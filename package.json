@@ -1,11 +1,8 @@
 {
   "name": "sharp-db",
   "version": "1.0.0",
-  "description": "Classes for running SQL and building select queries",
+  "description": "Classes for running SQL and building select queries in MySQL",
   "main": "dist/index.js",
-  "directories": {
-    "test": "tests"
-  },
   "scripts": {
     "test": "npx mocha src/**/*.spec.js",
     "build": "npx parcel build src/entry.js --out-file index.js --target node",
