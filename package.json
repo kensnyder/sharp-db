@@ -1,0 +1,49 @@
+{
+  "name": "sharp-db",
+  "version": "1.0.0",
+  "description": "Classes for running SQL and building select queries",
+  "main": "dist/index.js",
+  "directories": {
+    "test": "tests"
+  },
+  "scripts": {
+    "test": "npx mocha src/**/*.spec.js",
+    "build": "npx parcel build src/entry.js --out-file index.js --target node",
+    "watch": "npx parcel watch src/entry.js --out-file index.js --target node"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kensnyder/sharp-db.git"
+  },
+  "keywords": [
+    "Db",
+    "Select",
+    "MySQL",
+    "MSSQL"
+  ],
+  "author": "kendsnyder@gmail.com",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/kensnyder/sharp-db/issues"
+  },
+  "homepage": "https://github.com/kensnyder/sharp-db#readme",
+  "dependencies": {
+    "lodash.capitalize": "^4.2.1",
+    "lodash.clonedeep": "^4.5.0",
+    "lodash.escaperegexp": "^4.1.2",
+    "lodash.forown": "^4.4.0",
+    "lodash.isempty": "^4.4.0",
+    "lodash.trim": "^4.5.1",
+    "lodash.uniq": "^4.5.0",
+    "mysql": "^2.16.0",
+    "quickly-count-substrings": "^1.0.0"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.3.3",
+    "@babel/plugin-transform-runtime": "^7.2.0",
+    "chai": "^4.2.0",
+    "mocha": "^5.2.0",
+    "parcel": "^1.11.0",
+    "prettier": "^1.16.4"
+  }
+}
