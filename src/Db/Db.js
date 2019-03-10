@@ -9,10 +9,8 @@ export class Db {
 	 * @param {Object} config  Configuration object
 	 */
 	constructor(config = {}) {
-		const env =
-			typeof process === 'object' && typeof process.env === 'object'
-				? process.env
-				: {};
+		this.mocks = [];
+		const env = typeof process === 'object' && typeof process.env === 'object' ? process.env : {};
 		this.config = {
 			host: config.hostname || env.DB_HOSTNAME || '127.0.0.1',
 			user: config.username || env.DB_USERNAME || 'root',
@@ -102,17 +100,14 @@ export class Db {
 		this.connectOnce();
 		const options = this.bindArgs(sql, bindVars);
 		return new Promise((resolve, reject) => {
-			this.lastQuery = this.connection.query(
-				options,
-				(error, results, fields) => {
-					if (error) {
-						reject(error);
-					} else {
-						this.lastFields = fields;
-						resolve(results);
-					}
+			this.lastQuery = this.connection.query(options, (error, results, fields) => {
+				if (error) {
+					reject(error);
+				} else {
+					this.lastFields = fields;
+					resolve(results);
 				}
-			);
+			});
 		});
 	}
 
@@ -126,24 +121,20 @@ export class Db {
 		this.connectOnce();
 		const options = this.bindArgs(sql, bindVars);
 		return new Promise((resolve, reject) => {
-			this.lastQuery = this.connection.query(
-				options,
-				bindVars,
-				(error, results, fields) => {
-					if (error) {
-						reject(error);
-					} else {
-						this.lastFields = fields;
-						const key = fields[0].name;
-						const val = fields[1].name;
-						const hash = {};
-						results.forEach(result => {
-							hash[result[key]] = result[val];
-						});
-						resolve(hash);
-					}
+			this.lastQuery = this.connection.query(options, bindVars, (error, results, fields) => {
+				if (error) {
+					reject(error);
+				} else {
+					this.lastFields = fields;
+					const key = fields[0].name;
+					const val = fields[1].name;
+					const hash = {};
+					results.forEach(result => {
+						hash[result[key]] = result[val];
+					});
+					resolve(hash);
 				}
-			);
+			});
 		});
 	}
 
@@ -157,20 +148,17 @@ export class Db {
 		this.connectOnce();
 		const options = this.bindArgs(sql, bindVars);
 		return new Promise((resolve, reject) => {
-			this.lastQuery = this.connection.query(
-				options,
-				(error, results, fields) => {
-					if (error) {
-						reject(error);
-					} else {
-						this.lastFields = fields;
-						const name = fields[0].name;
-						const list = [];
-						results.forEach(result => list.push(result[name]));
-						resolve(list);
-					}
+			this.lastQuery = this.connection.query(options, (error, results, fields) => {
+				if (error) {
+					reject(error);
+				} else {
+					this.lastFields = fields;
+					const name = fields[0].name;
+					const list = [];
+					results.forEach(result => list.push(result[name]));
+					resolve(list);
 				}
-			);
+			});
 		});
 	}
 
@@ -185,24 +173,21 @@ export class Db {
 		this.connectOnce();
 		const options = this.bindArgs(sql, bindVars);
 		return new Promise((resolve, reject) => {
-			this.lastQuery = this.connection.query(
-				options,
-				(error, results, fields) => {
-					if (error) {
-						reject(error);
-					} else {
-						this.lastFields = fields;
-						const hash = {};
-						results.forEach(result => {
-							if (!hash[result[groupField]]) {
-								hash[result[groupField]] = [];
-							}
-							hash[result[groupField]].push(result);
-						});
-						resolve(hash);
-					}
+			this.lastQuery = this.connection.query(options, (error, results, fields) => {
+				if (error) {
+					reject(error);
+				} else {
+					this.lastFields = fields;
+					const hash = {};
+					results.forEach(result => {
+						if (!hash[result[groupField]]) {
+							hash[result[groupField]] = [];
+						}
+						hash[result[groupField]].push(result);
+					});
+					resolve(hash);
 				}
-			);
+			});
 		});
 	}
 
@@ -217,21 +202,18 @@ export class Db {
 		this.connectOnce();
 		const options = this.bindArgs(sql, bindVars);
 		return new Promise((resolve, reject) => {
-			this.lastQuery = this.connection.query(
-				options,
-				(error, results, fields) => {
-					if (error) {
-						reject(error);
-					} else {
-						this.lastFields = fields;
-						const hash = {};
-						results.forEach(result => {
-							hash[result[indexField]] = result;
-						});
-						resolve(hash);
-					}
+			this.lastQuery = this.connection.query(options, (error, results, fields) => {
+				if (error) {
+					reject(error);
+				} else {
+					this.lastFields = fields;
+					const hash = {};
+					results.forEach(result => {
+						hash[result[indexField]] = result;
+					});
+					resolve(hash);
 				}
-			);
+			});
 		});
 	}
 
@@ -245,17 +227,14 @@ export class Db {
 		this.connectOnce();
 		const options = this.bindArgs(sql, bindVars);
 		return new Promise((resolve, reject) => {
-			this.lastQuery = this.connection.query(
-				options,
-				(error, results, fields) => {
-					if (error) {
-						reject(error);
-					} else {
-						this.lastFields = fields;
-						resolve(results[0]);
-					}
+			this.lastQuery = this.connection.query(options, (error, results, fields) => {
+				if (error) {
+					reject(error);
+				} else {
+					this.lastFields = fields;
+					resolve(results[0]);
 				}
-			);
+			});
 		});
 	}
 
@@ -269,18 +248,15 @@ export class Db {
 		this.connectOnce();
 		const options = this.bindArgs(sql, bindVars);
 		return new Promise((resolve, reject) => {
-			this.lastQuery = this.connection.query(
-				options,
-				(error, results, fields) => {
-					if (error) {
-						reject(error);
-					} else {
-						this.lastFields = fields;
-						const name = fields[0].name;
-						resolve(results[0][name]);
-					}
+			this.lastQuery = this.connection.query(options, (error, results, fields) => {
+				if (error) {
+					reject(error);
+				} else {
+					this.lastFields = fields;
+					const name = fields[0].name;
+					resolve(results[0][name]);
 				}
-			);
+			});
 		});
 	}
 
@@ -394,10 +370,7 @@ export class Db {
 	selectRecordByKey(table, column, value) {
 		const escTable = mysql.escapeId(table);
 		const escColumn = mysql.escapeId(column);
-		return this.selectFirst(
-			`SELECT * FROM ${escTable} WHERE ${escColumn} = ?`,
-			value
-		);
+		return this.selectFirst(`SELECT * FROM ${escTable} WHERE ${escColumn} = ?`, value);
 	}
 
 	/**
@@ -411,10 +384,7 @@ export class Db {
 	findIdOrCreate(table, column, value, newValues = {}) {
 		const escTable = mysql.escapeId(table);
 		const escColumn = mysql.escapeId(column);
-		return this.selectFirst(
-			`SELECT id FROM ${escTable} WHERE ${escColumn} = ?`,
-			value
-		).then(id => {
+		return this.selectFirst(`SELECT id FROM ${escTable} WHERE ${escColumn} = ?`, value).then(id => {
 			if (id) {
 				return id;
 			}
@@ -438,16 +408,13 @@ export class Db {
 				if (error) {
 					reject(error);
 				} else {
-					this.connection.query(
-						'SELECT LAST_INSERT_ID() AS id',
-						(insertError, insertResults) => {
-							if (insertError) {
-								reject(insertError);
-							} else {
-								resolve(insertResults[0].id);
-							}
+					this.connection.query('SELECT LAST_INSERT_ID() AS id', (insertError, insertResults) => {
+						if (insertError) {
+							reject(insertError);
+						} else {
+							resolve(insertResults[0].id);
 						}
-					);
+					});
 				}
 			});
 		});
@@ -586,5 +553,65 @@ export class Db {
 	 */
 	escapeQuoteless(value) {
 		return mysql.escape(value).slice(1, -1);
+	}
+
+	tpl() {
+		function toSql(templateData, variables) {
+			let s = templateData[0];
+			variables.forEach((variable, i) => {
+				s += mysql.escape(variable);
+				s += templateData[i + 1];
+			});
+			return s;
+		}
+		const supported = [
+			'select',
+			'selectFirst',
+			'selectList',
+			'selectHash',
+			'selectValue',
+			'insert',
+			'update',
+			'delete',
+		];
+		const functions = {};
+		supported.forEach(name => {
+			functions[name] = (templateData, ...variables) => {
+				return this[name](toSql(templateData, variables));
+			};
+		});
+		return functions;
+	}
+
+	mock(when, data) {
+		if (this.mocks.length === 0) {
+			this.connection = {
+				connect: function() {},
+				query: function(options, values, cb) {
+					for (mock of this.mocks) {
+						const { when, data } = mock;
+						if (typeof when === 'string') {
+							if (options.sql === when) {
+								cb(data);
+								return;
+							}
+						} else if (when instanceof RegExp) {
+							if (when.test(options.sql)) {
+								cb(data);
+								return;
+							}
+						} else if (typeof when === 'function') {
+							if (when(options.sql)) {
+								cb(data);
+								return;
+							}
+						}
+					}
+					cb(data);
+				},
+			};
+		}
+		this.mocks.push({ when, data });
+		return this;
 	}
 }

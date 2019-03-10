@@ -1,30 +1,37 @@
 const { Select } = require('../../dist/index.js');
 const expect = require('chai').expect;
 
-describe('Parser', function() {
-	describe('column handler', function() {
-		it('should recognize asterisk', function() {
+describe('Parser', () => {
+	describe('column handler', () => {
+		it('should recognize asterisk', () => {
 			const query = Select.parse('SELECT * FROM mytable');
 			expect(query._columns).to.deep.equal(['*']);
 		});
 	});
-	describe('table handler', function() {
-		const query = Select.parse('SELECT * FROM a, b');
-		expect(query._tables).to.deep.equal(['a', 'b']);
-	});
-	describe('comment handler', function() {
-		it('should strip single-line comments', function() {
+	describe('comment handler', () => {
+		it('should strip single-line comments -- dashes', () => {
 			const query = Select.parse(`
 				SELECT
 				-- stuff
 				a,
 					-- more stuff
-				b
+				b -- and even more stuff
 				FROM mytable
 			`);
 			expect(query.normalized()).to.equal('SELECT a, b FROM mytable');
 		});
-		it('should strip multi-line comments', function() {
+		it('should strip single-line comments #hash', () => {
+			const query = Select.parse(`
+				SELECT
+				#stuff
+				a,
+					# more stuff
+				b #and even more stuff
+				FROM mytable
+			`);
+			expect(query.normalized()).to.equal('SELECT a, b FROM mytable');
+		});
+		it('should strip multi-line comments', () => {
 			const query = Select.parse(`
 				SELECT
 				/*
@@ -37,165 +44,123 @@ describe('Parser', function() {
 			expect(query.normalized()).to.equal('SELECT a, b FROM mytable');
 		});
 	});
-	describe('conditions handler', function() {
-		it('should parse single WHERE', function() {
+	describe('subquery handler', () => {
+		it('should handle column subqueries', () => {
+			const normalized = 'SELECT a, (SELECT * FROM tbl2) AS b FROM mytable WHERE mycol = 1';
+			const query = Select.parse(normalized);
+			expect(query.normalized()).to.equal(normalized);
+		});
+		it('should handle column subqueries with SELECT EXISTS', () => {
+			const normalized =
+				'SELECT a, (SELECT EXISTS (SELECT * FROM tbl2)) AS b FROM mytable WHERE mycol = 1';
+			const query = Select.parse(normalized);
+			expect(query.normalized()).to.equal(normalized);
+		});
+		it('should handle IF() column expressions', () => {
+			const normalized =
+				'SELECT a, IF(b > 0) AS is_gt_0, IF(b > 100) AS is_gt_100 FROM mytable WHERE mycol = 1';
+			const query = Select.parse(normalized);
+			expect(query.normalized()).to.equal(normalized);
+		});
+		it('should handle IN() expressions in WHERE', () => {
+			const normalized = 'SELECT * FROM mytable WHERE mycol IN (SELECT id FROM othertable)';
+			const query = Select.parse(normalized);
+			expect(query.normalized()).to.equal(normalized);
+		});
+		it('should handle IN() expressions in JOINs', () => {
+			const normalized =
+				'SELECT * FROM a INNER JOIN b ON b.id = a.b_id AND b.status IN (SELECT id FROM statuses) WHERE a.id > 10';
+			const query = Select.parse(normalized);
+			expect(query.normalized()).to.equal(normalized);
+		});
+	});
+	describe('table handler', () => {
+		it('should parse single table', () => {
+			const query = Select.parse('SELECT * FROM a');
+			expect(query._tables).to.deep.equal(['a']);
+		});
+		it('should parse comma-separated tables', () => {
+			const query = Select.parse('SELECT * FROM a, b');
+			expect(query._tables).to.deep.equal(['a', 'b']);
+		});
+	});
+	describe('column handler', () => {
+		it('should parse single column', () => {
+			const query = Select.parse('SELECT a FROM b');
+			expect(query._columns).to.deep.equal(['a']);
+		});
+		it('should parse comma-separated columns', () => {
+			const query = Select.parse('SELECT a, b FROM c');
+			expect(query._columns).to.deep.equal(['a', 'b']);
+		});
+	});
+	describe('option handler', () => {
+		it('should save SQL_CALC_FOUND_ROWS as an option', () => {
+			const query = Select.parse('SELECT SQL_CALC_FOUND_ROWS * FROM a');
+			expect(query._columns).to.deep.equal(['*']);
+			expect(query._options).to.deep.equal(['SQL_CALC_FOUND_ROWS']);
+		});
+	});
+	describe('JOIN handler', () => {
+		const joins = [
+			'JOIN',
+			'INNER JOIN',
+			'LEFT JOIN',
+			'OUTER JOIN',
+			'RIGHT JOIN',
+			'RIGHT OUTER JOIN',
+			'CROSS JOIN',
+			'FULL JOIN',
+			'FULL OUTER JOIN',
+		];
+		joins.forEach(join => {
+			it(`should handle ${join}`, () => {
+				const sql = `SELECT * FROM a ${join} b ON b.id = a.b_id`;
+				const query = Select.parse(sql);
+				expect(query.normalized()).to.equal(sql);
+			});
+		});
+	});
+	describe('conditions handler', () => {
+		it('should parse WHERE 1', () => {
+			const query = Select.parse('SELECT * FROM mytable WHERE 1');
+			expect(query._wheres).to.deep.equal(['1']);
+		});
+		it("should parse WHERE '1'", () => {
+			const query = Select.parse("SELECT * FROM mytable WHERE '1'");
+			expect(query._wheres).to.deep.equal(["'1'"]);
+		});
+		it('should parse WHERE true', () => {
+			const query = Select.parse('SELECT * FROM mytable WHERE true');
+			expect(query._wheres).to.deep.equal(['true']);
+		});
+		it('should parse single WHERE', () => {
 			const query = Select.parse('SELECT * FROM mytable WHERE mycol = 1');
 			expect(query._wheres).to.deep.equal(['mycol = 1']);
 		});
-		it('should parse two WHERE clauses joined by AND', function() {
+		it('should parse two WHERE clauses joined by AND', () => {
 			const query = Select.parse('SELECT * FROM mytable WHERE mycol = 1 AND scheduled < NOW()');
 			expect(query._wheres).to.deep.equal(['mycol = 1', 'scheduled < NOW()']);
 		});
-		it('should parse two WHERE clauses joined by OR', function() {
+		it('should parse two WHERE clauses joined by OR', () => {
 			const query = Select.parse('SELECT * FROM mytable WHERE mycol = 1 OR scheduled < NOW()');
 			expect(query._wheres).to.deep.equal(['(mycol = 1 OR scheduled < NOW())']);
 		});
-		it('should parse OR then AND', function() {
+		it('should parse OR then AND', () => {
 			const query = Select.parse('SELECT * FROM mytable WHERE a = 1 OR b = 2 AND c = 3');
 			expect(query._wheres).to.deep.equal(['(a = 1 OR b = 2)', 'c = 3']);
 		});
-		it('should parse OR then AND with parens', function() {
+		it('should parse OR then AND with parens', () => {
 			const query = Select.parse('SELECT * FROM mytable WHERE (a = 1 OR b = 2) AND c = 3');
 			expect(query._wheres).to.deep.equal(['(a = 1 OR b = 2)', 'c = 3']);
 		});
-		it('should parse AND then OR', function() {
+		it('should parse AND then OR', () => {
 			const query = Select.parse('SELECT * FROM mytable WHERE a = 1 AND b = 2 OR c = 3');
 			expect(query._wheres).to.deep.equal(['a = 1', '(b = 2 OR c = 3)']);
 		});
 	});
-	describe('subquery handler', function() {
-		// it('should handle column subqueries', function()  {
-		// 	$normalized = 'SELECT a, (SELECT * FROM tbl2) AS b FROM mytable WHERE mycol = 1';
-		// 	const query = Select.parse($normalized);
-		// 	expect(query.normalized()).to.equal($normalized);
-		// });
-		// it('should handle column subqueries with SELECT EXISTS', function()  {
-		// 	$normalized = 'SELECT a, (SELECT EXISTS (SELECT * FROM tbl2)) AS b FROM mytable WHERE mycol = 1';
-		// 	const query = Select.parse($normalized);
-		// 	expect(query.normalized()).to.equal($normalized);
-		// });
-		// it('should handle IF() column expressions', function()  {
-		// 	$normalized = 'SELECT a, IF(b > 0) AS is_gt_0, IF(b > 100) AS is_gt_100 FROM mytable WHERE mycol = 1';
-		// 	const query = Select.parse($normalized);
-		// 	expect(query.normalized()).to.equal($normalized);
-		// });
+	it('should parse WHERE 1', () => {
+		const query = Select.parse('SELECT * FROM mytable WHERE 1');
+		expect(query._wheres).to.deep.equal(['1']);
 	});
-	//
-	// describe('where() with arguments', function() {
-	// 	it('should handle expressions', function()  {
-	// 		$query = new QuickSelect();
-	// 		query.where('mycol = LOWER(mycol2)');
-	// 		expect(query._wheres[0]).to.equal('mycol = LOWER(mycol2)');
-	// 	});
-	// 	it('should handle equals', function()  {
-	// 		$query = new QuickSelect();
-	// 		query.where('mycol', 'myval');
-	// 		expect(query._wheres[0]).to.equal("`mycol` = 'myval'");
-	// 	});
-	// 	it('should handle automatic IN', function()  {
-	// 		$query = new QuickSelect();
-	// 		query.where('mycol', [1,2]);
-	// 		expect(query._wheres[0]).to.equal("`mycol` IN('1','2')");
-	// 	});
-	// 	it('should handle explicit IN', function()  {
-	// 		$query = new QuickSelect();
-	// 		query.where('mycol', 'IN', [1,2]);
-	// 		expect(query._wheres[0]).to.equal("`mycol` IN('1','2')");
-	// 	});
-	// 	it('should handle automatic NOT IN', function()  {
-	// 		$query = new QuickSelect();
-	// 		query.where('mycol', '!=', [1,2]);
-	// 		expect(query._wheres[0]).to.equal("`mycol` NOT IN('1','2')");
-	// 	});
-	// 	it('should handle explicit NOT IN', function()  {
-	// 		$query = new QuickSelect();
-	// 		query.where('mycol', 'NOT IN', [1,2]);
-	// 		expect(query._wheres[0]).to.equal("`mycol` NOT IN('1','2')");
-	// 	});
-	// 	it('should handle BETWEEN', function()  {
-	// 		$query = new QuickSelect();
-	// 		query.where('mycol', 'BETWEEN', [1,2]);
-	// 		expect(query._wheres[0]).to.equal("`mycol` BETWEEN '1' AND '2'");
-	// 	});
-	// 	it('should handle operators', function()  {
-	// 		$query = new QuickSelect();
-	// 		query.where('mycol', '>', 3);
-	// 		expect(query._wheres[0]).to.equal("`mycol` > '3'");
-	// 	});
-	// 	it('should handle NULL', function()  {
-	// 		$query = new QuickSelect();
-	// 		query.where('mycol', null);
-	// 		expect(query._wheres[0]).to.equal("`mycol` IS NULL");
-	// 	});
-	// 	it('should handle NOT NULL', function()  {
-	// 		$query = new QuickSelect();
-	// 		query.where('mycol', '!', null);
-	// 		expect(query._wheres[0]).to.equal("`mycol` IS NOT NULL");
-	// 	});
-	// 	it('should handle LIKE', function()  {
-	// 		$query = new QuickSelect();
-	// 		query.where('mycol', 'LIKE', 'foo');
-	// 		expect(query._wheres[0]).to.equal("`mycol` LIKE 'foo'");
-	// 	});
-	// 	it('should handle LIKE %?', function()  {
-	// 		$query = new QuickSelect();
-	// 		query.where('mycol', 'LIKE %?', 'foo');
-	// 		expect(query._wheres[0]).to.equal("`mycol` LIKE '%foo'");
-	// 	});
-	// 	it('should handle LIKE ?%', function()  {
-	// 		$query = new QuickSelect();
-	// 		query.where('mycol', 'LIKE ?%', 'foo');
-	// 		expect(query._wheres[0]).to.equal("`mycol` LIKE 'foo%'");
-	// 	});
-	// 	it('should handle LIKE %?%', function()  {
-	// 		$query = new QuickSelect();
-	// 		query.where('mycol', 'LIKE %?%', 'foo');
-	// 		expect(query._wheres[0]).to.equal("`mycol` LIKE '%foo%'");
-	// 	});
-	// });
-	//
-	// describe('where() with arrays', function() {
-	// 	it('should handle numeric arrays', function()  {
-	// 		$query = new QuickSelect();
-	// 		query.where([
-	// 			'mycol = LOWER(mycol2)',
-	// 		]);
-	// 		expect(query._wheres[0]).to.equal('mycol = LOWER(mycol2)');
-	// 	});
-	// 	it('should handle mixed arrays', function()  {
-	// 		$query = new QuickSelect();
-	// 		query.where([
-	// 			'mycol = LOWER(mycol2)',
-	// 			'col2' => 2
-	// 	]);
-	// 		expect(query._wheres[0]).to.equal('mycol = LOWER(mycol2)');
-	// 		expect(query._wheres[1]).to.equal("`col2` = '2'");
-	// 	});
-	// 	it('should handle equals', function()  {
-	// 		$query = new QuickSelect();
-	// 		query.where(['mycol' => 'myval']);
-	// 		expect(query._wheres[0]).to.equal("`mycol` = 'myval'");
-	// 	});
-	// 	it('should handle automatic IN', function()  {
-	// 		$query = new QuickSelect();
-	// 		query.where(['mycol' => [1,2]]);
-	// 		expect(query._wheres[0]).to.equal("`mycol` IN('1','2')");
-	// 	});
-	// 	it('should handle operators', function()  {
-	// 		$query = new QuickSelect();
-	// 		query.where(['mycol >' => 3]);
-	// 		expect(query._wheres[0]).to.equal("mycol > '3'");
-	// 	});
-	// });
-	//
-	// describe('orWhere()', function() {
-	// 	it('should handle expressions', function()  {
-	// 		$query = new QuickSelect();
-	// 		query.orWhere([
-	// 			['a', '>', 2],
-	// 			['b', 1],
-	// 		]);
-	// 		expect(query._wheres[0]).to.equal("(`a` > '2' OR `b` = '1')");
-	// 	});
-	// });
 });

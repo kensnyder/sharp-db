@@ -9,7 +9,7 @@ import mysql from 'mysql';
 
 /**
  * Build a select query
- * Class QuickSelect
+ * Class Select
  */
 export class Select {
 	parse(sql) {
@@ -20,14 +20,15 @@ export class Select {
 	}
 
 	static parse(sql) {
-		return Select.init(Db.factory()).parse(sql);
+		const db = Db.factory();
+		return Select.init(db).parse(sql);
 	}
 
 	/**
-	 * QuickSelect constructor
+	 * Select constructor
 	 */
 	constructor(Db) {
-		this.Db = Db;
+		this.db = Db;
 		this.reset();
 	}
 
@@ -82,8 +83,8 @@ export class Select {
 		const lines = [
 			'SELECT',
 			this._options.length ? this._options.join(' ') : null,
-			this._columns.length ? this._columns.join(', ') : ' * ',
-			`FROM ${this._tables.join(', ')} `,
+			this._columns.length ? this._columns.join(', ') : '*',
+			`FROM ${this._tables.join(', ')}`,
 			this._joins.length ? this._joins.join(' ') : null,
 			this._wheres.length ? `WHERE ${this._wheres.join(' AND ')}` : null,
 			this._groupBys.length ? `GROUP BY ${this._groupBys.join(', ')}` : null,
@@ -241,8 +242,8 @@ export class Select {
 
 	/**
 	 * Bind values by name to the query
-	 * @param {String} placeholder  The name of the placeholder
-	 * @param mixed $value  The value to bind
+	 * @param {Object|String} placeholder  The name of the placeholder or an object with placeholder: value pairs
+	 * @param {*} [value=null]  The value to bind when placeholder is a string
 	 * @example
 	 *     query.bind('postId', 123); // replace :postId with '123'
 	 * @return {Select}
@@ -278,7 +279,7 @@ export class Select {
 	 */
 	async fetch(options = {}) {
 		options.sql = this.toString();
-		const records = await Db.factory().select(options, this._bound);
+		const records = await this.db.select(options, this._bound);
 		await this._spliceHasOnes(records);
 		await this._spliceBelongsTos(records);
 		await this._spliceHasManys(records);
@@ -301,7 +302,7 @@ export class Select {
 	 * @return {Promise<Object>}
 	 */
 	fetchHash() {
-		return Db.factory().selectHash(this.toString(), this._bound);
+		return this.db.selectHash(this.toString(), this._bound);
 	}
 
 	/**
@@ -309,7 +310,7 @@ export class Select {
 	 * @return {Promise}
 	 */
 	fetchValue() {
-		return Db.factory().selectValue(this.toString(), this._bound);
+		return this.db.selectValue(this.toString(), this._bound);
 	}
 
 	/**
@@ -331,10 +332,10 @@ export class Select {
 	 * Fetch values grouped by the given field name
 	 * @param {String} byField  The field by which to group
 	 * @example
-	 *      $query = QuickSelect::parse('SELECT * FROM comments');
-	 *      $byUser = query.fetchGrouped('user_id')
+	 *      const query = Select.parse('SELECT * FROM comments');
+	 *      const byUser = query.fetchGrouped('user_id')
 	 *      // a key for each user id with an array of comments for each key
-	 * @return array|bool
+	 * @return {Array}
 	 */
 	async fetchGrouped(byField) {
 		const rs = await this.fetch();
@@ -353,7 +354,7 @@ export class Select {
 
 	/**
 	 * Clone this object
-	 * @return {QuickSelect}
+	 * @return {Select}
 	 */
 	getClone() {
 		const copy = new Select();
@@ -379,27 +380,38 @@ export class Select {
 	/**
 	 * Build a version of this query that simply returns COUNT(*)
 	 * @param {String} [countExpr="*"]  Use to specify `DISTINCT colname` if needed
-	 * @return {String}  The SQL query
+	 * @return {Select}  The SQL query
 	 */
 	getFoundRowsQuery(countExpr = '*') {
 		if (this._havings.length === 0) {
-			const query2 = this.getClone();
-			query2._columns = [`COUNT(${countExpr}) AS foundRows`];
-			query2._options = [];
-			query2._groupBys = [];
-			query2._orderBys = [];
-			query2._limit = null;
-			query2._offset = null;
-			query2._page = null;
-			return query2.toString();
+			const clone = this.getClone();
+			clone._columns = [`COUNT(${countExpr}) AS foundRows`];
+			clone._options = [];
+			clone._groupBys = [];
+			clone._orderBys = [];
+			clone._limit = null;
+			clone._offset = null;
+			clone._page = null;
+			return clone;
 		} else {
 			const subquery = this.getClone();
 			subquery._limit = null;
 			subquery._offset = null;
 			subquery._page = null;
-			const subquerySql = subquery.toString().replace(/\n/g, '\n\t');
-			const sql = `SELECT COUNT(*) AS foundRows FROM (\n\t${subquerySql}\n) AS subq`;
-			return sql;
+			return subquery;
+		}
+	}
+
+	getFoundRowsSql(countExpr, normalize = false) {
+		const query = this.getFoundRowsQuery(countExpr);
+		if (this._havings.length === 0) {
+			return normalize ? query.normalized() : query.toString();
+		} else if (normalize) {
+			const subquerySql = query.normalized();
+			return `SELECT COUNT(*) AS foundRows FROM (${subquerySql}) AS subq`;
+		} else {
+			const subquerySql = query.toString().replace(/\n/g, '\n\t');
+			return `SELECT COUNT(*) AS foundRows FROM (\n\t${subquerySql}\n) AS subq`;
 		}
 	}
 
@@ -409,8 +421,8 @@ export class Select {
 	 * @return {Promise<Number>}  The number of rows or false on error
 	 */
 	foundRows(countExpr = '*') {
-		const sql = this.getFoundRowsQuery(countExpr);
-		return Db.factory().selectValue(sql, this._bound);
+		const sql = this.getFoundRowsSql(countExpr);
+		return this.db.selectValue(sql, this._bound);
 	}
 
 	/**
@@ -462,7 +474,7 @@ export class Select {
 		const ids = uniq(records.map(r => r.id));
 		this._belongsTo.forEach(async spec => {
 			const [table, column] = spec.thatTableAndColumn.split('.');
-			const indexed = await Select.init()
+			const indexed = await Select.init(this.db)
 				.table(table)
 				.where(column, 'IN', ids)
 				.fetchIndexed(column);
@@ -511,7 +523,7 @@ export class Select {
 		const ids = uniq(records.map(r => r.id));
 		this._habtm.forEach(async spec => {
 			// const { joinTableQuery, foreignTable } = spec;
-			// const joinTableLookup = await Db.factory().selectGrouped('user_id', joinTableQuery, ids);
+			// const joinTableLookup = await this.db.selectGrouped('user_id', joinTableQuery, ids);
 			// const foreignIds = uniq(values(joinTableLookup));
 			// const foreignQuery = Select.init()
 			// 	.table(foreignTable)

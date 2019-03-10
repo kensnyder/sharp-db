@@ -25,6 +25,7 @@
   },
   "homepage": "https://github.com/kensnyder/sharp-db#readme",
   "dependencies": {
+    "lodash.camelcase": "^4.3.0",
     "lodash.capitalize": "^4.2.1",
     "lodash.clonedeep": "^4.5.0",
     "lodash.escaperegexp": "^4.1.2",
@@ -32,6 +33,7 @@
     "lodash.isempty": "^4.4.0",
     "lodash.trim": "^4.5.1",
     "lodash.uniq": "^4.5.0",
+    "lodash.upperfirst": "^4.3.1",
     "mysql": "^2.16.0",
     "quickly-count-substrings": "^1.0.0"
   },

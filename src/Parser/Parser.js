@@ -1,4 +1,6 @@
 import capitalize from 'lodash.capitalize';
+import camelCase from 'lodash.camelcase';
+import upperFirst from 'lodash.upperfirst';
 import trim from 'lodash.trim';
 
 /**
@@ -21,8 +23,10 @@ export class Parser {
 	_stripComments(sql) {
 		// multiline comments
 		sql = sql.replace(/\/\*[\s\S]*?\*\//g, '');
-		// single line comments
+		// single line comments -- dashes
 		sql = sql.replace(/--([\r\n]|\s+[^\r\n]+[\r\n])/g, '');
+		// single line comments #hashes
+		sql = sql.replace(/#[^\r\n]+[\r\n]/g, '');
 		return sql;
 	}
 
@@ -35,25 +39,34 @@ export class Parser {
 		const subqueries = {};
 		let i = 0;
 		const extractor = $0 => {
-			const placeholder = `'%SUBQUERY_${i++}'`;
+			const placeholder = `~~SUBQUERY_${i++}~~`;
 			subqueries[placeholder] = $0;
 			return placeholder;
 		};
 		// subselect in FROM clause
-		sql = sql.replace(/(s*SELECTs+.+)s+ASs+[^s,]+/, extractor);
+		sql = sql.replace(/\(\s*SELECT\s+.+\)\s+AS\s+[^\s,]+/, extractor);
 		// IF() in FROM clause
-		sql = sql.replace(/IF(.+)s+ASs+[^s,]+/, extractor);
+		sql = sql.replace(/\bIF\s*\(.+\)\s+AS\s+[^\s,]+/, extractor);
+		// IN (SELECT *) in JOINs, WHERE or HAVING
+		sql = sql.replace(/\bIN\s*\(SELECT\s.+?\)/, extractor);
 		return { sql, subqueries };
 	}
 
 	/**
 	 * Inject column subqueries back into this object
-	 * @param {Array} subqueries  The list of extracted subqueries
+	 * @param {Object} subqueries  The lookup of extracted subqueries
 	 */
 	_injectSubqueries(subqueries) {
-		this.query._columns = this.query._columns.map(col => {
-			return subqueries[col] || col;
-		});
+		const replacer = $0 => {
+			return subqueries[$0] || $0;
+		};
+		const mapper = clause => {
+			return clause.replace(/~~SUBQUERY_\d+~~/g, replacer);
+		};
+		this.query._columns = this.query._columns.map(replacer);
+		this.query._joins = this.query._joins.map(mapper);
+		this.query._wheres = this.query._wheres.map(mapper);
+		this.query._havings = this.query._havings.map(mapper);
 	}
 
 	/**
@@ -62,7 +75,7 @@ export class Parser {
 	 * @return {String[]}
 	 */
 	_split(sql) {
-		const splitter = /\b(SELECT| TOP \d+| SQL_CALC_FOUND_ROWS|FROM|(?:INNER |LEFT OUTER |RIGHT OUTER |LEFT |RIGHT |CROSS |FULL |FULL OUTER )JOIN|WHERE|GROUP BY|HAVING|ORDER BY|LIMIT|OFFSET)\b/i;
+		const splitter = /\b(SELECT|FROM|(?:INNER |LEFT OUTER |RIGHT OUTER |LEFT |RIGHT |CROSS |FULL |FULL OUTER )JOIN|WHERE|GROUP BY|HAVING|ORDER BY|LIMIT|OFFSET)\b/i;
 		return sql.split(splitter);
 	}
 
@@ -73,90 +86,99 @@ export class Parser {
 	 */
 	parse(rawSql) {
 		const stripped = this._stripComments(rawSql);
-		let { sql, subqueries } = this._extractSubqueries(stripped);
-		let exprs = this._split(sql);
-		let expr;
-		for (let i = 0, len = exprs.length; i < len; i++) {
-			expr = exprs[i].trim();
-			let upper = expr.toLocaleUpperCase();
-			if (upper === 'SELECT') {
-				i++;
-				expr = exprs[i];
-				upper = expr.toLocaleUpperCase();
-				if (upper === 'SQL_CALC_FOUND_ROWS' || upper.slice(0, 3) === 'TOP') {
-					this.query.options(expr);
-					i++;
-					expr = exprs[i];
-				}
-				let fragments = expr.split(/s*,s*/);
-				// now handle parenthesis expressions that contain commas
-				let buffer = '';
-				fragments.forEach(fragment => {
-					if (buffer.length) {
-						// we are in the middle of an expression containing parenthesis
-						buffer += fragment + ',';
-						if (fragment.indexOf(')') > 0) {
-							// we have an end parenthesis
-							buffer = '';
-						}
-					} else if (fragment.match(/\([^)]+$/)) {
-						buffer = fragment + ',';
-					} else {
-						const column = subqueries[fragment] || fragment;
-						this.query.column(column.trim());
-					}
-				});
-			} else if (upper === 'FROM') {
-				i++;
-				expr = exprs[i].trim();
-				expr.split(/\s*,\s*/).forEach(table => this.query.table(table));
-			} else if (upper.slice(-4) === 'JOIN') {
-				i++;
-				expr = exprs[i];
-				switch (upper) {
-					case 'JOIN':
-					case 'INNER JOIN':
-					default:
-						this.query.innerJoin(expr);
-						break;
-					case 'LEFT JOIN':
-						this.query.leftJoin(expr);
-						break;
-					case 'LEFT OUTER JOIN':
-						this.query.leftOuterJoin(expr);
-						break;
-					case 'RIGHT JOIN':
-						this.query.rightJoin(expr);
-						break;
-					case 'RIGHT OUTER JOIN':
-						this.query.rightOuterJoin(expr);
-						break;
-					case 'CROSS JOIN':
-						this.query.crossJoin(expr);
-						break;
-					case 'FULL JOIN':
-						this.query.fullJoin(expr);
-						break;
-					case 'FULL OUTER JOIN':
-						this.query.fullOuterJoin(expr);
-						break;
-				}
-			} else if (upper === 'WHERE' || upper === 'HAVING') {
-				this.handleConditions(upper, exprs[++i]);
-			} else if (upper === 'GROUP BY' || upper === 'ORDER BY') {
-				i++;
-				let fn = upper.slice(0, 5).toLowerCase() + 'By';
-				expr = exprs[i].trim();
-				expr.split(/\s*,\s*/).forEach(this.query[fn].bind(this.query));
-			} else if (upper === 'LIMIT' || upper === 'OFFSET') {
-				i++;
-				let fn = upper.toLowerCase();
-				expr = exprs[i].trim();
-				this.query[fn](expr);
-			}
+		const { sql, subqueries } = this._extractSubqueries(stripped);
+		const expressions = this._split(sql);
+		let i = 1;
+		while (i < expressions.length) {
+			const rawKeyword = expressions[i++].trim();
+			const keyword = upperFirst(camelCase(rawKeyword));
+			const clause = expressions[i++].trim();
+			const handler = `_handle${keyword}`;
+			this[handler](clause);
 		}
 		this._injectSubqueries(subqueries);
 		return true;
+	}
+
+	_handleSelect(clause) {
+		let columns = clause.split(/s*,s*/);
+		// now handle parenthesis expressions that contain commas
+		let buffer = '';
+		columns.forEach((column, i) => {
+			if (i === 0) {
+				const optionRegex = /^(SQL_CALC_FOUND_ROWS)\s+/i;
+				const match = column.match(optionRegex);
+				if (match) {
+					this.query.option(match[1]);
+					column = column.replace(optionRegex, '');
+				}
+			}
+			if (buffer.length) {
+				// we are in the middle of an expression containing parenthesis
+				buffer += column + ',';
+				if (column.indexOf(')') > 0) {
+					// we have an end parenthesis
+					buffer = '';
+				}
+			} else if (column.match(/\([^)]+$/)) {
+				buffer = column + ',';
+			} else {
+				this.query.column(column.trim());
+			}
+		});
+	}
+
+	_handleFrom(clause) {
+		const tables = clause.split(/\s*,\s*/);
+		tables.forEach(table => this.query.table(table));
+	}
+
+	_handleJoin(clause) {
+		this.query.innerJoin(clause);
+	}
+
+	_handleInnerJoin(clause) {
+		this.query.innerJoin(clause);
+	}
+
+	_handleLeftJoin(clause) {
+		this.query.leftJoin(clause);
+	}
+
+	_handleLeftOuterJoin(clause) {
+		this.query.leftOuterJoin(clause);
+	}
+
+	_handleRightJoin(clause) {
+		this.query.rightJoin(clause);
+	}
+
+	_handleRightOuterJoin(clause) {
+		this.query.rightOuterJoin(clause);
+	}
+
+	_handleCrossJoin(clause) {
+		this.query.crossJoin(clause);
+	}
+
+	_handleFullJoin(clause) {
+		this.query.fullJoin(clause);
+	}
+
+	_handleFullOuterJoin(clause) {
+		this.query.fullOuterJoin(clause);
+	}
+
+	_handleWhere(clause) {
+		if (/^(1|'1'|true)$/i.test(clause)) {
+			this.query._wheres.push(clause);
+		} else {
+			this._handleConditions('where', clause);
+		}
+	}
+
+	_handleHaving(clause) {
+		this._handleConditions('having', clause);
 	}
 
 	/**
@@ -164,26 +186,13 @@ export class Parser {
 	 * @param {String} type  Either WHERE or HAVING
 	 * @param {String} clause  The expressions following the type keyword
 	 */
-	// handleConditions(type, clause) {
-	// 	const chunks = clause.split(/\bOR\b/i);
-	// 	const conditions = chunks.map(chunk => chunk.split(/\bAND\b/i).map(trim));
-	// 	if (chunks.length === 1) {
-	// 		// no OR operators
-	// 		const fn = type.toLowerCase(); // either where or having
-	// 		conditions[0].forEach(condition => this.query[fn](condition));
-	// 	} else {
-	// 		// some OR operators
-	// 		const orFn = 'or' + capitalize(type); // either orWhere or orHaving
-	// 		this.query[orFn](conditions);
-	// 	}
-	// }
-	handleConditions(type, clause) {
+	_handleConditions(type, clause) {
 		const andGroups = clause.split(/\bAND\b/i);
 		andGroups.forEach(andGroup => {
 			const orPieces = andGroup.split(/\bOR\b/i).map(trim);
 			if (orPieces.length === 1) {
 				// no OR operators
-				const fn = type.toLowerCase(); // either where or having
+				const fn = type; // either where or having
 				this.query[fn](orPieces[0]);
 			} else {
 				// some OR operators
@@ -191,5 +200,23 @@ export class Parser {
 				this.query[orFn](orPieces);
 			}
 		});
+	}
+
+	_handleGroupBy(clause) {
+		const columns = clause.split(/\s*,\s*/);
+		columns.forEach(column => this.query.groupBy(column));
+	}
+
+	_handleOrderBy(clause) {
+		const columns = clause.split(/\s*,\s*/);
+		columns.forEach(column => this.query.orderBy(column));
+	}
+
+	_handleLimit(clause) {
+		this.limit(clause);
+	}
+
+	_handleOffset(clause) {
+		this.offset(clause);
 	}
 }
