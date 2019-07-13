@@ -5,7 +5,7 @@ import escapeRegExp from 'lodash.escaperegexp';
 import forOwn from 'lodash.forown';
 import uniq from 'lodash.uniq';
 import substrCount from 'quickly-count-substrings';
-import mysql from 'mysql';
+import mysql from 'mysql2';
 
 /**
  * Build a select query
@@ -124,7 +124,15 @@ export class Select {
 		if (field) {
 			let prop = '_' + field.replace(/s$/, '');
 			if (
-				['option', 'column', 'table', 'where', 'having', 'groupBy', 'orderBy'].indexOf(field) > -1
+				[
+					'option',
+					'column',
+					'table',
+					'where',
+					'having',
+					'groupBy',
+					'orderBy',
+				].indexOf(field) > -1
 			) {
 				prop += 's';
 			}
@@ -217,14 +225,19 @@ export class Select {
 	}
 
 	habtm(thisProperty, idsColumn, join) {
-		const matchJoinFirst = join.match(/(?:LEFT JOIN\s*)?(.+)\s+ON\s+\1\.id\s*=\s*(.+)\.(.+)/);
-		const matchJoinSecond = join.match(/(?:LEFT JOIN\s*)?(.+)\s+ON\s+(.+)\.(.+)\s*=\s*\1\.id/);
+		const matchJoinFirst = join.match(
+			/(?:LEFT JOIN\s*)?(.+)\s+ON\s+\1\.id\s*=\s*(.+)\.(.+)/
+		);
+		const matchJoinSecond = join.match(
+			/(?:LEFT JOIN\s*)?(.+)\s+ON\s+(.+)\.(.+)\s*=\s*\1\.id/
+		);
 		if (!matchJoinFirst && !matchJoinSecond) {
 			throw new Error(
 				`Select: Unknown join pattern: "${join}". Expecting format "joinTable ON joinTable.id = throughTable.foreignColumn"`
 			);
 		}
-		let [_, joinTable, throughTable, foreignColumn] = matchJoinFirst || matchJoinSecond;
+		let [_, joinTable, throughTable, foreignColumn] =
+			matchJoinFirst || matchJoinSecond;
 		this._habtm.push({
 			thisProperty,
 			idsColumn,
@@ -796,7 +809,9 @@ export class Select {
 			operator = '=';
 		}
 		operator = operator.toLocaleUpperCase();
-		const likeMatch = operator.match(/^(LIKE|NOT LIKE)(?: (\?|\?%|%\?|%\?%))?$/);
+		const likeMatch = operator.match(
+			/^(LIKE|NOT LIKE)(?: (\?|\?%|%\?|%\?%))?$/
+		);
 		if (operator === 'NOT BETWEEN' || operator === 'BETWEEN') {
 			// expect a two-item array
 			const from = mysql.escape(value[0]);
@@ -816,7 +831,9 @@ export class Select {
 			}
 			collection.push(`${column} ${likeMatch[1]} ${quoted}`);
 		} else if (value === null) {
-			collection.push(operator === '=' ? `${column} IS NULL` : `${column} IS NOT NULL`);
+			collection.push(
+				operator === '=' ? `${column} IS NULL` : `${column} IS NOT NULL`
+			);
 		} else if (Array.isArray(value)) {
 			// an array of values should be IN or NOT IN
 			const inVals = value.map(v => mysql.escape(v));

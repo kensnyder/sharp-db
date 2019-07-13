@@ -1,4 +1,11 @@
-import mysql from 'mysql';
+import forOwn from 'lodash.forown';
+import mysql from 'mysql2';
+
+/**
+ * A list of all the Db Instances that have been created
+ * @type {Array}
+ */
+const instances = [];
 
 /**
  * Simple database class for mysql
@@ -10,7 +17,10 @@ export class Db {
 	 */
 	constructor(config = {}) {
 		this.mocks = [];
-		const env = typeof process === 'object' && typeof process.env === 'object' ? process.env : {};
+		const env =
+			typeof process === 'object' && typeof process.env === 'object'
+				? process.env
+				: {};
 		this.config = {
 			host: config.hostname || env.DB_HOSTNAME || '127.0.0.1',
 			user: config.username || env.DB_USERNAME || 'root',
@@ -19,6 +29,7 @@ export class Db {
 			port: config.port || env.DB_PORT || 3306,
 			encoding: config.encoding || env.DB_ENCODING || 'utf-8',
 		};
+		instances.push(this);
 	}
 
 	/**
@@ -52,6 +63,54 @@ export class Db {
 		if (!this.connection) {
 			this.connect();
 		}
+	}
+
+	/**
+	 * Close this connection to the database
+	 * @return {Promise}  Resolves when connection has been closed
+	 */
+	end() {
+		return new Promise((resolve, reject) => {
+			if (this.connection && this.connection.end) {
+				this.connection.end(err => {
+					if (err) {
+						reject(err);
+					} else {
+						resolve();
+					}
+				});
+			} else {
+				resolve();
+			}
+		});
+	}
+
+	/**
+	 * Destroy the connection to the database
+	 * @return {Db}
+	 */
+	destroy() {
+		if (this.connection && this.connection.destroy) {
+			this.connection.destroy();
+		}
+		return this;
+	}
+
+	/**
+	 * Close all connections to the database
+	 * @return {Promise}  Resolves when all connections have been closed
+	 */
+	static endAll() {
+		return Promise.all(instances.map(db => db.end()));
+	}
+
+	/**
+	 * Destroy all connections to the database
+	 * @return {Db}
+	 */
+	static destroyAll() {
+		instances.forEach(db => db.destroy());
+		return Db;
 	}
 
 	// /**
@@ -100,14 +159,17 @@ export class Db {
 		this.connectOnce();
 		const options = this.bindArgs(sql, bindVars);
 		return new Promise((resolve, reject) => {
-			this.lastQuery = this.connection.query(options, (error, results, fields) => {
-				if (error) {
-					reject(error);
-				} else {
-					this.lastFields = fields;
-					resolve(results);
+			this.lastQuery = this.connection.query(
+				options,
+				(error, results, fields) => {
+					if (error) {
+						reject(error);
+					} else {
+						this.lastFields = fields;
+						resolve(results);
+					}
 				}
-			});
+			);
 		});
 	}
 
@@ -121,20 +183,24 @@ export class Db {
 		this.connectOnce();
 		const options = this.bindArgs(sql, bindVars);
 		return new Promise((resolve, reject) => {
-			this.lastQuery = this.connection.query(options, bindVars, (error, results, fields) => {
-				if (error) {
-					reject(error);
-				} else {
-					this.lastFields = fields;
-					const key = fields[0].name;
-					const val = fields[1].name;
-					const hash = {};
-					results.forEach(result => {
-						hash[result[key]] = result[val];
-					});
-					resolve(hash);
+			this.lastQuery = this.connection.query(
+				options,
+				bindVars,
+				(error, results, fields) => {
+					if (error) {
+						reject(error);
+					} else {
+						this.lastFields = fields;
+						const key = fields[0].name;
+						const val = fields[1].name;
+						const hash = {};
+						results.forEach(result => {
+							hash[result[key]] = result[val];
+						});
+						resolve(hash);
+					}
 				}
-			});
+			);
 		});
 	}
 
@@ -148,17 +214,20 @@ export class Db {
 		this.connectOnce();
 		const options = this.bindArgs(sql, bindVars);
 		return new Promise((resolve, reject) => {
-			this.lastQuery = this.connection.query(options, (error, results, fields) => {
-				if (error) {
-					reject(error);
-				} else {
-					this.lastFields = fields;
-					const name = fields[0].name;
-					const list = [];
-					results.forEach(result => list.push(result[name]));
-					resolve(list);
+			this.lastQuery = this.connection.query(
+				options,
+				(error, results, fields) => {
+					if (error) {
+						reject(error);
+					} else {
+						this.lastFields = fields;
+						const name = fields[0].name;
+						const list = [];
+						results.forEach(result => list.push(result[name]));
+						resolve(list);
+					}
 				}
-			});
+			);
 		});
 	}
 
@@ -173,21 +242,24 @@ export class Db {
 		this.connectOnce();
 		const options = this.bindArgs(sql, bindVars);
 		return new Promise((resolve, reject) => {
-			this.lastQuery = this.connection.query(options, (error, results, fields) => {
-				if (error) {
-					reject(error);
-				} else {
-					this.lastFields = fields;
-					const hash = {};
-					results.forEach(result => {
-						if (!hash[result[groupField]]) {
-							hash[result[groupField]] = [];
-						}
-						hash[result[groupField]].push(result);
-					});
-					resolve(hash);
+			this.lastQuery = this.connection.query(
+				options,
+				(error, results, fields) => {
+					if (error) {
+						reject(error);
+					} else {
+						this.lastFields = fields;
+						const hash = {};
+						results.forEach(result => {
+							if (!hash[result[groupField]]) {
+								hash[result[groupField]] = [];
+							}
+							hash[result[groupField]].push(result);
+						});
+						resolve(hash);
+					}
 				}
-			});
+			);
 		});
 	}
 
@@ -202,18 +274,21 @@ export class Db {
 		this.connectOnce();
 		const options = this.bindArgs(sql, bindVars);
 		return new Promise((resolve, reject) => {
-			this.lastQuery = this.connection.query(options, (error, results, fields) => {
-				if (error) {
-					reject(error);
-				} else {
-					this.lastFields = fields;
-					const hash = {};
-					results.forEach(result => {
-						hash[result[indexField]] = result;
-					});
-					resolve(hash);
+			this.lastQuery = this.connection.query(
+				options,
+				(error, results, fields) => {
+					if (error) {
+						reject(error);
+					} else {
+						this.lastFields = fields;
+						const hash = {};
+						results.forEach(result => {
+							hash[result[indexField]] = result;
+						});
+						resolve(hash);
+					}
 				}
-			});
+			);
 		});
 	}
 
@@ -227,14 +302,17 @@ export class Db {
 		this.connectOnce();
 		const options = this.bindArgs(sql, bindVars);
 		return new Promise((resolve, reject) => {
-			this.lastQuery = this.connection.query(options, (error, results, fields) => {
-				if (error) {
-					reject(error);
-				} else {
-					this.lastFields = fields;
-					resolve(results[0]);
+			this.lastQuery = this.connection.query(
+				options,
+				(error, results, fields) => {
+					if (error) {
+						reject(error);
+					} else {
+						this.lastFields = fields;
+						resolve(results[0]);
+					}
 				}
-			});
+			);
 		});
 	}
 
@@ -248,15 +326,18 @@ export class Db {
 		this.connectOnce();
 		const options = this.bindArgs(sql, bindVars);
 		return new Promise((resolve, reject) => {
-			this.lastQuery = this.connection.query(options, (error, results, fields) => {
-				if (error) {
-					reject(error);
-				} else {
-					this.lastFields = fields;
-					const name = fields[0].name;
-					resolve(results[0][name]);
+			this.lastQuery = this.connection.query(
+				options,
+				(error, results, fields) => {
+					if (error) {
+						reject(error);
+					} else {
+						this.lastFields = fields;
+						const name = fields[0].name;
+						resolve(results[0][name]);
+					}
 				}
-			});
+			);
 		});
 	}
 
@@ -269,7 +350,7 @@ export class Db {
 	selectExists(sql, ...bindVars) {
 		const options = this.bindArgs(sql, bindVars);
 		options.sql = `SELECT EXISTS (${options.sql}) AS does_it_exist`;
-		return this.selectValue(options).then(Boolean);
+		return this.selectValue(options).then(Boolean, err => err);
 	}
 
 	/**
@@ -326,16 +407,22 @@ export class Db {
 	 * Build a SELECT statement and return result rows
 	 * @param {String} table  The name of the table
 	 * @param {Array} fields  An array of field names to select
-	 * @param {Object} params  Params to construct the WHERE clause
+	 * @param {Object} criteria  Params to construct the WHERE clause
 	 * @param {String} extra  Additional raw SQL such as GROUP BY, ORDER BY, or LIMIT
 	 * @return {Promise<Array>}  The result rows
 	 */
-	selectFrom(table, fields = [], params = {}, extra = '') {
+	selectFrom(table, fields = [], criteria = {}, extra = '') {
+		if (!Array.isArray(fields)) {
+			throw new Error('Db.selectFrom fields must be an array');
+		}
+		if (typeof criteria !== 'object') {
+			throw new Error('Db.selectFrom criteria must be an array');
+		}
 		this.connectOnce();
-		const escFields = fields.map(field => mysql.escapeId(field));
+		const escFields = fields.map(field => this.quote(field));
 		const escFieldsString = fields.length ? escFields.join(', ') : '*';
-		const escTable = mysql.escapeId(table);
-		const escWhere = this.buildWheres(params) || '1';
+		const escTable = this.quote(table);
+		const escWhere = this.buildWheres(criteria) || '1';
 		const sql = `SELECT ${escFieldsString} FROM ${escTable} WHERE ${escWhere} ${extra}`.trim();
 		return this.select(sql);
 	}
@@ -347,7 +434,7 @@ export class Db {
 	 * @return {Promise<Number>}
 	 */
 	selectId(table, id) {
-		return this.selectRecordByKey(table, 'id', id);
+		return this.selectByKey(table, 'id', id);
 	}
 
 	/**
@@ -357,7 +444,7 @@ export class Db {
 	 * @return {Promise<String>}
 	 */
 	selectUuid(table, uuid) {
-		return this.selectRecordByKey(table, 'uuid', uuid);
+		return this.selectByKey(table, 'uuid', uuid);
 	}
 
 	/**
@@ -367,53 +454,111 @@ export class Db {
 	 * @param {String} value  The value of the record for that column
 	 * @return {Promise<Object>}
 	 */
-	selectRecordByKey(table, column, value) {
-		const escTable = mysql.escapeId(table);
-		const escColumn = mysql.escapeId(column);
-		return this.selectFirst(`SELECT * FROM ${escTable} WHERE ${escColumn} = ?`, value);
+	selectByKey(table, column, value) {
+		const escTable = this.quote(table);
+		const escColumn = this.quote(column);
+		return this.selectFirst(
+			`SELECT * FROM ${escTable} WHERE ${escColumn} = ?`,
+			value
+		);
 	}
 
 	/**
 	 * Find a record or add a new one
 	 * @param {String} table  The name of the table from which to select
-	 * @param {String} column  The name of the column from which to select
-	 * @param {String} value  The value of the record for that column
+	 * @param {Object} criteria  Criteria by which to find the row
 	 * @param {Object} newValues  The values to use to insert if the record doesn't exist
 	 * @return {Promise<Number>}  The existing id or the new id
 	 */
-	findIdOrCreate(table, column, value, newValues = {}) {
-		const escTable = mysql.escapeId(table);
-		const escColumn = mysql.escapeId(column);
-		return this.selectFirst(`SELECT id FROM ${escTable} WHERE ${escColumn} = ?`, value).then(id => {
-			if (id) {
-				return id;
-			}
-			return this.insertInto(table, { [column]: value, ...newValues });
-		});
+	selectOrCreate(table, criteria, newValues = {}) {
+		return this.selectFrom(table, [], criteria).then(
+			results => {
+				if (results.length > 0) {
+					return results[0];
+				} else {
+					return this.insertInto(table, newValues);
+				}
+			},
+			err => err
+		);
 	}
 
 	/**
 	 * Build an INSERT statement and run it
 	 * @param {String} table  The name of the table
-	 * @param {Object} values  column-value pairs to insert
+	 * @param {Object} insert  column-value pairs to insert
 	 * @return {Promise<Number>}  Id of the last inserted record
 	 */
-	insertInto(table, values) {
+	insertInto(table, insert) {
+		// build insert expression
+		const fields = [];
+		const values = [];
+		forOwn(insert, (value, field) => {
+			fields.push(this.quote(field));
+			values.push(mysql.escape(value));
+		});
+		if (fields.length === 0) {
+			throw new Error(
+				'Db.insertIntoOnDuplicateKeyUpdate requires a non-empty insert Object'
+			);
+		}
+		const escTable = this.quote(table);
+		const fieldsSql = fields.join(',');
+		const valuesSql = values.join(',');
+		const insertSql = `INSERT INTO ${escTable} (${fieldsSql}) VALUES (${valuesSql})`;
+		return this.insert(insertSql);
+	}
+
+	/**
+	 * Run an "INSERT INTO ... ON DUPLICATE KEY UPDATE" query where
+	 * if a key conflicts, update the given fields
+	 * @param {String} table  The name of the table
+	 * @param {Object} insert  An array with column => value pairs for insertion
+	 * @param {Object} update  An array with column => value pairs for update
+	 * @return {Promise<Object>} result
+	 * @property {Number} result.lastInsertId  The id of the last inserted or updated record
+	 * @property {Number} result.affected  The number of rows updated (if any)
+	 */
+	insertIntoOnDuplicateKeyUpdate(table, insert, update) {
 		this.connectOnce();
+		// build insert expression
+		const fields = [];
+		const values = [];
+		forOwn(insert, (value, field) => {
+			fields.push(this.quote(field));
+			values.push(mysql.escape(value));
+		});
+		if (fields.length === 0) {
+			throw new Error(
+				'Db.insertIntoOnDuplicateKeyUpdate requires a non-empty insert Object'
+			);
+		}
+		table = this.quote(table);
+		const fieldsSql = fields.join(',');
+		const valuesSql = values.join(',');
+		const insertSql = `INSERT INTO ${table} (${fieldsSql}) VALUES (${valuesSql})`;
+		// build update expression
+		const sets = [];
+		forOwn(update, (value, field) => {
+			sets.push(this.quote(field) + '=' + mysql.escape(value));
+		});
+		if (sets.length === 0) {
+			throw new Error(
+				'Db.insertIntoOnDuplicateKeyUpdate requires a non-empty update Object'
+			);
+		}
+		const setSql = sets.join(',');
+		// combine
+		const sql = `${insertSql} ON DUPLICATE KEY UPDATE ${setSql}`;
+		// run
 		return new Promise((resolve, reject) => {
-			const escTable = mysql.escapeId(table);
-			// see https://www.npmjs.com/package/mysql#escaping-query-values
-			const sql = `INSERT INTO ${escTable} SET ?`;
-			this.lastQuery = this.connection.query(sql, values, error => {
+			this.lastQuery = this.connection.query(sql, values, (error, results) => {
 				if (error) {
 					reject(error);
 				} else {
-					this.connection.query('SELECT LAST_INSERT_ID() AS id', (insertError, insertResults) => {
-						if (insertError) {
-							reject(insertError);
-						} else {
-							resolve(insertResults[0].id);
-						}
+					resolve({
+						lastInsertId: results.insertId,
+						affected: results.affectedRows,
 					});
 				}
 			});
@@ -429,7 +574,7 @@ export class Db {
 	 */
 	updateTable(table, set, where = {}) {
 		this.connectOnce();
-		const escTable = mysql.escapeId(table);
+		const escTable = this.quote(table);
 		const escWhere = this.buildWheres(where);
 		const sql = `UPDATE ${escTable} SET ? WHERE ${escWhere}`;
 		return this.select(sql, set);
@@ -444,7 +589,7 @@ export class Db {
 	 */
 	deleteFrom(table, where, limit = null) {
 		this.connectOnce();
-		const escTable = mysql.escapeId(table);
+		const escTable = this.quote(table);
 		const escWhere = this.buildWheres(where);
 		let sql = `DELETE FROM ${escTable} WHERE ${escWhere}`;
 		if (limit > 0) {
@@ -485,7 +630,7 @@ export class Db {
 	 */
 	buildWhere(field, value) {
 		let [name, operator] = field.split(' ');
-		name = mysql.escapeId(name);
+		name = this.quote(name);
 		operator = operator ? operator.toUpperCase() : '=';
 		if (operator === 'BETWEEN') {
 			const val0 = mysql.escape(value[0]);
@@ -555,6 +700,42 @@ export class Db {
 		return mysql.escape(value).slice(1, -1);
 	}
 
+	/**
+	 * Escape an identifier such as a table or column
+	 * @param identifier
+	 * @return {*}
+	 */
+	quote(identifier) {
+		if (identifier === '*') {
+			return identifier;
+		}
+		if (/[`()]/.test(identifier)) {
+			return identifier;
+		}
+		let quoted = mysql.escapeId(identifier);
+		if (/\.`\*`$/.test(quoted)) {
+			quoted.slice(0, -3) + '*';
+		}
+		return quoted;
+	}
+
+	/**
+	 * Return an object with query methods to run on template literals
+	 * (backticked strings) where interpolated strings are automatically escaped
+	 * @example
+	 * const query = db.tpl();
+	 * const users = await query.select`SELECT * FROM users WHERE id IN(${userIds})`;
+	 * const count = await query.selectValue`SELECT COUNT(*) FROM users WHERE is_active = ${isActive}`;
+	 * @return {Object}  Object with query methods
+	 * @property {Function} select  Same as Db#select()
+	 * @property {Function} selectFirst  Same as Db#selectFirst()
+	 * @property {Function} selectList  Same as Db#selectList()
+	 * @property {Function} selectHash  Same as Db#selectHash()
+	 * @property {Function} selectValue  Same as Db#selectValue()
+	 * @property {Function} insert  Same as Db#insert()
+	 * @property {Function} update  Same as Db#update()
+	 * @property {Function} delete  Same as Db#delete()
+	 */
 	tpl() {
 		function toSql(templateData, variables) {
 			let s = templateData[0];
@@ -583,6 +764,13 @@ export class Db {
 		return functions;
 	}
 
+	/**
+	 * Instruct Db to return the given data when the query matches the given
+	 * pattern
+	 * @param {String|RegExp|Function} when  The pattern to match
+	 * @param {*} data  The data to return
+	 * @return {Db}
+	 */
 	mock(when, data) {
 		if (this.mocks.length === 0) {
 			this.connection = {

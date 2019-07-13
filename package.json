@@ -16,7 +16,7 @@
     "Db",
     "Select",
     "MySQL",
-    "MSSQL"
+    "mysql2"
   ],
   "author": "kendsnyder@gmail.com",
   "license": "ISC",
@@ -34,15 +34,15 @@
     "lodash.trim": "^4.5.1",
     "lodash.uniq": "^4.5.0",
     "lodash.upperfirst": "^4.3.1",
-    "mysql": "^2.16.0",
+    "mysql2": "^1.6.5",
     "quickly-count-substrings": "^1.0.0"
   },
   "devDependencies": {
-    "@babel/core": "^7.3.3",
-    "@babel/plugin-transform-runtime": "^7.2.0",
+    "@babel/core": "^7.5.4",
+    "@babel/plugin-transform-runtime": "^7.5.0",
     "chai": "^4.2.0",
-    "mocha": "^5.2.0",
-    "parcel": "^1.11.0",
-    "prettier": "^1.16.4"
+    "mocha": "^6.1.4",
+    "parcel": "^1.12.3",
+    "prettier": "^1.18.2"
   }
 }
