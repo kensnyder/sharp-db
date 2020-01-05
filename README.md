@@ -15,7 +15,7 @@ The intent is to be fast and useful for 99% of situations.
 
 ```sql
 -- SELECT clause does not properly handle expressions with commas
-SELECT CONCAT(lname, ',', fname) FROM users
+SELECT CONCAT(lname, ', ', fname) FROM users
 
 -- 
 ```
