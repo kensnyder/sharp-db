@@ -1,5 +1,5 @@
-import forOwn from 'lodash.forown';
-import mysql from 'mysql2';
+const forOwn = require('lodash.forown');
+const mysql = require('mysql2');
 
 /**
  * A list of all the Db Instances that have been created
@@ -10,7 +10,7 @@ const instances = [];
 /**
  * Simple database class for mysql
  */
-export class Db {
+class Db {
 	/**
 	 * Connection options including host, login, password, encoding, database
 	 * @param {Object} config  Configuration object
@@ -803,3 +803,5 @@ export class Db {
 		return this;
 	}
 }
+
+module.exports = Db;

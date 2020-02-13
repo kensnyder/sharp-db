@@ -1,12 +1,12 @@
-import capitalize from 'lodash.capitalize';
-import camelCase from 'lodash.camelcase';
-import upperFirst from 'lodash.upperfirst';
-import trim from 'lodash.trim';
+const capitalize = require('lodash.capitalize');
+const camelCase = require('lodash.camelcase');
+const upperFirst = require('lodash.upperfirst');
+const trim = require('lodash.trim');
 
 /**
  * Parse SQL and populate onto a Select query object
  */
-export class Parser {
+class Parser {
 	/**
 	 * Create a new instance
 	 * @param {Select} query  A Select object on which to build parsed conditions
@@ -220,3 +220,5 @@ export class Parser {
 		this.offset(clause);
 	}
 }
+
+module.exports = Parser;

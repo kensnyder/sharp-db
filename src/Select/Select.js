@@ -1,17 +1,17 @@
-import { Parser } from '../Parser/Parser.js';
-import { Db } from '../Db/Db.js';
-import cloneDeep from 'lodash.clonedeep';
-import escapeRegExp from 'lodash.escaperegexp';
-import forOwn from 'lodash.forown';
-import uniq from 'lodash.uniq';
-import substrCount from 'quickly-count-substrings';
-import mysql from 'mysql2';
+const Parser = require('../Parser/Parser.js');
+const Db = require('../Db/Db.js');
+const cloneDeep = require('lodash.clonedeep');
+const escapeRegExp = require('lodash.escaperegexp');
+const forOwn = require('lodash.forown');
+const uniq = require('lodash.uniq');
+const substrCount = require('quickly-count-substrings');
+const mysql = require('mysql2');
 
 /**
  * Build a select query
  * Class Select
  */
-export class Select {
+class Select {
 	parse(sql) {
 		this.reset();
 		const parser = new Parser(this);
@@ -1012,3 +1012,5 @@ export class Select {
 		return value;
 	}
 }
+
+module.exports = Select;

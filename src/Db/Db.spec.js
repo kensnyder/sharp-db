@@ -1,16 +1,15 @@
-const { Db } = require('../../dist/index.js');
-const expect = require('chai').expect;
+const { Db } = require('../../index.js');
 
 describe('Db', () => {
 	describe('class', () => {
 		it('should be instantiable', () => {
 			const db = Db.factory();
-			expect(db).to.be.instanceof(Db);
+			expect(db).toBeInstanceOf(Db);
 		});
 		it('should work as singleton', () => {
 			const db1 = Db.factory();
 			const db2 = Db.factory();
-			expect(db1).to.equal(db2);
+			expect(db1).toBe(db2);
 		});
 	});
 
@@ -18,7 +17,7 @@ describe('Db', () => {
 		it('should bind numbers', () => {
 			const db = Db.factory();
 			const bound = db.bindArgs('WHERE a = ? AND b = ?', [1, 2]);
-			expect(bound.sql).to.equal('WHERE a = 1 AND b = 2');
+			expect(bound.sql).toBe('WHERE a = 1 AND b = 2');
 		});
 		it('should bind true', () => {
 			const db = Db.factory();
@@ -27,22 +26,22 @@ describe('Db', () => {
 					isSuccess: true,
 				},
 			]);
-			expect(bound.sql).to.equal('WHERE is_success = true');
+			expect(bound.sql).toBe('WHERE is_success = true');
 		});
 		it('should bind false', () => {
 			const db = Db.factory();
 			const bound = db.bindArgs('WHERE is_active = ?', [false]);
-			expect(bound.sql).to.equal('WHERE is_active = false');
+			expect(bound.sql).toBe('WHERE is_active = false');
 		});
 		it('should bind arrays', () => {
 			const db = Db.factory();
 			const bound = db.bindArgs('WHERE id IN(?)', [[1, 2, 3]]);
-			expect(bound.sql).to.equal('WHERE id IN(1, 2, 3)');
+			expect(bound.sql).toBe('WHERE id IN(1, 2, 3)');
 		});
 		it('should bind nulls', () => {
 			const db = Db.factory();
 			const bound = db.bindArgs('SET a = ?', [null]);
-			expect(bound.sql).to.equal('SET a = NULL');
+			expect(bound.sql).toBe('SET a = NULL');
 		});
 	});
 	//
@@ -51,7 +50,7 @@ describe('Db', () => {
 	// 		const db = Db.factory();
 	// 		$sql = 'SELECT COUNT(*) AS acount FROM affiliations; SELECT COUNT(*) AS ccount FROM clients;';
 	// 		$res = $db->multiQuery($sql);
-	// 		expect($db->error()).to.equal('');
+	// 		expect($db->error()).toBe('');
 	// 		expect($res)->to->have->size(2);
 	// 		expect($res[0][0]->acount)->to->be->gt(0);
 	// 		expect($res[1][0]->ccount)->to->be->gt(0);
@@ -67,7 +66,7 @@ describe('Db', () => {
 	// 		';
 	// 		$res = $db->multiQuery($sql, compact('rand'));
 	// 		expect($res)->to->have->size(4);
-	// 		expect($res[1][0]->name).to.equal($rand);
+	// 		expect($res[1][0]->name).toBe($rand);
 	// 		expect($res[3][0]->cnt)->to->be->oneOf([0, "0"]);
 	// 	});
 	// });

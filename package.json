@@ -2,11 +2,9 @@
   "name": "sharp-db",
   "version": "1.0.0",
   "description": "Classes for running SQL and building select queries in MySQL",
-  "main": "dist/index.js",
+  "main": "index.js",
   "scripts": {
-    "test": "npx mocha src/**/*.spec.js",
-    "build": "npx parcel build src/entry.js --out-file index.js --target node",
-    "watch": "npx parcel watch src/entry.js --out-file index.js --target node"
+    "test": "npx jest --watch"
   },
   "repository": {
     "type": "git",
@@ -34,15 +32,11 @@
     "lodash.trim": "^4.5.1",
     "lodash.uniq": "^4.5.0",
     "lodash.upperfirst": "^4.3.1",
-    "mysql2": "^1.6.5",
+    "mysql2": "^2.1.0",
     "quickly-count-substrings": "^1.0.0"
   },
   "devDependencies": {
-    "@babel/core": "^7.5.4",
-    "@babel/plugin-transform-runtime": "^7.5.0",
-    "chai": "^4.2.0",
-    "mocha": "^6.1.4",
-    "parcel": "^1.12.3",
-    "prettier": "^1.18.2"
+    "jest": "^25.1.0",
+    "prettier": "^1.19.1"
   }
 }
