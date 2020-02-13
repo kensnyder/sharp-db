@@ -1,3 +1,5 @@
+jest.mock('mysql2');
+const mysqlMock = require('mysql2');
 const { Db } = require('../../index.js');
 
 describe('Db', () => {
@@ -42,6 +44,208 @@ describe('Db', () => {
 			const db = Db.factory();
 			const bound = db.bindArgs('SET a = ?', [null]);
 			expect(bound.sql).toBe('SET a = NULL');
+		});
+	});
+	describe('select()', () => {
+		it('should handle errors', async () => {
+			mysqlMock.pushResponse({
+				error: new Error('foo')
+			});
+			const db = Db.factory();
+			try {
+				await db.select('SELECT * FROM users');
+			}
+			catch (e) {
+				expect(e.message).toBe('foo');
+			}
+		});
+		it('should return result arrays', async () => {
+			const sql = 'SELECT * FROM users';
+			const results = [
+				{ name: 'John Doe', email: 'john@example.com' },
+				{ name: 'Jane Doe', email: 'jane@example.com' },
+			];
+			const fields = [
+				{ name: 'name' },
+				{ name: 'email'},
+			];
+			mysqlMock.pushResponse({ results, fields });
+			const db = Db.factory();
+			const res = await db.select(sql);
+			expect(res).toEqual(results);
+			expect(db.lastFields).toEqual(fields);
+			expect(db.lastQuery).toBe(sql);
+		});
+		it('should bind on question marks', async () => {
+			const sql = 'SELECT * FROM users WHERE id BETWEEN ? AND ?';
+			const db = Db.factory();
+			await db.select(sql, 101, 199);
+			expect(db.lastQuery).toBe('SELECT * FROM users WHERE id BETWEEN 101 AND 199');
+		});
+		it('should bind on colons', async () => {
+			const sql = 'SELECT * FROM users WHERE id BETWEEN :min AND :max';
+			const db = Db.factory();
+			await db.select(sql, { min: 101, max: 199 });
+			expect(db.lastQuery).toBe('SELECT * FROM users WHERE id BETWEEN 101 AND 199');
+		});
+		it('should handle options', async () => {
+			const sql = 'SELECT * FROM users';
+			const db = Db.factory();
+			await db.select({ sql, timeout: 30000 });
+			expect(db.lastQuery).toBe('SELECT * FROM users');
+		});
+		it('should handle array values bound in options', async () => {
+			const sql = 'SELECT * FROM users WHERE id BETWEEN ? AND ?';
+			const db = Db.factory();
+			await db.select({ sql, values: [101, 199] });
+			expect(db.lastQuery).toBe('SELECT * FROM users WHERE id BETWEEN 101 AND 199');
+		});
+		it('should handle array options binding and param binding', async () => {
+			const sql = 'SELECT * FROM users WHERE id BETWEEN ? AND ? AND department_id = ?';
+			const db = Db.factory();
+			await db.select({ sql, values: [101, 199] }, 1);
+			expect(db.lastQuery).toBe('SELECT * FROM users WHERE id BETWEEN 101 AND 199 AND department_id = 1');
+		});
+		it('should handle objects bound in options', async () => {
+			const sql = 'SELECT * FROM users WHERE id BETWEEN :min AND :max';
+			const db = Db.factory();
+			await db.select({ sql, values: { min: 101, max: 199 } });
+			expect(db.lastQuery).toBe('SELECT * FROM users WHERE id BETWEEN 101 AND 199');
+		});
+		it('should handle object options binding and param binding', async () => {
+			const sql = 'SELECT * FROM users WHERE id BETWEEN :min AND :max AND department = ?';
+			const db = Db.factory();
+			await db.select({ sql, values: { min: 101, max: 199 } }, 1);
+			expect(db.lastQuery).toBe('SELECT * FROM users WHERE id BETWEEN 101 AND 199 AND department = 1');
+		});
+	});
+	describe('selectHash()', () => {
+		it('should return result object', async () => {
+			const sql = 'SELECT email, name FROM users';
+			const results = [
+				{ name: 'John Doe', email: 'john@example.com' },
+				{ name: 'Jane Doe', email: 'jane@example.com' },
+			];
+			const fields = [
+				{ name: 'email'},
+				{ name: 'name' },
+			];
+			const hash = {
+				'john@example.com': 'John Doe',
+				'jane@example.com': 'Jane Doe',
+			};
+			mysqlMock.pushResponse({ results, fields });
+			const db = Db.factory();
+			const res = await db.selectHash(sql);
+			expect(res).toEqual(hash);
+		});
+	});
+	describe('selectList()', () => {
+		it('should return item list', async () => {
+			const sql = 'SELECT name FROM users';
+			const results = [
+				{ name: 'John Doe' },
+				{ name: 'Jane Doe' },
+			];
+			const fields = [
+				{ name: 'name' },
+			];
+			const list = ['John Doe', 'Jane Doe'];
+			mysqlMock.pushResponse({ results, fields });
+			const db = Db.factory();
+			const res = await db.selectList(sql);
+			expect(res).toEqual(list);
+		});
+	});
+	describe('selectGrouped()', () => {
+		it('should return result object with lists', async () => {
+			const sql = 'SELECT email, name FROM users';
+			const results = [
+				{ name: 'John Doe', department_id: 1 },
+				{ name: 'Jane Doe', department_id: 2 },
+				{ name: 'Josh Doe', department_id: 1 },
+			];
+			const hash = {
+				'1': [results[0], results[2]],
+				'2': [results[1]],
+			};
+			mysqlMock.pushResponse({ results });
+			const db = Db.factory();
+			const res = await db.selectGrouped('department_id', sql);
+			expect(res).toEqual(hash);
+		});
+	});
+	describe('selectIndexed()', () => {
+		it('should return result object', async () => {
+			const sql = 'SELECT email, name FROM users';
+			const results = [
+				{ name: 'John Doe', email: 'john@example.com' },
+				{ name: 'Jane Doe', email: 'jane@example.com' },
+			];
+			const hash = {
+				'john@example.com': results[0],
+				'jane@example.com': results[1],
+			};
+			mysqlMock.pushResponse({ results });
+			const db = Db.factory();
+			const res = await db.selectIndexed('email', sql);
+			expect(res).toEqual(hash);
+		});
+	});
+	describe('selectFirst()', () => {
+		it('should return first result object', async () => {
+			const sql = 'SELECT email, name FROM users';
+			const results = [
+				{ name: 'John Doe', email: 'john@example.com' },
+				{ name: 'Jane Doe', email: 'jane@example.com' },
+			];
+			mysqlMock.pushResponse({ results });
+			const db = Db.factory();
+			const res = await db.selectFirst(sql);
+			expect(res).toEqual(results[0]);
+		});
+	});
+	describe('selectValue()', () => {
+		it('should return the first field from the first row', async () => {
+			const sql = 'SELECT name FROM users';
+			const results = [
+				{ name: 'John Doe' },
+				{ name: 'Jane Doe' },
+			];
+			const fields = [
+				{ name: 'name' },
+			];
+			mysqlMock.pushResponse({ results, fields });
+			const db = Db.factory();
+			const res = await db.selectValue(sql);
+			expect(res).toEqual('John Doe');
+		});
+		it('should return undefined on empty results', async () => {
+			const sql = 'SELECT name FROM users';
+			const results = [];
+			const fields = [
+				{ name: 'name' },
+			];
+			mysqlMock.pushResponse({ results, fields });
+			const db = Db.factory();
+			const res = await db.selectValue(sql);
+			expect(res).toBe(undefined);
+		});
+	});
+	describe('selectExists()', () => {
+		it('should construct a SELECT EXISTS query', async () => {
+			const sql = 'SELECT name FROM users';
+			const results = [
+				{ name: 'John Doe' },
+				{ name: 'Jane Doe' },
+			];
+			const fields = [
+				{ name: 'name' },
+			];
+			mysqlMock.pushResponse({ results, fields });
+			const db = Db.factory();
+			const res = await db.selectExists(sql);
+			expect(res).toBe(true);
 		});
 	});
 	//

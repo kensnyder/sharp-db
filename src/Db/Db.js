@@ -116,7 +116,7 @@ class Db {
 	// /**
 	//  * Run a list of semicolon-delimited queries
 	//  * @see https://www.npmjs.com/package/mysql#multiple-statement-queries
-	//  * @param {String} sql
+	//  * @param {String|Object} sql
 	//  * @param int|string $bindVar1  The value to bind to the first question mark
 	//  * @param int|string $bindVarN  The value to bind to the nth question mark
 	//  * @return {Array}|bool
@@ -151,7 +151,7 @@ class Db {
 
 	/**
 	 * Return result rows for the given SELECT statement
-	 * @param {String} sql  The SQL to run
+	 * @param {String|Object} sql  The SQL to run
 	 * @param {...*} bindVars  The values to bind to the each question mark or named binding
 	 * @return {Promise<Object[]>}
 	 */
@@ -175,7 +175,7 @@ class Db {
 
 	/**
 	 * Return result array as col1 => col2 pairs for the given SELECT statement
-	 * @param {String} sql  The SQL to run
+	 * @param {String|Object} sql  The SQL to run
 	 * @param {...*} bindVars  The values to bind to the each question mark or named binding
 	 * @return {Promise<Object>}
 	 */
@@ -185,7 +185,6 @@ class Db {
 		return new Promise((resolve, reject) => {
 			this.lastQuery = this.connection.query(
 				options,
-				bindVars,
 				(error, results, fields) => {
 					if (error) {
 						reject(error);
@@ -205,8 +204,8 @@ class Db {
 	}
 
 	/**
-	 * Return result array as col1 => col2 pairs for the given SELECT statement
-	 * @param {String} sql  The SQL to run
+	 * Return result array as col1 for the given SELECT statement
+	 * @param {String|Object} sql  The SQL to run
 	 * @param {...*} bindVars  The values to bind to the each question mark or named binding
 	 * @return {Promise<Object>}
 	 */
@@ -234,7 +233,7 @@ class Db {
 	/**
 	 * Return records all grouped by one of the column's values
 	 * @param {String} groupField  The name of the field to group by
-	 * @param {String} sql  The SQL to run
+	 * @param {String|Object} sql  The SQL to run
 	 * @param {...*} bindVars  The values to bind to the each question mark or named binding
 	 * @return {Promise<Array>}
 	 */
@@ -266,7 +265,7 @@ class Db {
 	/**
 	 * Return records all indexed by one of the column's values
 	 * @param {String} indexField  The name of the field to index by
-	 * @param {String} sql  The SQL to run
+	 * @param {String|Object} sql  The SQL to run
 	 * @param {...*} bindVars  The values to bind to the each question mark or named binding
 	 * @return {Promise<Array>}
 	 */
@@ -294,7 +293,7 @@ class Db {
 
 	/**
 	 * Return first result row for the given SELECT statement
-	 * @param {String} sql  The SQL to run
+	 * @param {String|Object} sql  The SQL to run
 	 * @param {...*} bindVars  The values to bind to the each question mark or named binding
 	 * @return {Promise<Object>}
 	 */
@@ -318,9 +317,9 @@ class Db {
 
 	/**
 	 * Return first column value for the first result row for the given SELECT statement
-	 * @param {String} sql  The SQL to run
+	 * @param {String|Object} sql  The SQL to run
 	 * @param {...*} bindVars  The values to bind to the each question mark or named binding
-	 * @return {Promise<Number|String>}
+	 * @return {Promise<Number|String|undefined>}
 	 */
 	selectValue(sql, ...bindVars) {
 		this.connectOnce();
@@ -333,8 +332,13 @@ class Db {
 						reject(error);
 					} else {
 						this.lastFields = fields;
-						const name = fields[0].name;
-						resolve(results[0][name]);
+						if (results.length === 0) {
+							resolve(undefined);
+						}
+						else {
+							const name = fields[0].name;
+							resolve(results[0][name]);
+						}
 					}
 				}
 			);
@@ -343,7 +347,7 @@ class Db {
 
 	/**
 	 * Run the given SELECT statement wrapped in a SELECT EXISTS query
-	 * @param {String} sql  The SQL to run
+	 * @param {String|Object} sql  The SQL to run
 	 * @param {...*} bindVars  The values to bind to the each question mark or named binding
 	 * @return {Promise<Boolean>}  True if it exists, false otherwise
 	 */
@@ -355,7 +359,7 @@ class Db {
 
 	/**
 	 * Run the given INSERT statement
-	 * @param {String} sql  The SQL to run
+	 * @param {String|Object} sql  The SQL to run
 	 * @param {...*} bindVars  The values to bind to the each question mark or named binding
 	 * @return {Promise<Number>}  The id of the last inserted record
 	 */
@@ -375,7 +379,7 @@ class Db {
 
 	/**
 	 * Run the given UPDATE statement
-	 * @param {String} sql  The SQL to run
+	 * @param {String|Object} sql  The SQL to run
 	 * @param {...*} bindVars  The values to bind to the each question mark or named binding
 	 * @return {Promise<Number>}  The number of rows affected by the statement
 	 */
@@ -395,7 +399,7 @@ class Db {
 
 	/**
 	 * Run the given DELETE statement
-	 * @param {String} sql  The SQL to run
+	 * @param {String|Object} sql  The SQL to run
 	 * @param {...*} bindVars  The values to bind to the each question mark or named binding
 	 * @return {Promise<Array>}
 	 */
@@ -576,7 +580,7 @@ class Db {
 		this.connectOnce();
 		const escTable = this.quote(table);
 		const escWhere = this.buildWheres(where);
-		const sql = `UPDATE ${escTable} SET ? WHERE ${escWhere}`;
+		const sql = `UPDATE ${escTable} SET ?  WHERE ${escWhere}`;
 		return this.select(sql, set);
 	}
 
@@ -650,7 +654,7 @@ class Db {
 
 	/**
 	 * Bind an array of arguments to a query
-	 * @param {String} sql  The base SQL query
+	 * @param {String|Object} sql  The base SQL query
 	 * @param {Array} args  An array of values to bind
 	 * @return {String}
 	 * @example
@@ -665,8 +669,15 @@ class Db {
 			options.sql = '';
 		}
 		if (!Array.isArray(args)) {
-			return options;
+			args = [];
 		}
+		if (Array.isArray(sql.values)) {
+			args = sql.values.concat(args);
+		}
+		else if (sql.values) {
+			args = [sql.values].concat(args);
+		}
+		options.values = undefined;
 		args.forEach(arg => {
 			if (arg && typeof arg === 'object' && !Array.isArray(arg)) {
 				options.sql = options.sql.replace(/:([\w_]+)/g, ($0, $1) => {
