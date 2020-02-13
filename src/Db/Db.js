@@ -334,8 +334,7 @@ class Db {
 						this.lastFields = fields;
 						if (results.length === 0) {
 							resolve(undefined);
-						}
-						else {
+						} else {
 							const name = fields[0].name;
 							resolve(results[0][name]);
 						}
@@ -401,7 +400,7 @@ class Db {
 	 * Run the given DELETE statement
 	 * @param {String|Object} sql  The SQL to run
 	 * @param {...*} bindVars  The values to bind to the each question mark or named binding
-	 * @return {Promise<Array>}
+	 * @return {Promise<Number>}
 	 */
 	delete(sql, ...bindVars) {
 		return this.update(sql, ...bindVars);
@@ -495,21 +494,16 @@ class Db {
 	 */
 	insertInto(table, insert) {
 		// build insert expression
-		const fields = [];
-		const values = [];
+		const sets = [];
 		forOwn(insert, (value, field) => {
-			fields.push(this.quote(field));
-			values.push(mysql.escape(value));
+			sets.push(this.quote(field) + '=' + mysql.escape(value));
 		});
-		if (fields.length === 0) {
-			throw new Error(
-				'Db.insertIntoOnDuplicateKeyUpdate requires a non-empty insert Object'
-			);
+		if (sets.length === 0) {
+			throw new Error('Db.insertInto requires a non-empty insert Object');
 		}
 		const escTable = this.quote(table);
-		const fieldsSql = fields.join(',');
-		const valuesSql = values.join(',');
-		const insertSql = `INSERT INTO ${escTable} (${fieldsSql}) VALUES (${valuesSql})`;
+		const setSql = sets.join(', ');
+		const insertSql = `INSERT INTO ${escTable} SET ${setSql}`;
 		return this.insert(insertSql);
 	}
 
@@ -526,43 +520,40 @@ class Db {
 	insertIntoOnDuplicateKeyUpdate(table, insert, update) {
 		this.connectOnce();
 		// build insert expression
-		const fields = [];
-		const values = [];
-		forOwn(insert, (value, field) => {
-			fields.push(this.quote(field));
-			values.push(mysql.escape(value));
-		});
-		if (fields.length === 0) {
-			throw new Error(
-				'Db.insertIntoOnDuplicateKeyUpdate requires a non-empty insert Object'
-			);
-		}
-		table = this.quote(table);
-		const fieldsSql = fields.join(',');
-		const valuesSql = values.join(',');
-		const insertSql = `INSERT INTO ${table} (${fieldsSql}) VALUES (${valuesSql})`;
-		// build update expression
 		const sets = [];
-		forOwn(update, (value, field) => {
+		forOwn(insert, (value, field) => {
 			sets.push(this.quote(field) + '=' + mysql.escape(value));
 		});
 		if (sets.length === 0) {
 			throw new Error(
+				'Db.insertIntoOnDuplicateKeyUpdate requires a non-empty insert Object'
+			);
+		}
+		// build update expression
+		const updates = [];
+		forOwn(update, (value, field) => {
+			updates.push(this.quote(field) + '=' + mysql.escape(value));
+		});
+		if (updates.length === 0) {
+			throw new Error(
 				'Db.insertIntoOnDuplicateKeyUpdate requires a non-empty update Object'
 			);
 		}
-		const setSql = sets.join(',');
+		table = this.quote(table);
+		const setSql = sets.join(', ');
+		const updateSql = updates.join(', ');
 		// combine
-		const sql = `${insertSql} ON DUPLICATE KEY UPDATE ${setSql}`;
+		const sql = `INSERT INTO ${table} SET ${setSql} ON DUPLICATE KEY UPDATE ${updateSql}`;
 		// run
 		return new Promise((resolve, reject) => {
-			this.lastQuery = this.connection.query(sql, values, (error, results) => {
+			this.lastQuery = this.connection.query(sql, (error, results) => {
 				if (error) {
 					reject(error);
 				} else {
 					resolve({
-						lastInsertId: results.insertId,
-						affected: results.affectedRows,
+						query: sql,
+						insertId: results.insertId,
+						affectedRows: results.affectedRows,
 					});
 				}
 			});
@@ -673,8 +664,7 @@ class Db {
 		}
 		if (Array.isArray(sql.values)) {
 			args = sql.values.concat(args);
-		}
-		else if (sql.values) {
+		} else if (sql.values) {
 			args = [sql.values].concat(args);
 		}
 		options.values = undefined;
