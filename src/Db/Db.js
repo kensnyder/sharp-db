@@ -113,120 +113,101 @@ class Db {
 		return Db;
 	}
 
-	// /**
-	//  * Run a list of semicolon-delimited queries
-	//  * @see https://www.npmjs.com/package/mysql#multiple-statement-queries
-	//  * @param {String|Object} sql
-	//  * @param int|string $bindVar1  The value to bind to the first question mark
-	//  * @param int|string $bindVarN  The value to bind to the nth question mark
-	//  * @return {Array}|bool
-	//  */
-	// multiQuery(/*$sql, $bindVar1, $bindVarN*/) {
-	// 	if (!$this->_connectOnce()) {
-	// 		return false;
-	// 	}
-	// 	$sql = $this->bindArgs(func_get_args());
-	// 	$ok = mysqli_multi_query($this->_dbh, $sql);
-	// 	if (!$ok) {
-	// 		return false;
-	// 	}
-	// 	$fetch = "mysqli_fetch_$this->fetchMode";
-	// 	$resultSets = [];
-	// 	while(1) {
-	// 		/* get first result set */
-	// 		$resultSet = [];
-	// 		if (($result = mysqli_store_result($this->_dbh))) {
-	// 			while (($row = $fetch($result))) {
-	// 				$resultSet[] = $row;
-	// 			}
-	// 			mysqli_free_result($result);
-	// 		}
-	// 		$resultSets[] = $resultSet;
-	// 		if (!mysqli_next_result($this->_dbh)) {
-	// 			break;
-	// 		}
-	// 	}
-	// 	return $resultSets;
-	// }
+	/**
+	 * Run a query, allowing multiple statements separated by semicolon
+	 * @param {String|Object} sql  The sql to run
+	 * @param {*} ...bindVars Values to bind to the sql placeholders
+	 * @returns {Promise<Object>}
+	 */
+	multiQuery(sql, ...bindVars) {
+		this.connectOnce();
+		const options = this.bindArgs(sql, bindVars);
+		options.multipleStatements = true;
+		return this.select(options);
+	}
 
 	/**
 	 * Return result rows for the given SELECT statement
 	 * @param {String|Object} sql  The SQL to run
-	 * @param {...*} bindVars  The values to bind to the each question mark or named binding
-	 * @return {Promise<Object[]>}
+	 * @param {*} ...bindVars The values to bind to the each question mark or named binding
+	 * @return {Promise<Object>}
+	 * @property {String} query  The final SQL that was executed
+	 * @property {Array} results  The result rows
+	 * @property {Object[]} fields  Info about the selected fields
 	 */
 	select(sql, ...bindVars) {
 		this.connectOnce();
 		const options = this.bindArgs(sql, bindVars);
 		return new Promise((resolve, reject) => {
-			this.lastQuery = this.connection.query(
-				options,
-				(error, results, fields) => {
-					if (error) {
-						reject(error);
-					} else {
-						this.lastFields = fields;
-						resolve(results);
-					}
+			const query = this.connection.query(options, (error, results, fields) => {
+				if (error) {
+					reject(error);
+				} else {
+					resolve({ query, results, fields });
 				}
-			);
+			});
 		});
 	}
 
 	/**
 	 * Return result array as col1 => col2 pairs for the given SELECT statement
 	 * @param {String|Object} sql  The SQL to run
-	 * @param {...*} bindVars  The values to bind to the each question mark or named binding
+	 * @param {*} ...bindVars The values to bind to the each question mark or named binding
 	 * @return {Promise<Object>}
+	 * @property {String} query  The final SQL that was executed
+	 * @property {Object} results  The result object with key-value pairs
+	 * @property {Object[]} fields  Info about the selected fields
 	 */
 	selectHash(sql, ...bindVars) {
 		this.connectOnce();
 		const options = this.bindArgs(sql, bindVars);
 		return new Promise((resolve, reject) => {
-			this.lastQuery = this.connection.query(
-				options,
-				(error, results, fields) => {
-					if (error) {
-						reject(error);
-					} else {
-						this.lastFields = fields;
-						const key = fields[0].name;
-						const val = fields[1].name;
-						const hash = {};
-						results.forEach(result => {
-							hash[result[key]] = result[val];
-						});
-						resolve(hash);
-					}
+			const query = this.connection.query(options, (error, results, fields) => {
+				if (error) {
+					reject(error);
+				} else {
+					const key = fields[0].name;
+					const val = fields[1].name;
+					const hash = {};
+					results.forEach(result => {
+						hash[result[key]] = result[val];
+					});
+					resolve({
+						query,
+						results: hash,
+						fields,
+					});
 				}
-			);
+			});
 		});
 	}
 
 	/**
 	 * Return result array as col1 for the given SELECT statement
 	 * @param {String|Object} sql  The SQL to run
-	 * @param {...*} bindVars  The values to bind to the each question mark or named binding
+	 * @param {*} ...bindVars The values to bind to the each question mark or named binding
 	 * @return {Promise<Object>}
+	 * @property {String} query  The final SQL that was executed
+	 * @property {Array} results  The result list
+	 * @property {Object[]} fields  Info about the selected fields
 	 */
 	selectList(sql, ...bindVars) {
 		this.connectOnce();
 		const options = this.bindArgs(sql, bindVars);
 		return new Promise((resolve, reject) => {
-			this.lastQuery = this.connection.query(
-				options,
-				(error, results, fields) => {
-					if (error) {
-						reject(error);
-					} else {
-						this.lastFields = fields;
-						const name = fields[0].name;
-						const list = [];
-						results.forEach(result => list.push(result[name]));
-						resolve(list);
-					}
+			const query = this.connection.query(options, (error, results, fields) => {
+				if (error) {
+					reject(error);
+				} else {
+					const name = fields[0].name;
+					const list = results.map(result => result[name]);
+					resolve({
+						query,
+						results: list,
+						fields,
+					});
 				}
-			);
+			});
 		});
 	}
 
@@ -234,31 +215,34 @@ class Db {
 	 * Return records all grouped by one of the column's values
 	 * @param {String} groupField  The name of the field to group by
 	 * @param {String|Object} sql  The SQL to run
-	 * @param {...*} bindVars  The values to bind to the each question mark or named binding
-	 * @return {Promise<Array>}
+	 * @param {*} ...bindVars The values to bind to the each question mark or named binding
+	 * @return {Promise<Object>}
+	 * @property {String} query  The final SQL that was executed
+	 * @property {Object} results  Result rows grouped by groupField
+	 * @property {Object[]} fields  Info about the selected fields
 	 */
 	selectGrouped(groupField, sql, ...bindVars) {
 		this.connectOnce();
 		const options = this.bindArgs(sql, bindVars);
 		return new Promise((resolve, reject) => {
-			this.lastQuery = this.connection.query(
-				options,
-				(error, results, fields) => {
-					if (error) {
-						reject(error);
-					} else {
-						this.lastFields = fields;
-						const hash = {};
-						results.forEach(result => {
-							if (!hash[result[groupField]]) {
-								hash[result[groupField]] = [];
-							}
-							hash[result[groupField]].push(result);
-						});
-						resolve(hash);
-					}
+			const query = this.connection.query(options, (error, results, fields) => {
+				if (error) {
+					reject(error);
+				} else {
+					const groups = {};
+					results.forEach(result => {
+						if (!groups[result[groupField]]) {
+							groups[result[groupField]] = [];
+						}
+						groups[result[groupField]].push(result);
+					});
+					resolve({
+						query,
+						results: groups,
+						fields,
+					});
 				}
-			);
+			});
 		});
 	}
 
@@ -266,111 +250,137 @@ class Db {
 	 * Return records all indexed by one of the column's values
 	 * @param {String} indexField  The name of the field to index by
 	 * @param {String|Object} sql  The SQL to run
-	 * @param {...*} bindVars  The values to bind to the each question mark or named binding
-	 * @return {Promise<Array>}
+	 * @param {*} ...bindVars The values to bind to the each question mark or named binding
+	 * @return {Promise<Object>}
+	 * @property {String} query  The final SQL that was executed
+	 * @property {Object} results  The results indexed by indexField
+	 * @property {Object[]} fields  Info about the selected fields
 	 */
 	selectIndexed(indexField, sql, ...bindVars) {
 		this.connectOnce();
 		const options = this.bindArgs(sql, bindVars);
 		return new Promise((resolve, reject) => {
-			this.lastQuery = this.connection.query(
-				options,
-				(error, results, fields) => {
-					if (error) {
-						reject(error);
-					} else {
-						this.lastFields = fields;
-						const hash = {};
-						results.forEach(result => {
-							hash[result[indexField]] = result;
-						});
-						resolve(hash);
-					}
+			const query = this.connection.query(options, (error, results, fields) => {
+				if (error) {
+					reject(error);
+				} else {
+					const hash = {};
+					results.forEach(result => {
+						hash[result[indexField]] = result;
+					});
+					resolve({
+						query,
+						results: hash,
+						fields,
+					});
 				}
-			);
+			});
 		});
 	}
 
 	/**
 	 * Return first result row for the given SELECT statement
 	 * @param {String|Object} sql  The SQL to run
-	 * @param {...*} bindVars  The values to bind to the each question mark or named binding
+	 * @param {*} ...bindVars The values to bind to the each question mark or named binding
 	 * @return {Promise<Object>}
+	 * @property {String} query  The final SQL that was executed
+	 * @property {Object|undefined} results  The result row or undefined
+	 * @property {Object[]} fields  Info about the selected fields
 	 */
 	selectFirst(sql, ...bindVars) {
 		this.connectOnce();
 		const options = this.bindArgs(sql, bindVars);
 		return new Promise((resolve, reject) => {
-			this.lastQuery = this.connection.query(
-				options,
-				(error, results, fields) => {
-					if (error) {
-						reject(error);
-					} else {
-						this.lastFields = fields;
-						resolve(results[0]);
-					}
+			const query = this.connection.query(options, (error, results, fields) => {
+				if (error) {
+					reject(error);
+				} else {
+					resolve({
+						query,
+						results: results[0],
+						fields,
+					});
 				}
-			);
+			});
 		});
 	}
 
 	/**
 	 * Return first column value for the first result row for the given SELECT statement
 	 * @param {String|Object} sql  The SQL to run
-	 * @param {...*} bindVars  The values to bind to the each question mark or named binding
-	 * @return {Promise<Number|String|undefined>}
+	 * @param {*} ...bindVars The values to bind to the each question mark or named binding
+	 * @return {Promise<Object>}
+	 * @property {String} query  The final SQL that was executed
+	 * @property {*} results  The value returned in the first field of the first row
+	 * @property {Object[]} fields  Info about the selected fields
 	 */
 	selectValue(sql, ...bindVars) {
 		this.connectOnce();
 		const options = this.bindArgs(sql, bindVars);
 		return new Promise((resolve, reject) => {
-			this.lastQuery = this.connection.query(
-				options,
-				(error, results, fields) => {
-					if (error) {
-						reject(error);
-					} else {
-						this.lastFields = fields;
-						if (results.length === 0) {
-							resolve(undefined);
-						} else {
-							const name = fields[0].name;
-							resolve(results[0][name]);
-						}
+			const query = this.connection.query(options, (error, results, fields) => {
+				if (error) {
+					reject(error);
+				} else {
+					let value = undefined;
+					if (results.length > 0) {
+						const name = fields[0].name;
+						value = results[0][name];
 					}
+					resolve({
+						query,
+						results: value,
+						fields,
+					});
 				}
-			);
+			});
 		});
 	}
 
 	/**
 	 * Run the given SELECT statement wrapped in a SELECT EXISTS query
 	 * @param {String|Object} sql  The SQL to run
-	 * @param {...*} bindVars  The values to bind to the each question mark or named binding
-	 * @return {Promise<Boolean>}  True if it exists, false otherwise
+	 * @param {*} ...bindVars The values to bind to the each question mark or named binding
+	 * @return {Promise<Object>}
+	 * @property {String} query  The final SQL that was executed
+	 * @property {Boolean} results  True if any records match query
+	 * @property {Object[]} fields  Info about the selected fields
 	 */
 	selectExists(sql, ...bindVars) {
 		const options = this.bindArgs(sql, bindVars);
 		options.sql = `SELECT EXISTS (${options.sql}) AS does_it_exist`;
-		return this.selectValue(options).then(Boolean, err => err);
+		return this.selectValue(options).then(
+			({ query, results, fields }) => {
+				return {
+					query,
+					results: Boolean(results),
+					fields,
+				};
+			},
+			err => err
+		);
 	}
 
 	/**
 	 * Run the given INSERT statement
 	 * @param {String|Object} sql  The SQL to run
-	 * @param {...*} bindVars  The values to bind to the each question mark or named binding
-	 * @return {Promise<Number>}  The id of the last inserted record
+	 * @param {*} ...bindVars The values to bind to the each question mark or named binding
+	 * @return {Promise<Object>}
+	 * @property {String} query  The final SQL that was executed
+	 * @property {Number} insertId  The id of the last inserted record
 	 */
 	insert(sql, ...bindVars) {
 		this.connectOnce();
 		const options = this.bindArgs(sql, bindVars);
 		return new Promise((resolve, reject) => {
-			this.lastQuery = this.connection.query(options, (error, results) => {
+			const query = this.connection.query(options, (error, results) => {
 				if (error) {
 					reject(error);
 				} else {
-					resolve(results.insertId);
+					resolve({
+						query,
+						insertId: results.insertId,
+					});
 				}
 			});
 		});
@@ -379,18 +389,23 @@ class Db {
 	/**
 	 * Run the given UPDATE statement
 	 * @param {String|Object} sql  The SQL to run
-	 * @param {...*} bindVars  The values to bind to the each question mark or named binding
-	 * @return {Promise<Number>}  The number of rows affected by the statement
+	 * @param {*} ...bindVars The values to bind to the each question mark or named binding
+	 * @return {Promise<Object>}
+	 * @property {String} query  The final SQL that was executed
+	 * @property {Number} changedRows  The number of rows affected by the statement
 	 */
 	update(sql, ...bindVars) {
 		this.connectOnce();
 		const options = this.bindArgs(sql, bindVars);
 		return new Promise((resolve, reject) => {
-			this.lastQuery = this.connection.query(options, (error, results) => {
+			const query = this.connection.query(options, (error, results) => {
 				if (error) {
 					reject(error);
 				} else {
-					resolve(results.changedRows);
+					resolve({
+						query,
+						changedRows: results.changedRows,
+					});
 				}
 			});
 		});
@@ -399,8 +414,10 @@ class Db {
 	/**
 	 * Run the given DELETE statement
 	 * @param {String|Object} sql  The SQL to run
-	 * @param {...*} bindVars  The values to bind to the each question mark or named binding
-	 * @return {Promise<Number>}
+	 * @param {*} ...bindVars The values to bind to the each question mark or named binding
+	 * @return {Promise<Object>}
+	 * @property {String} query  The final SQL that was executed
+	 * @property {Number} changedRows  The number of rows affected by the statement
 	 */
 	delete(sql, ...bindVars) {
 		return this.update(sql, ...bindVars);
@@ -412,7 +429,10 @@ class Db {
 	 * @param {Array} fields  An array of field names to select
 	 * @param {Object} criteria  Params to construct the WHERE clause
 	 * @param {String} extra  Additional raw SQL such as GROUP BY, ORDER BY, or LIMIT
-	 * @return {Promise<Array>}  The result rows
+	 * @return {Promise<Object>}
+	 * @property {String} query  The final SQL that was executed
+	 * @property {Array} results  The result rows
+	 * @property {Object[]} fields  Info about the selected fields
 	 */
 	selectFrom(table, fields = [], criteria = {}, extra = '') {
 		if (!Array.isArray(fields)) {
@@ -431,31 +451,14 @@ class Db {
 	}
 
 	/**
-	 * Select the record with the given id
-	 * @param {String} table  The name of the table from which to select
-	 * @param {String} id  The value of the id column
-	 * @return {Promise<Number>}
-	 */
-	selectId(table, id) {
-		return this.selectByKey(table, 'id', id);
-	}
-
-	/**
-	 * Select the record with the given UUID
-	 * @param {String} table  The name of the table from which to select
-	 * @param {String} uuid  The value of the uuid column
-	 * @return {Promise<String>}
-	 */
-	selectUuid(table, uuid) {
-		return this.selectByKey(table, 'uuid', uuid);
-	}
-
-	/**
 	 * Select the record with the given UUID
 	 * @param {String} table  The name of the table from which to select
 	 * @param {String} column  The name of the column from which to select
 	 * @param {String} value  The value of the record for that column
 	 * @return {Promise<Object>}
+	 * @property {String} query  The final SQL that was executed
+	 * @property {Object|undefined} results  The result row or undefined
+	 * @property {Object[]} fields  Info about the selected fields
 	 */
 	selectByKey(table, column, value) {
 		const escTable = this.quote(table);
@@ -467,17 +470,51 @@ class Db {
 	}
 
 	/**
+	 * Select the record with the given id
+	 * @param {String} table  The name of the table from which to select
+	 * @param {String} id  The value of the id column
+	 * @return {Promise<Object>}
+	 * @property {String} query  The final SQL that was executed
+	 * @property {Object|undefined} results  The result row or undefined
+	 * @property {Object[]} fields  Info about the selected fields
+	 */
+	selectId(table, id) {
+		return this.selectByKey(table, 'id', id);
+	}
+
+	/**
+	 * Select the record with the given UUID
+	 * @param {String} table  The name of the table from which to select
+	 * @param {String} uuid  The value of the uuid column
+	 * @return {Promise<Object>}
+	 * @property {String} query  The final SQL that was executed
+	 * @property {Object|undefined} results  The result row or undefined
+	 * @property {Object[]} fields  Info about the selected fields
+	 */
+	selectUuid(table, uuid) {
+		return this.selectByKey(table, 'uuid', uuid);
+	}
+
+	/**
 	 * Find a record or add a new one
 	 * @param {String} table  The name of the table from which to select
 	 * @param {Object} criteria  Criteria by which to find the row
 	 * @param {Object} newValues  The values to use to insert if the record doesn't exist
-	 * @return {Promise<Number>}  The existing id or the new id
+	 * @return {Promise<Object>}
+	 * @property {String} query  The final SQL that was executed
+	 * @property {Object|undefined} results  The result row or undefined
+	 * @property {Object[]} fields  Info about the selected fields
+	 * @property {Number} insertId  The id of the last inserted record
 	 */
 	selectOrCreate(table, criteria, newValues = {}) {
 		return this.selectFrom(table, [], criteria).then(
-			results => {
+			({ query, results, fields }) => {
 				if (results.length > 0) {
-					return results[0];
+					return {
+						query,
+						results: results[0],
+						fields,
+					};
 				} else {
 					return this.insertInto(table, newValues);
 				}
@@ -490,7 +527,9 @@ class Db {
 	 * Build an INSERT statement and run it
 	 * @param {String} table  The name of the table
 	 * @param {Object} insert  column-value pairs to insert
-	 * @return {Promise<Number>}  Id of the last inserted record
+	 * @return {Promise<Object>}
+	 * @property {String} query  The final SQL that was executed
+	 * @property {Number} insertId  The id of the last inserted record
 	 */
 	insertInto(table, insert) {
 		// build insert expression
@@ -513,9 +552,9 @@ class Db {
 	 * @param {String} table  The name of the table
 	 * @param {Object} insert  An array with column => value pairs for insertion
 	 * @param {Object} update  An array with column => value pairs for update
-	 * @return {Promise<Object>} result
-	 * @property {Number} result.lastInsertId  The id of the last inserted or updated record
-	 * @property {Number} result.affected  The number of rows updated (if any)
+	 * @return {Promise<Object>}
+	 * @property {Number} lastInsertId  The id of the last inserted or updated record
+	 * @property {Number} affected  The number of rows updated (if any)
 	 */
 	insertIntoOnDuplicateKeyUpdate(table, insert, update) {
 		this.connectOnce();
@@ -546,12 +585,12 @@ class Db {
 		const sql = `INSERT INTO ${table} SET ${setSql} ON DUPLICATE KEY UPDATE ${updateSql}`;
 		// run
 		return new Promise((resolve, reject) => {
-			this.lastQuery = this.connection.query(sql, (error, results) => {
+			const query = this.connection.query(sql, (error, results) => {
 				if (error) {
 					reject(error);
 				} else {
 					resolve({
-						query: sql,
+						query,
 						insertId: results.insertId,
 						affectedRows: results.affectedRows,
 					});
@@ -561,18 +600,60 @@ class Db {
 	}
 
 	/**
+	 * Build an INSERT statement and run it
+	 * @param {String} table  The name of the table
+	 * @param {Array} inserts  list of column-value pairs to insert
+	 * @return {Promise<Object>}
+	 * @property {String} query  The final SQL that was executed
+	 * @property {Number} insertId  The id of the last inserted record
+	 */
+	insertExtended(table, inserts) {
+		// build insert expression
+		if (!Array.isArray(inserts) || inserts.length === 0) {
+			throw new Error('Db.insertExtended inserts must be a non-empty array');
+		}
+		const fields = [];
+		forOwn(inserts[0], (value, field) => {
+			fields.push(this.quote(field));
+		});
+		const batches = [];
+		inserts.forEach(insert => {
+			const values = [];
+			forOwn(insert, (value, field) => {
+				values.push(this.quote(field));
+			});
+			batches.push('(' + values.join(', ') + ')');
+		});
+		const escTable = this.quote(table);
+		const fieldsSql = fields.join(', ');
+		const batchesSql = batches.join(', ');
+		const insertSql = `INSERT INTO ${escTable} (${fieldsSql}) VALUES ${batchesSql}`;
+		return this.insert(insertSql);
+	}
+
+	/**
 	 * Build an UPDATE statement and run it
 	 * @param {String} table  The name of the table
 	 * @param {Object} set  An array of column => value pairs to update
 	 * @param {Object} where  Params to construct the WHERE clause
-	 * @return {Promise<Number>}  Number of rows affected
+	 * @return {Promise<Object>}
+	 * @property {String} query  The final SQL that was executed
+	 * @property {Number} changedRows  The number of rows affected by the statement
 	 */
 	updateTable(table, set, where = {}) {
 		this.connectOnce();
+		const sets = [];
+		forOwn(set, (value, field) => {
+			sets.push(this.quote(field) + '=' + this.escape(value));
+		});
+		if (sets.length === 0) {
+			throw new Error('Db.updateTable requires a non-empty set Object');
+		}
 		const escTable = this.quote(table);
+		const setSql = sets.join(', ');
 		const escWhere = this.buildWheres(where);
-		const sql = `UPDATE ${escTable} SET ?  WHERE ${escWhere}`;
-		return this.select(sql, set);
+		const sql = `UPDATE ${escTable} SET ${setSql} WHERE ${escWhere}`;
+		return this.update(sql, set);
 	}
 
 	/**
@@ -580,7 +661,9 @@ class Db {
 	 * @param {String} table  The name of the table from which to delete
 	 * @param {Object} where  WHERE conditions on which to delete
 	 * @param {Number} limit  Limit deletion to this many records
-	 * @return {Promise<Number>}  Number of affected rows
+	 * @return {Promise<Object>}
+	 * @property {String} query  The final SQL that was executed
+	 * @property {Number} changedRows  The number of rows affected by the statement
 	 */
 	deleteFrom(table, where, limit = null) {
 		this.connectOnce();
@@ -588,7 +671,7 @@ class Db {
 		const escWhere = this.buildWheres(where);
 		let sql = `DELETE FROM ${escTable} WHERE ${escWhere}`;
 		if (limit > 0) {
-			sql = `${sql}LIMIT ${limit}`;
+			sql += ` LIMIT ${limit}`;
 		}
 		return this.delete(sql);
 	}
@@ -763,45 +846,6 @@ class Db {
 			};
 		});
 		return functions;
-	}
-
-	/**
-	 * Instruct Db to return the given data when the query matches the given
-	 * pattern
-	 * @param {String|RegExp|Function} when  The pattern to match
-	 * @param {*} data  The data to return
-	 * @return {Db}
-	 */
-	mock(when, data) {
-		if (this.mocks.length === 0) {
-			this.connection = {
-				connect: function() {},
-				query: function(options, values, cb) {
-					for (mock of this.mocks) {
-						const { when, data } = mock;
-						if (typeof when === 'string') {
-							if (options.sql === when) {
-								cb(data);
-								return;
-							}
-						} else if (when instanceof RegExp) {
-							if (when.test(options.sql)) {
-								cb(data);
-								return;
-							}
-						} else if (typeof when === 'function') {
-							if (when(options.sql)) {
-								cb(data);
-								return;
-							}
-						}
-					}
-					cb(data);
-				},
-			};
-		}
-		this.mocks.push({ when, data });
-		return this;
 	}
 }
 

@@ -12,10 +12,14 @@ class Connection {
 	destroy() {}
 	query(options, resultHandler) {
 		setTimeout(() => {
-			const resp = nextResponses.length > 0 ? nextResponses.shift() : [];
-			resultHandler(resp.error, resp.results, resp.fields);
+			if (nextResponses.length === 0) {
+				resultHandler(null, [], []);
+			} else {
+				const resp = nextResponses.shift();
+				resultHandler(resp.error, resp.results, resp.fields);
+			}
 		}, 0);
-		return options.sql;
+		return typeof options === 'object' ? options.sql : options;
 	}
 }
 
@@ -31,7 +35,7 @@ const mysql2 = {
 	},
 	pushResponse(resp) {
 		nextResponses.push(resp);
-	}
+	},
 };
 
 module.exports = mysql2;
