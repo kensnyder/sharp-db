@@ -429,30 +429,224 @@ describe('Db', () => {
 			);
 		});
 	});
-	//
-	// describe('multi-queries', () => {
-	// 	it('should run with SELECT', function()  {
-	// 		const db = Db.factory();
-	// 		$sql = 'SELECT COUNT(*) AS acount FROM affiliations; SELECT COUNT(*) AS ccount FROM clients;';
-	// 		$res = $db->multiQuery($sql);
-	// 		expect($db->error()).toBe('');
-	// 		expect($res)->to->have->size(2);
-	// 		expect($res[0][0]->acount)->to->be->gt(0);
-	// 		expect($res[1][0]->ccount)->to->be->gt(0);
-	// 	});
-	// 	it('should run with INSERT, SELECT, DELETE', function()  {
-	// 		const db = Db.factory();
-	// 		$rand = uniqid('unit-test-domain-');
-	// 		$sql = '
-	// 		INSERT INTO domain_names VALUES (NULL, :rand);
-	// 		SELECT * FROM domain_names WHERE name = :rand;
-	// 		DELETE FROM domain_names WHERE name = :rand;
-	// 		SELECT COUNT(*) AS cnt FROM domain_names WHERE name = :rand;
-	// 		';
-	// 		$res = $db->multiQuery($sql, compact('rand'));
-	// 		expect($res)->to->have->size(4);
-	// 		expect($res[1][0]->name).toBe($rand);
-	// 		expect($res[3][0]->cnt)->to->be->oneOf([0, "0"]);
-	// 	});
-	// });
+	describe('insertExtended()', () => {
+		it('should return last insert and affected', async () => {
+			const mockResults = { insertId: 5, affectedRows: 2 };
+			mysqlMock.pushResponse({ results: mockResults });
+			const db = Db.factory();
+			const { query, insertId, affectedRows } = await db.insertExtended(
+				'users',
+				[
+					{ name: 'John Doe', email: 'john@example.com' },
+					{ name: 'Jane Doe', email: 'jane@example.com' },
+				]
+			);
+			expect(insertId).toBe(5);
+			expect(affectedRows).toBe(2);
+			expect(query).toBe(
+				"INSERT INTO `users` (`name`, `email`) VALUES ('John Doe', 'john@example.com'), ('Jane Doe', 'jane@example.com')"
+			);
+		});
+	});
+	describe('updateTable()', () => {
+		it('should return affected', async () => {
+			const mockResults = { affectedRows: 1 };
+			mysqlMock.pushResponse({ results: mockResults });
+			const db = Db.factory();
+			const { query, affectedRows } = await db.updateTable(
+				'users',
+				{ email: 'john@example.com' },
+				{ id: 5 }
+			);
+			expect(affectedRows).toBe(1);
+			expect(query).toBe(
+				"UPDATE `users` SET `email`='john@example.com' WHERE `id` = 5"
+			);
+		});
+	});
+	describe('deleteFrom()', () => {
+		it('should return affected', async () => {
+			const mockResults = { affectedRows: 1 };
+			mysqlMock.pushResponse({ results: mockResults });
+			const db = Db.factory();
+			const { query, affectedRows } = await db.deleteFrom(
+				'users',
+				{ email: 'john@example.com' },
+				1
+			);
+			expect(affectedRows).toBe(1);
+			expect(query).toBe(
+				"DELETE FROM `users` WHERE `email` = 'john@example.com' LIMIT 1"
+			);
+		});
+	});
+	describe('buildWhere()', () => {
+		it('should handle single strings', async () => {
+			const db = Db.factory();
+			const sql = db.buildWhere('status = 5');
+			expect(sql).toBe('status = 5');
+		});
+		it('should handle single values', async () => {
+			const db = Db.factory();
+			const sql = db.buildWhere('status', 5);
+			expect(sql).toBe('`status` = 5');
+		});
+		it('should handle single strings with expressions', async () => {
+			const db = Db.factory();
+			const sql = db.buildWhere('SUM(size) < 1024');
+			expect(sql).toBe('SUM(size) < 1024');
+		});
+		it('should handle between', async () => {
+			const db = Db.factory();
+			const sql = db.buildWhere('status BETWEEN', [1, 3]);
+			expect(sql).toBe('`status` BETWEEN 1 AND 3');
+		});
+		it('should handle expressions', async () => {
+			const db = Db.factory();
+			const sql = db.buildWhere('COUNT(*) BETWEEN', [1, 3]);
+			expect(sql).toBe('COUNT(*) BETWEEN 1 AND 3');
+		});
+		it('should handle >', async () => {
+			const db = Db.factory();
+			const sql = db.buildWhere('id >', 5);
+			expect(sql).toBe('`id` > 5');
+		});
+		it('should handle !=', async () => {
+			const db = Db.factory();
+			const sql = db.buildWhere('id !=', 5);
+			expect(sql).toBe('`id` != 5');
+		});
+		it('should handle null', async () => {
+			const db = Db.factory();
+			const sql = db.buildWhere('deleted_at', null);
+			expect(sql).toBe('`deleted_at` IS NULL');
+		});
+		it('should handle implicit IN()', async () => {
+			const db = Db.factory();
+			const sql = db.buildWhere('status', [1, 3]);
+			expect(sql).toBe('`status` IN(1,3)');
+		});
+		it('should handle explicit IN()', async () => {
+			const db = Db.factory();
+			const sql = db.buildWhere('status IN', [1, 3]);
+			expect(sql).toBe('`status` IN(1,3)');
+		});
+		it('should handle implicit NOT IN()', async () => {
+			const db = Db.factory();
+			const sql = db.buildWhere('status !=', [1, 3]);
+			expect(sql).toBe('`status` NOT IN(1,3)');
+		});
+		it('should handle explicit NOT IN()', async () => {
+			const db = Db.factory();
+			const sql = db.buildWhere('status NOT IN', [1, 3]);
+			expect(sql).toBe('`status` NOT IN(1,3)');
+		});
+	});
+	describe('tpl() escaping', () => {
+		it('should template Numbers', async () => {
+			const { select } = Db.factory().tpl();
+			const id = 4;
+			const { query } = await select`SELECT * FROM users WHERE id = ${id}`;
+			expect(query).toBe('SELECT * FROM users WHERE id = 4');
+		});
+		it('should template Strings', async () => {
+			const { select } = Db.factory().tpl();
+			const email = 'john@example.com';
+			const {
+				query,
+			} = await select`SELECT * FROM users WHERE email = ${email}`;
+			expect(query).toBe(
+				"SELECT * FROM users WHERE email = 'john@example.com'"
+			);
+		});
+		it('should template Booleans', async () => {
+			const { select } = Db.factory().tpl();
+			const isActive = true;
+			const {
+				query,
+			} = await select`SELECT * FROM users WHERE is_active = ${isActive}`;
+			expect(query).toBe('SELECT * FROM users WHERE is_active = true');
+		});
+		it('should template Arrays', async () => {
+			const { select } = Db.factory().tpl();
+			const ids = [1, 3];
+			const { query } = await select`SELECT * FROM users WHERE id IN(${ids})`;
+			expect(query).toBe('SELECT * FROM users WHERE id IN(1, 3)');
+		});
+	});
+	describe('tpl() functions', () => {
+		it('should allow selectFirst', async () => {
+			const { selectFirst } = Db.factory().tpl();
+			const id = 4;
+			const { query } = await selectFirst`SELECT * FROM users WHERE id = ${id}`;
+			expect(query).toBe('SELECT * FROM users WHERE id = 4');
+		});
+		it('should allow selectList', async () => {
+			const mockResults = [
+				{ email: 'john@example.com' },
+				{ email: 'jane@example.com' },
+			];
+			const mockFields = [{ name: 'email' }];
+			mysqlMock.pushResponse({ results: mockResults, fields: mockFields });
+			const { selectList } = Db.factory().tpl();
+			const id = 4;
+			const {
+				query,
+			} = await selectList`SELECT email FROM users WHERE id > ${id}`;
+			expect(query).toBe('SELECT email FROM users WHERE id > 4');
+		});
+		it('should allow selectHash', async () => {
+			const mockResults = [
+				{ id: 4, name: 'John Doe' },
+				{ id: 5, name: 'Jane Doe' },
+			];
+			const mockFields = [{ name: 'id' }, { name: 'name' }];
+			mysqlMock.pushResponse({ results: mockResults, fields: mockFields });
+			const { selectHash } = Db.factory().tpl();
+			const id = 4;
+			const {
+				query,
+			} = await selectHash`SELECT id, name FROM users WHERE id > ${id}`;
+			expect(query).toBe('SELECT id, name FROM users WHERE id > 4');
+		});
+		it('should allow selectValue', async () => {
+			const mockResults = [{ email: 'jane@example.com' }];
+			const mockFields = [{ name: 'email' }];
+			mysqlMock.pushResponse({ results: mockResults, fields: mockFields });
+			const { selectValue } = Db.factory().tpl();
+			const id = 4;
+			const {
+				query,
+			} = await selectValue`SELECT email FROM users WHERE id = ${id}`;
+			expect(query).toBe('SELECT email FROM users WHERE id = 4');
+		});
+		it('should allow insert', async () => {
+			const { insert } = Db.factory().tpl();
+			const name = 'Jane Doe';
+			const email = 'jane@example.com';
+			const {
+				query,
+			} = await insert`INSERT INTO users VALUES (${name}, ${email})`;
+			expect(query).toBe(
+				"INSERT INTO users VALUES ('Jane Doe', 'jane@example.com')"
+			);
+		});
+		it('should allow update', async () => {
+			const { update } = Db.factory().tpl();
+			const name = 'Jane Doe';
+			const email = 'jane@example.com';
+			const {
+				query,
+			} = await update`UPDATE users SET name = ${name} WHERE email = ${email}`;
+			expect(query).toBe(
+				"UPDATE users SET name = 'Jane Doe' WHERE email = 'jane@example.com'"
+			);
+		});
+		it('should allow delete', async () => {
+			const { delete: del } = Db.factory().tpl();
+			const id = 4;
+			const { query } = await del`DELETE * FROM users WHERE id = ${id}`;
+			expect(query).toBe('DELETE * FROM users WHERE id = 4');
+		});
+	});
 });

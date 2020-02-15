@@ -16,18 +16,22 @@ class Db {
 	 * @param {Object} config  Configuration object
 	 */
 	constructor(config = {}) {
-		this.mocks = [];
 		const env =
 			typeof process === 'object' && typeof process.env === 'object'
 				? process.env
 				: {};
+		/**
+		 * The config used for this instance
+		 * @type {Object}
+		 */
 		this.config = {
-			host: config.hostname || env.DB_HOSTNAME || '127.0.0.1',
-			user: config.username || env.DB_USERNAME || 'root',
+			...config,
+			host: config.host || env.DB_HOST || '127.0.0.1',
+			user: config.user || env.DB_USER || 'root',
 			password: config.password || env.DB_PASSWORD || '',
-			database: config.database || env.DB_DATABASE || 'platform',
+			database: config.database || env.DB_DATABASE || undefined,
 			port: config.port || env.DB_PORT || 3306,
-			encoding: config.encoding || env.DB_ENCODING || 'utf-8',
+			charset: config.charset || env.DB_CHARSET || 'utf8mb4',
 		};
 		instances.push(this);
 	}
@@ -38,16 +42,20 @@ class Db {
 	 * @return {Db}
 	 */
 	static factory(config = {}) {
-		if (!Db.instance) {
-			Db.instance = new Db(config);
+		if (instances.length === 0) {
+			return new Db(config);
 		}
-		return Db.instance;
+		return instances[instances.length - 1];
 	}
 
 	/**
 	 * Make a new connection to MySQL
 	 */
 	connect() {
+		/**
+		 * The mysql2 library connection object
+		 * @type {Object}
+		 */
 		this.connection = mysql.createConnection(this.config);
 		this.connection.connect(err => {
 			if (err && err.fatal) {
@@ -114,16 +122,42 @@ class Db {
 	}
 
 	/**
-	 * Run a query, allowing multiple statements separated by semicolon
+	 * Run a statement of any type
+	 * @param {String|Object} sql  The sql to run
+	 * @param {*} ...bindVars  Values to bind to the sql placeholders
+	 * @returns {Promise<Object>}
+	 * @property {String} query  The final SQL that was executed
+	 * @property {Array} results  The result rows
+	 * @property {Object[]} fields  Info about the selected fields
+	 */
+	query(sql, ...bindVars) {
+		this.connectOnce();
+		const options = this.bindArgs(sql, bindVars);
+		return new Promise((resolve, reject) => {
+			const query = this.connection.query(options, (error, results, fields) => {
+				if (error) {
+					reject(error);
+				} else {
+					resolve({ query, results, fields });
+				}
+			});
+		});
+	}
+
+	/**
+	 * Run multiple statements separated by semicolon
 	 * @param {String|Object} sql  The sql to run
 	 * @param {*} ...bindVars Values to bind to the sql placeholders
 	 * @returns {Promise<Object>}
+	 * @property {String} query  The final SQL that was executed
+	 * @property {Array} results  One element for every statement in the query
+	 * @property {Object[]} fields  Info about the selected fields
 	 */
 	multiQuery(sql, ...bindVars) {
 		this.connectOnce();
 		const options = this.bindArgs(sql, bindVars);
 		options.multipleStatements = true;
-		return this.select(options);
+		return this.query(options);
 	}
 
 	/**
@@ -380,6 +414,8 @@ class Db {
 					resolve({
 						query,
 						insertId: results.insertId,
+						affectedRows: results.affectedRows,
+						changedRows: results.changedRows,
 					});
 				}
 			});
@@ -392,6 +428,7 @@ class Db {
 	 * @param {*} ...bindVars The values to bind to the each question mark or named binding
 	 * @return {Promise<Object>}
 	 * @property {String} query  The final SQL that was executed
+	 * @property {Number} affectedRows  The number of rows matching the WHERE criteria
 	 * @property {Number} changedRows  The number of rows affected by the statement
 	 */
 	update(sql, ...bindVars) {
@@ -404,6 +441,7 @@ class Db {
 				} else {
 					resolve({
 						query,
+						affectedRows: results.affectedRows,
 						changedRows: results.changedRows,
 					});
 				}
@@ -553,8 +591,9 @@ class Db {
 	 * @param {Object} insert  An array with column => value pairs for insertion
 	 * @param {Object} update  An array with column => value pairs for update
 	 * @return {Promise<Object>}
-	 * @property {Number} lastInsertId  The id of the last inserted or updated record
-	 * @property {Number} affected  The number of rows updated (if any)
+	 * @property {Number} insertId  The id of the last inserted or updated record
+	 * @property {Number} affectedRows  The number of rows matching the WHERE criteria
+	 * @property {Number} changedRows  The number of rows affected by the statement
 	 */
 	insertIntoOnDuplicateKeyUpdate(table, insert, update) {
 		this.connectOnce();
@@ -593,6 +632,7 @@ class Db {
 						query,
 						insertId: results.insertId,
 						affectedRows: results.affectedRows,
+						changedRows: results.changedRows,
 					});
 				}
 			});
@@ -619,8 +659,8 @@ class Db {
 		const batches = [];
 		inserts.forEach(insert => {
 			const values = [];
-			forOwn(insert, (value, field) => {
-				values.push(this.quote(field));
+			forOwn(insert, value => {
+				values.push(this.escape(value));
 			});
 			batches.push('(' + values.join(', ') + ')');
 		});
@@ -638,6 +678,7 @@ class Db {
 	 * @param {Object} where  Params to construct the WHERE clause
 	 * @return {Promise<Object>}
 	 * @property {String} query  The final SQL that was executed
+	 * @property {Number} affectedRows  The number of rows matching the WHERE criteria
 	 * @property {Number} changedRows  The number of rows affected by the statement
 	 */
 	updateTable(table, set, where = {}) {
@@ -663,6 +704,7 @@ class Db {
 	 * @param {Number} limit  Limit deletion to this many records
 	 * @return {Promise<Object>}
 	 * @property {String} query  The final SQL that was executed
+	 * @property {Number} affectedRows  The number of rows matching the WHERE criteria
 	 * @property {Number} changedRows  The number of rows affected by the statement
 	 */
 	deleteFrom(table, where, limit = null) {
@@ -698,16 +740,21 @@ class Db {
 	 * @param {*} value  The value to bind
 	 * @return {String}
 	 * @example
-	 * db.buildWhere('start_date BETWEEN', array('2012-01-01','2013-01-01'));
+	 * db.buildWhere('start_date BETWEEN', ['2012-01-01','2013-01-01']);
 	 * db.buildWhere('start_date >', '2013-01-01');
 	 * db.buildWhere('start_date !=', '2013-01-01');
 	 * db.buildWhere('start_date', null); // `start_date` IS NULL
 	 * db.buildWhere('start_date !=', null); // `start_date` IS NOT NULL
-	 * db.buildWhere('id', array(1,2,3)); // id IN (1,2,3)
-	 * db.buildWhere('id !=', array(1,2,3)); // id NOT IN (1,2,3)
+	 * db.buildWhere('id', [1,2,3]); // `id` IN (1,2,3)
+	 * db.buildWhere('id !=', [1,2,3]); // `id` NOT IN (1,2,3)
+	 * db.buildWhere('id IN', [1,2,3]); // `id` IN (1,2,3)
+	 * db.buildWhere('id NOT IN', [1,2,3]); // `id` NOT IN (1,2,3)
 	 */
-	buildWhere(field, value) {
-		let [name, operator] = field.split(' ');
+	buildWhere(field, value = undefined) {
+		if (value === undefined) {
+			return field;
+		}
+		let [name, operator] = field.split(/\s+/);
 		name = this.quote(name);
 		operator = operator ? operator.toUpperCase() : '=';
 		if (operator === 'BETWEEN') {
@@ -807,9 +854,9 @@ class Db {
 	 * Return an object with query methods to run on template literals
 	 * (backticked strings) where interpolated strings are automatically escaped
 	 * @example
-	 * const query = db.tpl();
-	 * const users = await query.select`SELECT * FROM users WHERE id IN(${userIds})`;
-	 * const count = await query.selectValue`SELECT COUNT(*) FROM users WHERE is_active = ${isActive}`;
+	 * const { select, selectValue } = Db.factory().tpl();
+	 * const users = await select`SELECT * FROM users WHERE id IN(${userIds})`;
+	 * const count = await selectValue`SELECT COUNT(*) FROM users WHERE is_active = ${isActive}`;
 	 * @return {Object}  Object with query methods
 	 * @property {Function} select  Same as Db#select()
 	 * @property {Function} selectFirst  Same as Db#selectFirst()
