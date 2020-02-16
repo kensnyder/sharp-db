@@ -36,7 +36,11 @@
     "quickly-count-substrings": "^1.0.0"
   },
   "devDependencies": {
+    "chalk": "^3.0.0",
     "jest": "^25.1.0",
-    "prettier": "^1.19.1"
+    "moment": "^2.24.0",
+    "prettier": "^1.19.1",
+    "prompts": "^2.3.1",
+    "walkdir": "^0.4.1"
   }
 }
