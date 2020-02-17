@@ -10,6 +10,7 @@ function terminal({
 	process.stdout.write('\x1b[0f');
 	// process.stdin.setRawMode(true);
 	if (header) {
+		console.log('');
 		process.stdout.write(header /* + '\033[1K\n'*/);
 	}
 

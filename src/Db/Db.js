@@ -1,5 +1,6 @@
 const forOwn = require('lodash.forown');
 const mysql = require('mysql2');
+const Ssh = require('../Ssh/Ssh.js');
 
 /**
  * A list of all the Db Instances that have been created
@@ -12,10 +13,14 @@ const instances = [];
  */
 class Db {
 	/**
-	 * Connection options including host, login, password, encoding, database
-	 * @param {Object} config  Configuration object
+	 * Specify connection options including host, login, password, encoding, database;
+	 * and ssh options including host, port, user, privateKey.
+	 * @param {Object} [config]  MySQL connection details
+	 * @see
+	 * @param {Object} [sshConfig]  SSH connection details
+	 * @see
 	 */
-	constructor(config = {}) {
+	constructor(config = {}, sshConfig = null) {
 		const env =
 			typeof process === 'object' && typeof process.env === 'object'
 				? process.env
@@ -33,17 +38,29 @@ class Db {
 			port: config.port || env.DB_PORT || 3306,
 			charset: config.charset || env.DB_CHARSET || 'utf8mb4',
 		};
+		if (sshConfig) {
+			/**
+			 * The Ssh instance for tunnelling
+			 * @type {Ssh}
+			 */
+			this.ssh = new Ssh(sshConfig);
+		}
 		instances.push(this);
 	}
 
 	/**
-	 * Create a new QuickDb instance or return the last used one
-	 * @param {Object} [config]  In the format required by mysql js
+	 * Create a new QuickDb instance or return the last used one.
+	 * Specify connection options including host, login, password, encoding, database;
+	 * and ssh options including host, port, user, privateKey.
+	 * @param {Object} [config]  MySQL connection details
+	 * @see
+	 * @param {Object} [sshConfig]  SSH connection details
+	 * @see
 	 * @return {Db}
 	 */
-	static factory(config = {}) {
+	static factory(config = {}, sshConfig = null) {
 		if (instances.length === 0) {
-			return new Db(config);
+			return new Db(config, sshConfig);
 		}
 		return instances[instances.length - 1];
 	}
@@ -51,7 +68,10 @@ class Db {
 	/**
 	 * Make a new connection to MySQL
 	 */
-	connect() {
+	async connect() {
+		if (this.ssh) {
+			await this.ssh.tunnelTo(this);
+		}
 		/**
 		 * The mysql2 library connection object
 		 * @type {Object}
@@ -67,9 +87,9 @@ class Db {
 	/**
 	 * Make a new connection to MySQL if not already connected
 	 */
-	connectOnce() {
+	async connectOnce() {
 		if (!this.connection) {
-			this.connect();
+			await this.connect();
 		}
 	}
 
@@ -85,6 +105,9 @@ class Db {
 					instances.splice(idx, 1);
 				}
 				this.connection.end(err => {
+					if (this.ssh) {
+						this.ssh.end();
+					}
 					if (err) {
 						reject(err);
 					} else {
@@ -92,6 +115,9 @@ class Db {
 					}
 				});
 			} else {
+				if (this.ssh) {
+					this.ssh.end();
+				}
 				resolve();
 			}
 		});
@@ -102,6 +128,9 @@ class Db {
 	 * @return {Db}
 	 */
 	destroy() {
+		if (this.ssh) {
+			this.ssh.end();
+		}
 		if (this.connection && this.connection.destroy) {
 			const idx = instances.indexOf(this);
 			if (idx > -1) {
@@ -138,8 +167,8 @@ class Db {
 	 * @property {Array} results  The result rows
 	 * @property {Object[]} fields  Info about the selected fields
 	 */
-	query(sql, ...bindVars) {
-		this.connectOnce();
+	async query(sql, ...bindVars) {
+		await this.connectOnce();
 		const options = this.bindArgs(sql, bindVars);
 		return new Promise((resolve, reject) => {
 			const query = this.connection.query(options, (error, results, fields) => {
@@ -161,8 +190,8 @@ class Db {
 	 * @property {Array} results  One element for every statement in the query
 	 * @property {Object[]} fields  Info about the selected fields
 	 */
-	multiQuery(sql, ...bindVars) {
-		this.connectOnce();
+	async multiQuery(sql, ...bindVars) {
+		await this.connectOnce();
 		const options = this.bindArgs(sql, bindVars);
 		options.multipleStatements = true;
 		return this.query(options);
@@ -177,8 +206,8 @@ class Db {
 	 * @property {Array} results  The result rows
 	 * @property {Object[]} fields  Info about the selected fields
 	 */
-	select(sql, ...bindVars) {
-		this.connectOnce();
+	async select(sql, ...bindVars) {
+		await this.connectOnce();
 		const options = this.bindArgs(sql, bindVars);
 		return new Promise((resolve, reject) => {
 			const query = this.connection.query(options, (error, results, fields) => {
@@ -200,8 +229,8 @@ class Db {
 	 * @property {Object} results  The result object with key-value pairs
 	 * @property {Object[]} fields  Info about the selected fields
 	 */
-	selectHash(sql, ...bindVars) {
-		this.connectOnce();
+	async selectHash(sql, ...bindVars) {
+		await this.connectOnce();
 		const options = this.bindArgs(sql, bindVars);
 		return new Promise((resolve, reject) => {
 			const query = this.connection.query(options, (error, results, fields) => {
@@ -233,8 +262,8 @@ class Db {
 	 * @property {Array} results  The result list
 	 * @property {Object[]} fields  Info about the selected fields
 	 */
-	selectList(sql, ...bindVars) {
-		this.connectOnce();
+	async selectList(sql, ...bindVars) {
+		await this.connectOnce();
 		const options = this.bindArgs(sql, bindVars);
 		return new Promise((resolve, reject) => {
 			const query = this.connection.query(options, (error, results, fields) => {
@@ -263,8 +292,8 @@ class Db {
 	 * @property {Object} results  Result rows grouped by groupField
 	 * @property {Object[]} fields  Info about the selected fields
 	 */
-	selectGrouped(groupField, sql, ...bindVars) {
-		this.connectOnce();
+	async selectGrouped(groupField, sql, ...bindVars) {
+		await this.connectOnce();
 		const options = this.bindArgs(sql, bindVars);
 		return new Promise((resolve, reject) => {
 			const query = this.connection.query(options, (error, results, fields) => {
@@ -298,8 +327,8 @@ class Db {
 	 * @property {Object} results  The results indexed by indexField
 	 * @property {Object[]} fields  Info about the selected fields
 	 */
-	selectIndexed(indexField, sql, ...bindVars) {
-		this.connectOnce();
+	async selectIndexed(indexField, sql, ...bindVars) {
+		await this.connectOnce();
 		const options = this.bindArgs(sql, bindVars);
 		return new Promise((resolve, reject) => {
 			const query = this.connection.query(options, (error, results, fields) => {
@@ -329,8 +358,8 @@ class Db {
 	 * @property {Object|undefined} results  The result row or undefined
 	 * @property {Object[]} fields  Info about the selected fields
 	 */
-	selectFirst(sql, ...bindVars) {
-		this.connectOnce();
+	async selectFirst(sql, ...bindVars) {
+		await this.connectOnce();
 		const options = this.bindArgs(sql, bindVars);
 		return new Promise((resolve, reject) => {
 			const query = this.connection.query(options, (error, results, fields) => {
@@ -356,8 +385,8 @@ class Db {
 	 * @property {*} results  The value returned in the first field of the first row
 	 * @property {Object[]} fields  Info about the selected fields
 	 */
-	selectValue(sql, ...bindVars) {
-		this.connectOnce();
+	async selectValue(sql, ...bindVars) {
+		await this.connectOnce();
 		const options = this.bindArgs(sql, bindVars);
 		return new Promise((resolve, reject) => {
 			const query = this.connection.query(options, (error, results, fields) => {
@@ -411,8 +440,8 @@ class Db {
 	 * @property {String} query  The final SQL that was executed
 	 * @property {Number} insertId  The id of the last inserted record
 	 */
-	insert(sql, ...bindVars) {
-		this.connectOnce();
+	async insert(sql, ...bindVars) {
+		await this.connectOnce();
 		const options = this.bindArgs(sql, bindVars);
 		return new Promise((resolve, reject) => {
 			const query = this.connection.query(options, (error, results) => {
@@ -439,8 +468,8 @@ class Db {
 	 * @property {Number} affectedRows  The number of rows matching the WHERE criteria
 	 * @property {Number} changedRows  The number of rows affected by the statement
 	 */
-	update(sql, ...bindVars) {
-		this.connectOnce();
+	async update(sql, ...bindVars) {
+		await this.connectOnce();
 		const options = this.bindArgs(sql, bindVars);
 		return new Promise((resolve, reject) => {
 			const query = this.connection.query(options, (error, results) => {
@@ -603,8 +632,8 @@ class Db {
 	 * @property {Number} affectedRows  The number of rows matching the WHERE criteria
 	 * @property {Number} changedRows  The number of rows affected by the statement
 	 */
-	insertIntoOnDuplicateKeyUpdate(table, insert, update) {
-		this.connectOnce();
+	async insertIntoOnDuplicateKeyUpdate(table, insert, update) {
+		await this.connectOnce();
 		// build insert expression
 		const sets = [];
 		forOwn(insert, (value, field) => {
@@ -690,7 +719,6 @@ class Db {
 	 * @property {Number} changedRows  The number of rows affected by the statement
 	 */
 	updateTable(table, set, where = {}) {
-		this.connectOnce();
 		const sets = [];
 		forOwn(set, (value, field) => {
 			sets.push(this.quote(field) + '=' + this.escape(value));
@@ -715,8 +743,8 @@ class Db {
 	 * @property {Number} affectedRows  The number of rows matching the WHERE criteria
 	 * @property {Number} changedRows  The number of rows affected by the statement
 	 */
-	deleteFrom(table, where, limit = null) {
-		this.connectOnce();
+	async deleteFrom(table, where, limit = null) {
+		await this.connectOnce();
 		const escTable = this.quote(table);
 		const escWhere = this.buildWheres(where);
 		let sql = `DELETE FROM ${escTable} WHERE ${escWhere}`;
