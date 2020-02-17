@@ -4,7 +4,7 @@ const prompts = require('prompts');
 const { red, green, yellow, cyan } = require('chalk');
 const walk = require('walkdir');
 const terminal = require('./lib/terminal.js');
-const pretty = require('./lib/pretty.js');
+const prettify = require('pretty-var-export');
 const Db = require('../src/Db/Db.js');
 
 const homedir = os.homedir();
@@ -21,16 +21,24 @@ async function main() {
 		header: green('TYPE exit TO EXIT.'),
 		prompt: `${yellow(config.user)}@${cyan(config.host)}> `,
 		onLine: runQuery,
-		onExit: () => console.log(yellow('Goodbye')),
+		onClose: () => console.log(yellow('\nGoodbye')),
 	});
 
 	async function runQuery(sql) {
+		if (sql.slice(-1) === ';') {
+			sql = sql.slice(0, -1);
+		}
+		if (sql.match(/^(exit|quit|bye)$/)) {
+			process.exit(0);
+		}
+		const db = new Db(config);
 		try {
-			const { results } = await Db.factory(config).query(sql);
-			console.log(pretty(results));
+			const { results } = await db.query(sql);
+			console.log(prettify(results));
 		} catch (e) {
 			console.log(red(e.message));
 		}
+		db.end();
 	}
 }
 async function chooseExistingConn() {

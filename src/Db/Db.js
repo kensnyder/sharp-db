@@ -80,6 +80,10 @@ class Db {
 	end() {
 		return new Promise((resolve, reject) => {
 			if (this.connection && this.connection.end) {
+				const idx = instances.indexOf(this);
+				if (idx > -1) {
+					instances.splice(idx, 1);
+				}
 				this.connection.end(err => {
 					if (err) {
 						reject(err);
@@ -99,6 +103,10 @@ class Db {
 	 */
 	destroy() {
 		if (this.connection && this.connection.destroy) {
+			const idx = instances.indexOf(this);
+			if (idx > -1) {
+				instances.splice(idx, 1);
+			}
 			this.connection.destroy();
 		}
 		return this;
