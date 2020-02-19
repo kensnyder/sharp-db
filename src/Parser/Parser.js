@@ -115,10 +115,13 @@ class Parser {
 			}
 			if (buffer.length) {
 				// we are in the middle of an expression containing parenthesis
-				buffer += column + ',';
 				if (column.indexOf(')') > 0) {
 					// we have an end parenthesis
+					buffer += column;
+					this.query.column(buffer.trim());
 					buffer = '';
+				} else {
+					buffer += column + ',';
 				}
 			} else if (column.match(/\([^)]+$/)) {
 				buffer = column + ',';

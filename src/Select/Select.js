@@ -1,3 +1,4 @@
+const mysql = require('mysql2');
 const Parser = require('../Parser/Parser.js');
 const Db = require('../Db/Db.js');
 const cloneDeep = require('lodash.clonedeep');
@@ -5,7 +6,6 @@ const escapeRegExp = require('lodash.escaperegexp');
 const forOwn = require('lodash.forown');
 const uniq = require('lodash.uniq');
 const substrCount = require('quickly-count-substrings');
-const mysql = require('mysql2');
 
 /**
  * Build a select query
@@ -19,25 +19,26 @@ class Select {
 		return this;
 	}
 
-	static parse(sql) {
-		const db = Db.factory();
+	static parse(sql, db = null) {
 		return Select.init(db).parse(sql);
 	}
 
 	/**
 	 * Select constructor
+	 * @param {Db} [db]  The Db instance to use
 	 */
-	constructor(Db) {
-		this.db = Db;
+	constructor(db = null) {
+		this.db = db || Db.factory();
 		this.reset();
 	}
 
 	/**
 	 * Shortcut to initialize without the `new` keyword
+	 * @param {Db} [db]  The Db instance to use
 	 * @return {Select}
 	 */
-	static init(Db) {
-		return new Select(Db);
+	static init(db = null) {
+		return new Select(db || Db.factory());
 	}
 
 	/**
@@ -122,18 +123,17 @@ class Select {
 			return this;
 		}
 		if (field) {
+			const pluralizable = [
+				'option',
+				'column',
+				'table',
+				'where',
+				'having',
+				'groupBy',
+				'orderBy',
+			];
 			let prop = '_' + field.replace(/s$/, '');
-			if (
-				[
-					'option',
-					'column',
-					'table',
-					'where',
-					'having',
-					'groupBy',
-					'orderBy',
-				].indexOf(field) > -1
-			) {
+			if (pluralizable.indexOf(field) > -1) {
 				prop += 's';
 			}
 			this[prop] = ['limit', 'offset', 'page'].indexOf(field) > -1 ? null : [];
@@ -236,7 +236,7 @@ class Select {
 				`Select: Unknown join pattern: "${join}". Expecting format "joinTable ON joinTable.id = throughTable.foreignColumn"`
 			);
 		}
-		let [_, joinTable, throughTable, foreignColumn] =
+		let [, joinTable, throughTable, foreignColumn] =
 			matchJoinFirst || matchJoinSecond;
 		this._habtm.push({
 			thisProperty,
@@ -288,42 +288,51 @@ class Select {
 
 	/**
 	 * Fetch records and splice in related data
-	 * @return {Promise<Array>}
+	 * @param [options] Query options
+	 * @return {Promise<Object>}
 	 */
 	async fetch(options = {}) {
 		options.sql = this.toString();
-		const records = await this.db.select(options, this._bound);
-		await this._spliceHasOnes(records);
-		await this._spliceBelongsTos(records);
-		await this._spliceHasManys(records);
-		await this._spliceHabtms(records);
-		return records;
+		const { query, results, fields } = await this.db.select(
+			options,
+			this._bound
+		);
+		await this._spliceHasOnes(results);
+		await this._spliceBelongsTos(results);
+		await this._spliceHasManys(results);
+		await this._spliceHabtms(results);
+		return { query, results, fields };
 	}
 
 	/**
 	 * Fetch the first matched record
 	 * @return {Object|null}
 	 */
-	async fetchFirst() {
+	async fetchFirst(options = {}) {
+		options.sql = this.toString();
+		const oldLimit = this._limit;
 		this.limit(1);
-		const records = await this.fetch();
-		return Array.isArray(records) && records.length ? records[0] : null;
+		const { query, results, fields } = await this.fetch(options);
+		this.limit(this._limit);
+		return { query, results: results[0], fields };
 	}
 
 	/**
 	 * Fetch each record as an array of values or an array of key-value pairs
 	 * @return {Promise<Object>}
 	 */
-	fetchHash() {
-		return this.db.selectHash(this.toString(), this._bound);
+	fetchHash(options = {}) {
+		options.sql = this.toString();
+		return this.db.selectHash(options, this._bound);
 	}
 
 	/**
 	 * Fetch the value of first column of the first record
 	 * @return {Promise}
 	 */
-	fetchValue() {
-		return this.db.selectValue(this.toString(), this._bound);
+	fetchValue(options = {}) {
+		options.sql = this.toString();
+		return this.db.selectValue(options, this._bound);
 	}
 
 	/**
@@ -331,14 +340,15 @@ class Select {
 	 * @param {String} byField  The field by which to index (e.g. id)
 	 * @return {Promise<Object>}
 	 */
-	async fetchIndexed(byField) {
-		const rs = await this.fetch();
-		if (!Array.isArray(rs)) {
+	async fetchIndexed(byField, options = {}) {
+		options.sql = this.toString();
+		const { query, results, fields } = await this.fetch(options);
+		if (!Array.isArray(results)) {
 			return false;
 		}
 		const indexed = {};
-		rs.forEach(r => (indexed[r[byField]] = r));
-		return indexed;
+		results.forEach(r => (indexed[r[byField]] = r));
+		return { query, results: indexed, fields };
 	}
 
 	/**
@@ -350,19 +360,20 @@ class Select {
 	 *      // a key for each user id with an array of comments for each key
 	 * @return {Array}
 	 */
-	async fetchGrouped(byField) {
-		const rs = await this.fetch();
-		if (!Array.isArray(rs)) {
+	async fetchGrouped(byField, options = {}) {
+		options.sql = this.toString();
+		const { query, results, fields } = await this.fetch(options);
+		if (!Array.isArray(results)) {
 			return false;
 		}
 		const grouped = {};
-		rs.forEach(r => {
+		results.forEach(r => {
 			if (!grouped[r[byField]]) {
 				grouped[r[byField]] = [];
 			}
 			grouped[r[byField]].push(r);
 		});
-		return grouped;
+		return { query, results: grouped, fields };
 	}
 
 	/**
@@ -433,9 +444,9 @@ class Select {
 	 * @param {String} [countExpr="*"]  Use to specify `DISTINCT colname` if needed
 	 * @return {Promise<Number>}  The number of rows or false on error
 	 */
-	foundRows(countExpr = '*') {
-		const sql = this.getFoundRowsSql(countExpr);
-		return this.db.selectValue(sql, this._bound);
+	foundRows(countExpr = '*', options = {}) {
+		options.sql = this.getFoundRowsSql(countExpr);
+		return this.db.selectValue(options, this._bound);
 	}
 
 	/**
@@ -446,7 +457,7 @@ class Select {
 		if (this._hasOne.length === 0 || records.length === 0) {
 			return;
 		}
-		this._hasOne.forEach(async spec => {
+		for (const spec of this._hasOne) {
 			const match = spec.thisProperty.match(/^([\w_]+) AS ([\w_]+)$/i);
 			let thisProperty;
 			if (match) {
@@ -466,14 +477,14 @@ class Select {
 				return;
 			}
 			ids = uniq(ids);
-			const query = Select.init()
+			const query = Select.init(this.db)
 				.table(table)
 				.where(column, 'IN', ids);
-			const indexed = await query.fetchIndexed(column);
+			const { results: indexed } = await query.fetchIndexed(column);
 			records.forEach(r => {
 				r[thisProperty] = indexed[r[spec.thisColumn]] || null;
 			});
-		});
+		}
 	}
 
 	/**
@@ -485,16 +496,16 @@ class Select {
 			return;
 		}
 		const ids = uniq(records.map(r => r.id));
-		this._belongsTo.forEach(async spec => {
+		for (const spec of this._belongsTo) {
 			const [table, column] = spec.thatTableAndColumn.split('.');
-			const indexed = await Select.init(this.db)
+			const { results: indexed } = await Select.init(this.db)
 				.table(table)
 				.where(column, 'IN', ids)
 				.fetchIndexed(column);
 			records.forEach(r => {
 				r[spec.thisPropery] = indexed[r.id] || null;
 			});
-		});
+		}
 	}
 
 	/**
@@ -506,16 +517,16 @@ class Select {
 			return;
 		}
 		const ids = uniq(records.map(r => r.id));
-		this._hasMany.forEach(async spec => {
+		for (const spec of this._hasMany) {
 			const [table, column] = spec.thatTableAndColumn.split('.');
 			const query = Select.init()
 				.table(table)
 				.where(column, 'IN', ids);
-			const grouped = await query.fetchGrouped(column);
+			const { results: grouped } = await query.fetchGrouped(column);
 			records.forEach(r => {
 				r[spec.thisPropery] = grouped[r.id] || [];
 			});
-		});
+		}
 	}
 
 	/**
@@ -534,7 +545,8 @@ class Select {
 			return;
 		}
 		const ids = uniq(records.map(r => r.id));
-		this._habtm.forEach(async spec => {
+		// TODO: get this working!
+		for (const spec of this._habtm) {
 			// const { joinTableQuery, foreignTable } = spec;
 			// const joinTableLookup = await this.db.selectGrouped('user_id', joinTableQuery, ids);
 			// const foreignIds = uniq(values(joinTableLookup));
@@ -554,7 +566,7 @@ class Select {
 			// records.forEach(r => {
 			// 	r[thisProperty] = grouped[r.id] || [];
 			// });
-		});
+		}
 	}
 
 	/**
@@ -563,7 +575,7 @@ class Select {
 	 * @return {Select}
 	 */
 	columns(columnNames) {
-		this._columns = [...this._columns, ...columnNames];
+		this._columns = this._columns.concat(columnNames);
 		return this;
 	}
 
@@ -883,11 +895,12 @@ class Select {
 	 * @return {Select}
 	 */
 	whereBetween(column, twoValueArray) {
-		if (twoValueArray[0] && twoValueArray[1]) {
+		const isNullish = v => v === undefined || v === null || v === false;
+		if (!isNullish(twoValueArray[0]) && !isNullish(twoValueArray[1])) {
 			this.where(column, 'BETWEEN', twoValueArray);
-		} else if (twoValueArray[0]) {
+		} else if (!isNullish(twoValueArray[0]) && isNullish(twoValueArray[1])) {
 			this.where(column, '>=', twoValueArray[0]);
-		} else if (twoValueArray.length > 1) {
+		} else if (isNullish(twoValueArray[0]) && !isNullish(twoValueArray[1])) {
 			this.where(column, '<=', twoValueArray[1]);
 		}
 		return this;
@@ -900,6 +913,8 @@ class Select {
 	 */
 	orWhere(conditions) {
 		const criteria = [];
+
+		// TODO: something wrong with this loop
 		conditions.forEach(condition => {
 			this._conditions(criteria, condition);
 		});
@@ -925,6 +940,7 @@ class Select {
 	}
 	orHaving(conditions) {
 		const criteria = [];
+		// TODO: something wrong with this loop
 		conditions.forEach(condition => {
 			this._conditions(criteria, condition);
 		});

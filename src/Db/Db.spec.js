@@ -1,6 +1,6 @@
 jest.mock('mysql2');
 const mysqlMock = require('mysql2');
-const { Db } = require('../../index.js');
+const Db = require('../Db/Db.js');
 
 describe('Db', () => {
 	describe('class', () => {

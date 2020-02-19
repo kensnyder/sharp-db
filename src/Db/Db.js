@@ -13,18 +13,14 @@ const instances = [];
  */
 class Db {
 	/**
-	 * Specify connection options including host, login, password, encoding, database;
-	 * and ssh options including host, port, user, privateKey.
-	 * @param {Object} [config]  MySQL connection details
-	 * @see
-	 * @param {Object} [sshConfig]  SSH connection details
-	 * @see
+	 * Specify connection details for MySQL and optionally SSH
+	 * @param {Object} [config]  MySQL connection details such as host, login, password, encoding, database
+	 * @see https://github.com/mysqljs/mysql#connection-options
+	 * @param {Object} [sshConfig]  SSH connection details including host, port, user, privateKey
+	 * @see https://github.com/mscdex/ssh2#client-methods
 	 */
 	constructor(config = {}, sshConfig = null) {
-		const env =
-			typeof process === 'object' && typeof process.env === 'object'
-				? process.env
-				: {};
+		const env = process.env;
 		/**
 		 * The config used for this instance
 		 * @type {Object}
@@ -50,12 +46,11 @@ class Db {
 
 	/**
 	 * Create a new QuickDb instance or return the last used one.
-	 * Specify connection options including host, login, password, encoding, database;
-	 * and ssh options including host, port, user, privateKey.
-	 * @param {Object} [config]  MySQL connection details
-	 * @see
-	 * @param {Object} [sshConfig]  SSH connection details
-	 * @see
+	 * Specify connection details for MySQL and optionally SSH
+	 * @param {Object} [config]  MySQL connection details such as host, login, password, encoding, database
+	 * @see https://github.com/mysqljs/mysql#connection-options
+	 * @param {Object} [sshConfig]  SSH connection details including host, port, user, privateKey
+	 * @see https://github.com/mscdex/ssh2#client-methods
 	 * @return {Db}
 	 */
 	static factory(config = {}, sshConfig = null) {

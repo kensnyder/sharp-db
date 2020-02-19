@@ -1,4 +1,5 @@
-const { Select } = require('../../index.js');
+jest.mock('mysql2');
+const Select = require('../Select/Select.js');
 
 describe('Select', function() {
 	describe('class', function() {
@@ -106,17 +107,23 @@ describe('Select', function() {
 	describe('orWhere()', function() {
 		it('should handle expressions', function() {
 			const query = new Select();
-			query.orWhere([['a', '>', 1], ['b', 2]]);
+			query.orWhere([
+				['a', '>', 1],
+				['b', 2],
+			]);
 			expect(query._wheres[0]).toBe('(`a` > 1 OR `b` = 2)');
 		});
 	});
-	// describe('bindings', function() { // can't do bindings without real DB
+	// describe('bindings', function() {
+	// 	// can't do bindings without real DB
 	// 	it('should handle strings', function() {
 	// 		const query = new Select();
 	// 		query.table('mytable');
 	// 		query.bind({ myval: 'a' });
 	// 		query.where('mycol = :myval');
-	// 		expect(query.normalized()).toBe("SELECT * FROM mytable WHERE mycol = 'a'");
+	// 		expect(query.normalized()).toBe(
+	// 			"SELECT * FROM mytable WHERE mycol = 'a'"
+	// 		);
 	// 	});
 	// });
 	describe('foundRows()', () => {

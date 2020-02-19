@@ -1,3 +1,4 @@
+const os = require('os');
 const fs = require('fs');
 const Client = require('ssh2').Client;
 
@@ -7,24 +8,25 @@ class Ssh {
 	 * @param {Object} [config]  Configuration to send to npm's ssh2
 	 */
 	constructor(config = {}) {
-		const env =
-			typeof process === 'object' && typeof process.env === 'object'
-				? process.env
-				: {};
+		const env = process.env;
 		this.config = {
 			...config,
-			host: config.host || env.DB_SSH_HOST,
+			host: config.host || env.DB_SSH_HOST || 'localhost',
 			port: config.port || env.DB_SSH_PORT || 22,
 			user: config.user || env.DB_SSH_USER,
-			privateKey: config.privateKey || env.DB_SSH_PRIVATE_KEY,
-			tunnelPort: config.tunnelPort || env.DB_SSH_TUNNEL_PORT || 12346,
+			localPort: config.localPort || env.DB_SSH_LOCAL_PORT || 12347,
 		};
-		if (this.config.privateKey.match(/\.pem$/)) {
-			const pkeyPath = this.config.privateKey.replace(/^~/, process.env.HOME);
-			if (!fs.existsSync(pkeyPath)) {
-				throw new Error(`Private key file not found at "${pkeyPath}".`);
+		if (config.privateKey || env.DB_SSH_PRIVATE_KEY) {
+			this.config.privateKey = config.privateKey || env.DB_SSH_PRIVATE_KEY;
+			if (this.config.privateKey.match(/\.pem$/)) {
+				const pkeyPath = this.config.privateKey.replace(/^~/, os.homedir());
+				if (!fs.existsSync(pkeyPath)) {
+					throw new Error(`Private key file not found at "${pkeyPath}".`);
+				}
+				this.config.privateKey = fs.readFileSync(pkeyPath, {
+					encoding: 'utf8',
+				});
 			}
-			this.config.privateKey = fs.readFileSync(pkeyPath, { encoding: 'utf8' });
 		}
 	}
 
@@ -36,21 +38,20 @@ class Ssh {
 	tunnelTo(db) {
 		return new Promise((resolve, reject) => {
 			if (!db.config || !db.config.host || !db.config.port) {
-				reject('Db config must have host and port.');
+				console.log('rejecting tunnelTo');
+				reject(new Error('Db config must have host and port.'));
 			}
 			this.connection = new Client();
 			this.connection.on('ready', () => {
 				this.connection.forwardOut(
 					'127.0.0.1',
-					this.config.tunnelPort,
+					this.config.localPort,
 					db.config.host,
 					db.config.port,
 					(err, stream) => {
 						if (err) {
 							this.end();
-							const msg =
-								err.reason == 'CONNECT_FAILED' ? 'Connection failed.' : err;
-							return reject(msg);
+							return reject(err);
 						}
 						// override db host, since we're operating from within the SSH tunnel
 						db.config.host = 'localhost';
@@ -67,9 +68,7 @@ class Ssh {
 	 * Close the ssh tunnel
 	 */
 	end() {
-		if (this.connection.end) {
-			this.connection.end();
-		}
+		this.connection.end();
 	}
 }
 

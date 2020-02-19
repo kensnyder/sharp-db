@@ -21,27 +21,71 @@ npm install --save sharp-db
 Connection can be configured with environmental variables or in the constructor.
 
 | Option | ENV name | Default |
-| host | DB_HOST | 127.0.0.1 |
-| user | DB_USER | root |
-| password | DB_PASSWORD | _empty string_ |
-| database | DB_DATABASE | undefined |
-| port | DB_PORT | 3306 |
-| charset | DB_CHARSET| utf8mb4 |
+|---|---|---|
+| `host` | DB_HOST | 127.0.0.1 |
+| `port` | DB_PORT | 3306 |
+| `user` | DB_USER | root |
+| `password` | DB_PASSWORD | _empty string_ |
+| `database` | DB_DATABASE | undefined |
+| `charset` | DB_CHARSET| utf8mb4 |
 
 See node's mysqljs for [other options](https://github.com/mysqljs/mysql#connection-options).
 
 ### Instantiation
 
+Connect to MySQL server
+
 ```js
-const db1 = Db.factory(); // all options in ENV
-const db2 = Db.factory({ // specify options in constructor
-    host: '0.0.0.0',
+// read options from ENV
+const db1 = Db.factory();
+
+// specify options in constructor
+const db2 = new Db({
+    host: '127.0.0.1',
+    user: 'root',
+    password: '',
     port: 3306,
 });
-const db2Again = Db.factory(); // instance that was last created
+
+// instance that was last created
+const db2Again = Db.factory();
 ```
 
-All examples onward assume the `Db` instance has been stored in `db`.
+### SSH Tunneling
+
+Connect to MySQL through an SSH tunnel
+
+```js
+const db = Db.factory({
+    // MySQL connection as first argument
+    host: '127.0.0.1',
+    port: 3306,
+    user: 'root',
+    password: '',
+}, {
+    // SSH connection as second argument
+    host: 'example.com',
+    port: 22,
+    user: 'ubuntu',
+    privateKey: '~/.ssh/example.com.pem',
+});
+```
+
+SSH Tunnel Options
+
+| Option | ENV name | Default |
+|---|---|---|
+| `host` | DB_SSH_HOST | "localhost" |
+| `port` | DB_SSH_PORT | 22 |
+| `user` | DB_SSH_USER | _none_ |
+| `privateKey` | DB_SSH_PRIVATE_KEY | _none_ |
+| `localPort` | DB_SSH_LOCAL_PORT | 12346 |
+
+See all options in [ssh2's npm package](https://github.com/mscdex/ssh2#client-methods).
+
+### Code examples
+
+All code examples below assume the `Db` instance has been stored in `db`.
 
 ### Plain select queries
 
@@ -51,6 +95,17 @@ const { query, results, fields } = await db.select('SELECT * FROM users');
 // results is an Array of objects representing the query results
 // fields is an Array of objects representing the columns that were returned
 ```
+
+Relevant properties of each `fields` item:
+
+| Item | Description | Example |
+|---|---|---|
+| `characterSet` | [Character set constant](https://github.com/mysqljs/mysql/blob/master/lib/protocol/constants/charsets.js) | 45 |
+| `encoding` | Character Set name | utf8 |
+| `name` | Name of column | my_column |
+| `columnLength` | Number of *bytes* of field | 400 |
+| `columnType` | [Data type constant](https://github.com/mysqljs/mysql/blob/master/lib/protocol/constants/types.js) | 253 |
+| `flags` | [Field flag constant](https://github.com/mysqljs/mysql/blob/master/lib/protocol/constants/field_flags.js) | 33 |
 
 ### Binding values
 
@@ -71,7 +126,7 @@ const { results: users } = await db.select(sql, {
 });
 ```
 
-#### Binding types
+#### Binding data types
 
 ```js
 const { results: users } = await db.select(sql, {
@@ -91,7 +146,7 @@ Get only the first row.
 const { results: row } = await db.selectFirst(sql);
 ```
 
-Example: `{ id: 1, name: "John" }`
+Example results: `{ id: 1, name: "John" }`
 
 ### selectValue(sql, ...bindValues)
 
@@ -101,7 +156,7 @@ Get only the first column of the first row.
 const { results: value } = await db.selectValue(sql);
 ```
 
-Example: `"John"`
+Example results: `"John"`
 
 ### selectHash(sql, ...bindValues)
 
@@ -111,7 +166,7 @@ Get an Object with column-value pairs.
 const { results: hash } = await db.selectHash(sql);
 ```
 
-Example: `{ "1": "John", "2": "Jane" }`
+Example results: `{ "1": "John", "2": "Jane" }`
 
 ### selectList(sql, ...bindValues)
 
@@ -121,7 +176,7 @@ Get an Array of values for the first column of the first row.
 const { results: list } = await db.selectList(sql);
 ```
 
-Example: `["John", "Jane"]`
+Example results: `["John", "Jane"]`
 
 ### selectExists(sql, ...bindValues)
 
@@ -131,17 +186,17 @@ Return true if query returns any rows.
 const { results: doesExist } = await db.selectExists(sql);
 ```
 
-Example: `true`
+Example results: `true`
 
 ### selectIndexed(indexColumn, sql, ...bindValues)
 
 Return an Object where every result row is indexed by the given field.
 
 ```js
-const { results: doesExist } = await db.selectIndexed('id', sql);
+const { results: usersById } = await db.selectIndexed('id', sql);
 ```
 
-Example:
+Example results:
 ```js
 {
   "1": { id: 1, name: "John" },
@@ -154,10 +209,10 @@ Example:
 Return an Object where every result row is indexed by the given field.
 
 ```js
-const { results: groups } = await db.selectGrouped('org', sql);
+const { results: usersGroupedByOrg } = await db.selectGrouped('org', sql);
 ```
 
-Example:
+Example results:
 ```js
 {
     "Marketing": [
@@ -177,19 +232,61 @@ SQL can actually be an Object with options.
 ```js
 const options = {
     sql: `
-        SELECT users.*, actions.*
+        SELECT users.*, avatars.*
         FROM users
-        INNER JOIN actions ON action.user_id = users.id
+        INNER JOIN avatars ON avatars.user_id = users.id
         WHERE users.is_active = ?
     `,
     // kill query if not completed within 30 seconds
     timeout: 30000,
-    // return records with keys `users` and `actions` with their own fields nested underneath
+    // return records with keys `users` and `avatars` with their own fields nested underneath
     nestTables: true,
     // you can also bind values here using question marks
     values: [true],
 };
 const { results } = await db.select(options);
+```
+
+#### nestTables example
+
+Given a query of:
+
+```sql
+SELECT users.*, avatars.*
+FROM users
+INNER JOIN avatars ON avatars.user_id = users.id
+WHERE users.is_active = ?
+```
+
+nesting tables will return a data structure such as:
+
+```js
+[
+	{
+		users: {
+			id: 1,
+			name: 'John Doe',
+			is_active: true,
+		},
+		avatars: {
+			id: 101,
+			user_id: 1,
+			url: 'http://example.com/john.png'
+		}
+	},
+	{
+		users: {
+			id: 2,
+			name: 'Jane Doe',
+			is_active: true,
+		},
+		avatars: {
+			id: 102,
+			user_id: 2,
+			url: 'http://example.com/jane.png'
+		}
+	}
+]
 ```
 
 ### selectFrom(table, fields, values)
@@ -202,6 +299,18 @@ const { results } = await db.selectFrom('users', ['fname','lname'], {
 });
 ```
 
+insert
+update
+delete
+
+insertInto
+insertIntoExtended
+updateTable
+deleteFrom
+
+
+
+
 
 ## Parser
 
@@ -209,10 +318,3 @@ const { results } = await db.selectFrom('users', ['fname','lname'], {
 
 The parser has several limitations.
 The intent is to be fast and useful for 99% of situations.
-
-```sql
--- SELECT clause does not properly handle expressions with commas
-SELECT CONCAT(lname, ', ', fname) FROM users
-
---
-```

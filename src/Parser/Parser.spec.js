@@ -1,4 +1,4 @@
-const { Select } = require('../../index.js');
+const Select = require('../Select/Select.js');
 
 describe('Parser', () => {
 	describe('column handler', () => {
@@ -45,7 +45,8 @@ describe('Parser', () => {
 	});
 	describe('subquery handler', () => {
 		it('should handle column subqueries', () => {
-			const normalized = 'SELECT a, (SELECT * FROM tbl2) AS b FROM mytable WHERE mycol = 1';
+			const normalized =
+				'SELECT a, (SELECT * FROM tbl2) AS b FROM mytable WHERE mycol = 1';
 			const query = Select.parse(normalized);
 			expect(query.normalized()).toBe(normalized);
 		});
@@ -62,7 +63,8 @@ describe('Parser', () => {
 			expect(query.normalized()).toBe(normalized);
 		});
 		it('should handle IN() expressions in WHERE', () => {
-			const normalized = 'SELECT * FROM mytable WHERE mycol IN (SELECT id FROM othertable)';
+			const normalized =
+				'SELECT * FROM mytable WHERE mycol IN (SELECT id FROM othertable)';
 			const query = Select.parse(normalized);
 			expect(query.normalized()).toBe(normalized);
 		});
@@ -91,6 +93,16 @@ describe('Parser', () => {
 		it('should parse comma-separated columns', () => {
 			const query = Select.parse('SELECT a, b FROM c');
 			expect(query._columns).toEqual(['a', 'b']);
+		});
+		it('should handle expressions contain comments', () => {
+			const query = Select.parse("SELECT a, CONCAT('b',b) FROM c");
+			expect(query._columns).toEqual(['a', "CONCAT('b',b)"]);
+		});
+		it('should handle expressions contain comments', () => {
+			const query = Select.parse(
+				"SELECT a, CONCAT(fname, ' ', lname) FROM users"
+			);
+			expect(query._columns).toEqual(['a', "CONCAT(fname, ' ', lname)"]);
 		});
 	});
 	describe('option handler', () => {
@@ -138,23 +150,33 @@ describe('Parser', () => {
 			expect(query._wheres).toEqual(['mycol = 1']);
 		});
 		it('should parse two WHERE clauses joined by AND', () => {
-			const query = Select.parse('SELECT * FROM mytable WHERE mycol = 1 AND scheduled < NOW()');
+			const query = Select.parse(
+				'SELECT * FROM mytable WHERE mycol = 1 AND scheduled < NOW()'
+			);
 			expect(query._wheres).toEqual(['mycol = 1', 'scheduled < NOW()']);
 		});
 		it('should parse two WHERE clauses joined by OR', () => {
-			const query = Select.parse('SELECT * FROM mytable WHERE mycol = 1 OR scheduled < NOW()');
+			const query = Select.parse(
+				'SELECT * FROM mytable WHERE mycol = 1 OR scheduled < NOW()'
+			);
 			expect(query._wheres).toEqual(['(mycol = 1 OR scheduled < NOW())']);
 		});
 		it('should parse OR then AND', () => {
-			const query = Select.parse('SELECT * FROM mytable WHERE a = 1 OR b = 2 AND c = 3');
+			const query = Select.parse(
+				'SELECT * FROM mytable WHERE a = 1 OR b = 2 AND c = 3'
+			);
 			expect(query._wheres).toEqual(['(a = 1 OR b = 2)', 'c = 3']);
 		});
 		it('should parse OR then AND with parens', () => {
-			const query = Select.parse('SELECT * FROM mytable WHERE (a = 1 OR b = 2) AND c = 3');
+			const query = Select.parse(
+				'SELECT * FROM mytable WHERE (a = 1 OR b = 2) AND c = 3'
+			);
 			expect(query._wheres).toEqual(['(a = 1 OR b = 2)', 'c = 3']);
 		});
 		it('should parse AND then OR', () => {
-			const query = Select.parse('SELECT * FROM mytable WHERE a = 1 AND b = 2 OR c = 3');
+			const query = Select.parse(
+				'SELECT * FROM mytable WHERE a = 1 AND b = 2 OR c = 3'
+			);
 			expect(query._wheres).toEqual(['a = 1', '(b = 2 OR c = 3)']);
 		});
 	});
