@@ -4,7 +4,9 @@
   "description": "Classes for running SQL and building select queries in MySQL",
   "main": "index.js",
   "scripts": {
-    "test": "npx jest --watch"
+    "test": "npx jest --watch",
+    "coverage": "npx jest --collectCoverage",
+    "docs": "npx documentation build src/** -f html -o docs"
   },
   "repository": {
     "type": "git",
@@ -29,7 +31,6 @@
     "lodash.escaperegexp": "^4.1.2",
     "lodash.forown": "^4.4.0",
     "lodash.isempty": "^4.4.0",
-    "lodash.trim": "^4.5.1",
     "lodash.uniq": "^4.5.0",
     "lodash.upperfirst": "^4.3.1",
     "mysql2": "^2.1.0",
@@ -38,6 +39,7 @@
   },
   "devDependencies": {
     "chalk": "^3.0.0",
+    "documentation": "^12.1.4",
     "jest": "^25.1.0",
     "moment": "^2.24.0",
     "prettier": "^1.19.1",
