@@ -94,11 +94,11 @@ describe('Parser', () => {
 			const query = Select.parse('SELECT a, b FROM c');
 			expect(query._columns).toEqual(['a', 'b']);
 		});
-		it('should handle expressions contain comments', () => {
+		it('should handle expressions with one comma', () => {
 			const query = Select.parse("SELECT a, CONCAT('b',b) FROM c");
 			expect(query._columns).toEqual(['a', "CONCAT('b',b)"]);
 		});
-		it('should handle expressions contain comments', () => {
+		it('should handle expressions with 2 commas', () => {
 			const query = Select.parse(
 				"SELECT a, CONCAT(fname, ' ', lname) FROM users"
 			);
@@ -117,6 +117,7 @@ describe('Parser', () => {
 			'JOIN',
 			'INNER JOIN',
 			'LEFT JOIN',
+			'LEFT OUTER JOIN',
 			'OUTER JOIN',
 			'RIGHT JOIN',
 			'RIGHT OUTER JOIN',
@@ -183,5 +184,29 @@ describe('Parser', () => {
 	it('should parse WHERE 1', () => {
 		const query = Select.parse('SELECT * FROM mytable WHERE 1');
 		expect(query._wheres).toEqual(['1']);
+	});
+	it('should parse GROUP BY and HAVING', () => {
+		const query = Select.parse(
+			'SELECT name, COUNT(*) FROM mytable GROUP BY name HAVING COUNT(*) > 1'
+		);
+		expect(query._groupBys).toEqual(['name']);
+		expect(query._havings).toEqual(['COUNT(*) > 1']);
+	});
+	it('should parse ORDER BY', () => {
+		const query = Select.parse('SELECT * FROM users ORDER BY id DESC');
+		expect(query._orderBys).toEqual(['id DESC']);
+	});
+	it('should parse LIMIT', () => {
+		const query = Select.parse('SELECT * FROM mytable LIMIT 1');
+		expect(query._limit).toBe(1);
+	});
+	it('should parse OFFSET', () => {
+		const query = Select.parse('SELECT * FROM mytable LIMIT 5 OFFSET 10');
+		expect(query._offset).toBe(10);
+	});
+	it('should parse OFFSET, LIMIT', () => {
+		const query = Select.parse('SELECT * FROM mytable LIMIT 10, 5');
+		expect(query._limit).toBe(5);
+		expect(query._offset).toBe(10);
 	});
 });

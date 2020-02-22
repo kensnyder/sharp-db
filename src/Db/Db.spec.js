@@ -645,8 +645,8 @@ describe('Db', () => {
 		it('should allow delete', async () => {
 			const { delete: del } = Db.factory().tpl();
 			const id = 4;
-			const { query } = await del`DELETE * FROM users WHERE id = ${id}`;
-			expect(query).toBe('DELETE * FROM users WHERE id = 4');
+			const { query } = await del`DELETE FROM users WHERE id = ${id}`;
+			expect(query).toBe('DELETE FROM users WHERE id = 4');
 		});
 	});
 });

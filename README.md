@@ -309,6 +309,163 @@ updateTable
 deleteFrom
 
 
+## Select
+
+A Select object represents a SQL SELECT query and allows dynamically adding
+clauses including JOIN, WHERE, ORDER BY, LIMIT, OFFSET.
+
+
+
+
+### Dependent data
+
+A Select object can splice in sibling or child data for each row.
+
+### withSiblingData(propertyName, siblingSql)
+
+Example:
+
+```js
+const query = Select.parse('SELECT id, name FROM users');
+query.withSiblingData(
+    'homeAddress',
+    `SELECT * FROM addresses
+    WHERE addresses.user_id IN(:id)
+    AND addresses.type = 'home'
+    AND addresses.deleted_at IS NULL
+    `,
+);
+query.withSiblingData(
+    'workAddress',
+    `SELECT * FROM addresses
+    WHERE addresses.user_id IN(:id)
+    AND addresses.type = 'work'
+    AND addresses.deleted_at IS NULL
+    `,
+);
+const { results } = await query.fetch();
+```
+
+...and `results` for example may equal:
+
+```js
+results = [
+    {
+        id: 1,
+        name: 'John',
+        homeAddress: {
+            id: 11,
+            type: 'home',
+            is_active: 1,
+            user_id: 1,
+            street: '123 Any St.',
+            city: 'Any Town',
+            state: 'CA'
+        },
+        workAddress: {
+            id: 12,
+            type: 'work',
+            is_active: 1,
+            user_id: 1,
+            street: '123 Commerce Dr.',
+            city: 'Any Town',
+            state: 'CA',
+        },
+    },
+    {
+        id: 2,
+        name: 'Jane',
+        // rows without sibling data will be null
+        homeAddress: null,
+        workAddress: {
+            id: 12,
+            type: 'work',
+            is_active: 1,
+            user_id: 2,
+            street: '123 Tower Blvd.',
+            city: 'Any Town',
+            state: 'CA',
+        },
+    }
+]
+```
+
+### withChildData(propertyName, childSql)
+
+Example:
+
+```js
+const query = Select.parse('SELECT id, headline, published_by FROM posts');
+query.withChildData(
+    'theComments',
+    'SELECT * FROM comments WHERE comments.post_id IN(:id)'
+);
+query.withChildData(
+    'theTags',
+    `
+    SELECT posts_tags.post_id, tags.* FROM tags
+    INNER JOIN posts_tags ON posts_tags.tag_id = tags.id
+    WHERE posts_tags.post_id IN(:id)
+    `
+);
+query.withSiblingData(
+    'thePublisher',
+    'SELECT id, name FROM users WHERE user_id IN(:published_by)'
+);
+const { results } = await query.fetch();
+```
+
+...and `results` for example may equal:
+
+```js
+results = [
+    {
+        id: 1,
+        headline: 'Turmoil in China',
+        published_by: 1001,
+        theComments: [
+            {
+                id: 11,
+                post_id: 1,
+                user_id: 101,
+                text: 'Sad to hear',
+            },
+            {
+                id: 12,
+                post_id: 1,
+                user_id: 102,
+                text: 'Hope it works out',
+            },
+        ],
+        theTags: [
+            {
+                id: 101,
+                post_id: 1,
+                name: 'China',
+            },
+            {
+                id: 102,
+                post_id: 1,
+                name: 'Crisis',
+            },
+        ],
+        thePublisher: {
+            id: 1001,
+            name: 'John',
+        },
+    },
+    {
+        id: 2,
+        headline: 'Syria at War',
+        // records with missing child data will hae empty arrays
+        theComments: [],
+        theTags: [],
+        thePublisher: null,
+    }
+]
+```
+
+
 
 
 

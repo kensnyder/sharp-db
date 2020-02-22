@@ -31,7 +31,6 @@
     "lodash.escaperegexp": "^4.1.2",
     "lodash.forown": "^4.4.0",
     "lodash.isempty": "^4.4.0",
-    "lodash.uniq": "^4.5.0",
     "lodash.upperfirst": "^4.3.1",
     "mysql2": "^2.1.0",
     "quickly-count-substrings": "^1.0.0",

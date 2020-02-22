@@ -67,4 +67,8 @@ describe('Ssh', () => {
 		});
 		expect(conn.config.privateKey).toBe('keyval');
 	});
+	it('should avoid calling end if not connected', () => {
+		const conn = new Ssh();
+		expect(conn.end()).toBe(undefined);
+	});
 });

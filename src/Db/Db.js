@@ -3,12 +3,6 @@ const mysql = require('mysql2');
 const Ssh = require('../Ssh/Ssh.js');
 
 /**
- * A list of all the Db Instances that have been created
- * @type {Array}
- */
-const instances = [];
-
-/**
  * Simple database class for mysql
  */
 class Db {
@@ -41,7 +35,7 @@ class Db {
 			 */
 			this.ssh = new Ssh(sshConfig);
 		}
-		instances.push(this);
+		Db.instances.push(this);
 	}
 
 	/**
@@ -54,10 +48,10 @@ class Db {
 	 * @return {Db}
 	 */
 	static factory(config = {}, sshConfig = null) {
-		if (instances.length === 0) {
+		if (Db.instances.length === 0) {
 			return new Db(config, sshConfig);
 		}
-		return instances[instances.length - 1];
+		return Db.instances[Db.instances.length - 1];
 	}
 
 	/**
@@ -95,9 +89,9 @@ class Db {
 	end() {
 		return new Promise((resolve, reject) => {
 			if (this.connection && this.connection.end) {
-				const idx = instances.indexOf(this);
+				const idx = Db.instances.indexOf(this);
 				if (idx > -1) {
-					instances.splice(idx, 1);
+					Db.instances.splice(idx, 1);
 				}
 				this.connection.end(err => {
 					if (this.ssh) {
@@ -127,9 +121,9 @@ class Db {
 			this.ssh.end();
 		}
 		if (this.connection && this.connection.destroy) {
-			const idx = instances.indexOf(this);
+			const idx = Db.instances.indexOf(this);
 			if (idx > -1) {
-				instances.splice(idx, 1);
+				Db.instances.splice(idx, 1);
 			}
 			this.connection.destroy();
 		}
@@ -141,7 +135,7 @@ class Db {
 	 * @return {Promise}  Resolves when all connections have been closed
 	 */
 	static endAll() {
-		return Promise.all(instances.map(db => db.end()));
+		return Promise.all(Db.instances.map(db => db.end()));
 	}
 
 	/**
@@ -149,7 +143,7 @@ class Db {
 	 * @return {Db}
 	 */
 	static destroyAll() {
-		instances.forEach(db => db.destroy());
+		Db.instances.forEach(db => db.destroy());
 		return Db;
 	}
 
@@ -832,7 +826,7 @@ class Db {
 		args.forEach(arg => {
 			if (arg && typeof arg === 'object' && !Array.isArray(arg)) {
 				options.sql = options.sql.replace(/:([\w_]+)/g, ($0, $1) => {
-					if (arg.hasOwnProperty($1)) {
+					if (arg.hasOwnProperty($1) && arg[$1] !== undefined) {
 						return mysql.escape(arg[$1]);
 					}
 					return $0;
@@ -926,5 +920,11 @@ class Db {
 		return functions;
 	}
 }
+
+/**
+ * A list of all the Db instances that have been created
+ * @type {Array}
+ */
+Db.instances = [];
 
 module.exports = Db;

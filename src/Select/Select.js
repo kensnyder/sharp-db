@@ -4,7 +4,6 @@ const Db = require('../Db/Db.js');
 const cloneDeep = require('lodash.clonedeep');
 const escapeRegExp = require('lodash.escaperegexp');
 const forOwn = require('lodash.forown');
-const uniq = require('lodash.uniq');
 const substrCount = require('quickly-count-substrings');
 
 /**
@@ -12,6 +11,11 @@ const substrCount = require('quickly-count-substrings');
  * Class Select
  */
 class Select {
+	/**
+	 * Load the given SQL into this object
+	 * @param {String} sql  The SQL to parse
+	 * @returns {Select}
+	 */
 	parse(sql) {
 		this.reset();
 		const parser = new Parser(this);
@@ -19,6 +23,12 @@ class Select {
 		return this;
 	}
 
+	/**
+	 * Return a new Select object that matches the given SQL
+	 * @param {String} sql  The SQL to parse
+	 * @param {Db} [db]  The Db instance to use for queries
+	 * @returns {Select}
+	 */
 	static parse(sql, db = null) {
 		return Select.init(db).parse(sql);
 	}
@@ -113,6 +123,16 @@ class Select {
 	}
 
 	/**
+	 * Get normalized SQL with all parameters bound
+	 * @returns {String}
+	 */
+	toBoundSql() {
+		const sql = this.normalized();
+		const options = this.db.bindArgs(sql, [this._bound]);
+		return options.sql;
+	}
+
+	/**
 	 * @param {String|Array} [field]  If given, reset the given component(s), otherwise reset all query components
 	 *     Valid components: option, column, table, where, orWhere, having, groupBy, orderBy, limit, offset, page
 	 * @return {Select}
@@ -138,119 +158,116 @@ class Select {
 			}
 			this[prop] = ['limit', 'offset', 'page'].indexOf(field) > -1 ? null : [];
 		} else {
-			this._hasOne = [];
-			this._belongsTo = [];
-			this._hasMany = [];
-			this._habtm = [];
+			/**
+			 * The list of sibling relationship definitions
+			 * @property {Object[]}
+			 * @private
+			 */
+			this._siblings = [];
+			/**
+			 * The list of child relationship definitions
+			 * @property {Object[]}
+			 * @private
+			 */
+			this._children = [];
+			/**
+			 * The list of strings to come immediately after "SELECT"
+			 * and before column names
+			 * @property {String[]}
+			 * @private
+			 */
 			this._options = [];
+			/**
+			 * The list of column names to select
+			 * @property {String[]}
+			 * @private
+			 */
 			this._columns = [];
+			/**
+			 * The list of tables in the FROM clause
+			 * @property {String[]}
+			 * @private
+			 */
 			this._tables = [];
+			/**
+			 * The list of JOIN strings to add
+			 * @property {String[]}
+			 * @private
+			 */
 			this._joins = [];
+			/**
+			 * The list of WHERE clauses
+			 * @property {String[]}
+			 * @private
+			 */
 			this._wheres = [];
+			/**
+			 * The list of HAVING clauses
+			 * @property {String[]}
+			 * @private
+			 */
 			this._havings = [];
+			/**
+			 * The list of GROUP BY clauses
+			 * @property {String[]}
+			 * @private
+			 */
 			this._groupBys = [];
+			/**
+			 * The list of ORDER BY clauses
+			 * @property {String[]}
+			 * @private
+			 */
 			this._orderBys = [];
+			/**
+			 * The LIMIT to use
+			 * @property {Number}
+			 * @private
+			 */
 			this._limit = null;
+			/**
+			 * The OFFSET to use
+			 * @property {Number}
+			 * @private
+			 */
 			this._offset = null;
+			/**
+			 * The page used to construct an OFFSET based on the LIMIT
+			 * @property {Number}
+			 * @private
+			 */
 			this._page = null;
-			this._bound = [];
+			/**
+			 * Values to bind by name to the query before executing
+			 * @property {Object}
+			 * @private
+			 */
+			this._bound = {};
 		}
 		return this;
 	}
 
-	// 		/**
-	// 		 * Internal function for defining a relationship for fetching dependent or related tate
-	// 		 * @param {String} type  One of hasOne, hasMany, habtm
-	// 		 * @param array $spec  The specification for the relationship
-	// 		 * @return {Select}
-	// 		 */
-	// 		relate($type, $spec) {
-	// 			if ($type == 'habtm' || $type == 'hasAndBelongsToMany') {
-	// 				this.relationships[] = [
-	// 					'key' => $spec['thisProperty'],
-	// 					'type' => 'habtm',
-	// 					'thisProperty' => @$spec['key'] ?: $spec['thisProperty'],
-	// 					'options' => $spec
-	// 			];
-	// 			}
-	// 			elseif ($type == 'hasOne') {
-	// 				$spec['key'] = @$spec['key'] ?: preg_replace('/^\S+ as (\S+)$/i', '$1', $spec['thisProperty']);
-	// 				$spec['type'] = 'hasOne';
-	// 				this.relationships[] = $spec;
-	// 			}
-	// 		else {
-	// 				$spec['key'] = @$spec['key'] ?: $spec['thisProperty'];
-	// 				$spec['type'] = $type;
-	// 				this.relationships[] = $spec;
-	// 			}
-	// 			return this;
-	// 		}
-	//
-	// 		/**
-	// 		 * Specify to fetch dependent data of the given type
-	// 		 * @param {String} key  The name of the relationship as previously defined
-	// 		 * @return {Select}
-	// 		 */
-	// 		contain($key) {
-	// 			if ($key == 'ALL') {
-	// 				foreach (this.relationships as $rel) {
-	// 					this.{'_' . $rel['type']}[] = $rel;
-	// 				}
-	// 				return this;
-	// 			}
-	// 			foreach (this.relationships as $rel) {
-	// 				if ($key == $rel['key']) {
-	// 					this.{'_' . $rel['type']}[] = $rel;
-	// 					return this;
-	// 				}
-	// 			}
-	// //		QuickLogger::write('hasOne', pprt($key, this.relationships));
-	// 			trigger_error("Unknown contain key `$key`", E_USER_WARNING);
-	// 			return this;
-	// 		}
-	//
-	hasOne(thisProperty, thatTableAndColumn) {
-		this._hasOne.push({ thisProperty, thatTableAndColumn });
+	/**
+	 *
+	 * @param {String} property
+	 * @param {Select} siblingQuery
+	 * @returns {Select}
+	 * @chainable
+	 */
+	withSiblingData(property, siblingQuery) {
+		this._siblings.push({ property, query: siblingQuery });
 		return this;
 	}
 
-	belongsTo(thisProperty, thatTableAndColumn) {
-		this._belongsTo.push({ thisProperty, thatTableAndColumn });
+	/**
+	 *
+	 * @param {String} property
+	 * @param {Select} childQuery
+	 * @returns {Select}
+	 */
+	withChildData(property, childQuery) {
+		this._children.push({ property, query: childQuery });
 		return this;
-	}
-
-	hasMany(thisProperty, thatTableAndColumn) {
-		this._hasMany.push({ thisProperty, thatTableAndColumn });
-		return this;
-	}
-
-	habtm(thisProperty, idsColumn, join) {
-		const matchJoinFirst = join.match(
-			/(?:LEFT JOIN\s*)?(.+)\s+ON\s+\1\.id\s*=\s*(.+)\.(.+)/
-		);
-		const matchJoinSecond = join.match(
-			/(?:LEFT JOIN\s*)?(.+)\s+ON\s+(.+)\.(.+)\s*=\s*\1\.id/
-		);
-		if (!matchJoinFirst && !matchJoinSecond) {
-			throw new Error(
-				`Select: Unknown join pattern: "${join}". Expecting format "joinTable ON joinTable.id = throughTable.foreignColumn"`
-			);
-		}
-		let [, joinTable, throughTable, foreignColumn] =
-			matchJoinFirst || matchJoinSecond;
-		this._habtm.push({
-			thisProperty,
-			idsColumn,
-			join,
-			joinTable,
-			throughTable,
-			foreignColumn,
-		});
-		return this;
-	}
-
-	hasAndBelongsToMany(thisProperty, idsColumn, join) {
-		return this.habtm(thisProperty, idsColumn, join);
 	}
 
 	/**
@@ -274,15 +291,19 @@ class Select {
 
 	/**
 	 * Unbind a previously bound property
-	 * @param {String} placeholder
+	 * @param {String} [placeholder]
 	 * @return {Select}
 	 */
-	unbind(placeholder) {
+	unbind(placeholder = null) {
 		if (Array.isArray(placeholder)) {
 			placeholder.forEach(p => this.unbind(p));
 			return this;
 		}
-		this._bound[placeholder] = undefined;
+		if (placeholder) {
+			this._bound[placeholder] = undefined;
+		} else {
+			this._bound = {};
+		}
 		return this;
 	}
 
@@ -293,15 +314,14 @@ class Select {
 	 */
 	async fetch(options = {}) {
 		options.sql = this.toString();
-		const { query, results, fields } = await this.db.select(
+		const { query: initialSql, results, fields } = await this.db.select(
 			options,
 			this._bound
 		);
-		await this._spliceHasOnes(results);
-		await this._spliceBelongsTos(results);
-		await this._spliceHasManys(results);
-		await this._spliceHabtms(results);
-		return { query, results, fields };
+		const queries1 = await this._spliceChildData(results);
+		const queries2 = await this._spliceSiblingData(results);
+		const queries = [initialSql, ...queries1, ...queries2];
+		return { queries, results, fields };
 	}
 
 	/**
@@ -312,9 +332,9 @@ class Select {
 		options.sql = this.toString();
 		const oldLimit = this._limit;
 		this.limit(1);
-		const { query, results, fields } = await this.fetch(options);
-		this.limit(this._limit);
-		return { query, results: results[0], fields };
+		const { queries, results, fields } = await this.fetch(options);
+		this.limit(oldLimit);
+		return { queries, results: results[0], fields };
 	}
 
 	/**
@@ -342,13 +362,13 @@ class Select {
 	 */
 	async fetchIndexed(byField, options = {}) {
 		options.sql = this.toString();
-		const { query, results, fields } = await this.fetch(options);
+		const { queries, results, fields } = await this.fetch(options);
 		if (!Array.isArray(results)) {
 			return false;
 		}
 		const indexed = {};
 		results.forEach(r => (indexed[r[byField]] = r));
-		return { query, results: indexed, fields };
+		return { queries, results: indexed, fields };
 	}
 
 	/**
@@ -382,10 +402,8 @@ class Select {
 	 */
 	getClone() {
 		const copy = new Select();
-		copy._hasOne = cloneDeep(this._hasOne);
-		copy._belongsTo = cloneDeep(this._belongsTo);
-		copy._hasMany = cloneDeep(this._hasMany);
-		copy._habtm = cloneDeep(this._habtm);
+		copy._children = cloneDeep(this._children);
+		copy._siblings = cloneDeep(this._siblings);
 		copy._options = cloneDeep(this._options);
 		copy._columns = cloneDeep(this._columns);
 		copy._tables = cloneDeep(this._tables);
@@ -426,7 +444,13 @@ class Select {
 		}
 	}
 
-	getFoundRowsSql(countExpr, normalize = false) {
+	/**
+	 * Get SQL needed to return the found rows of this query
+	 * @param {String} countExpr  The expression to use inside the COUNT()
+	 * @param {Boolean} normalize  If true, return a normalized sql
+	 * @returns {String}
+	 */
+	getFoundRowsSql(countExpr = '*', normalize = false) {
 		const query = this.getFoundRowsQuery(countExpr);
 		if (this._havings.length === 0) {
 			return normalize ? query.normalized() : query.toString();
@@ -450,123 +474,77 @@ class Select {
 	}
 
 	/**
-	 * Internal method to fetch hasOne dependent data and splice it into the given result set
-	 * @param {Array} records  Records from .fetch()
+	 * Extract the name of the first bound variable
+	 * E.g. given "SELECT * FROM users WHERE id IN(:id)" it would return "id"
+	 * @param {String} sql
+	 * @returns {*|string}
+	 * @private
 	 */
-	async _spliceHasOnes(records) {
-		if (this._hasOne.length === 0 || records.length === 0) {
-			return;
+	static _extractBindingName(sql) {
+		const match = sql.match(/:([\w_]+)/);
+		if (!match) {
+			throw new Error(`Unable to find bound variable in SQL "${sql}"`);
 		}
-		for (const spec of this._hasOne) {
-			const match = spec.thisProperty.match(/^([\w_]+) AS ([\w_]+)$/i);
-			let thisProperty;
-			if (match) {
-				thisProperty = match[2];
-				spec.thisColumn = match[1];
-			} else {
-				thisProperty = spec.thisProperty.replace(/_id$/, '');
-			}
-			const [table, column] = spec.thatTableAndColumn.split('.');
-			let ids = [];
-			records.forEach(r => {
-				if (r[spec.thisColumn]) {
-					ids.push(r[spec.thisColumn]);
+		return match[1];
+	}
+
+	/**
+	 * Fetch sibling data and splice it into the given result set
+	 * @param {Array} queries  The final SQL statements that were executed
+	 */
+	async _spliceSiblingData(records) {
+		if (this._siblings.length === 0 || records.length === 0) {
+			return [];
+		}
+		const sqlQueries = [];
+		for (const { property, query } of this._siblings) {
+			const onColumn = Select._extractBindingName(query.toString());
+			const values = records.map(record => record[onColumn]);
+			query.bind(onColumn, values);
+			const { queries, results, fields } = await query.fetch();
+			const indexed = {};
+			const firstField = fields[0].name;
+			results.forEach(result => {
+				const key = result[firstField];
+				indexed[key] = result;
+			});
+			records.forEach(record => {
+				record[property] = indexed[record[onColumn]];
+			});
+			sqlQueries.push(...queries);
+		}
+		return sqlQueries;
+	}
+
+	/**
+	 * Fetch child data and splice it into the given result set
+	 * @param {Array} queries  The final SQL statements that were executed
+	 */
+	async _spliceChildData(records) {
+		if (this._children.length === 0 || records.length === 0) {
+			return [];
+		}
+		const sqlQueries = [];
+		for (const { property, query } of this._children) {
+			const onColumn = Select._extractBindingName(query.toString());
+			const values = records.map(record => record[onColumn]);
+			query.bind(onColumn, values);
+			const { queries, results, fields } = await query.fetch();
+			const firstField = fields[0].name;
+			const grouped = {};
+			results.forEach(result => {
+				const key = result[firstField];
+				if (!grouped[key]) {
+					grouped[key] = [];
 				}
+				grouped[key].push(result);
 			});
-			if (ids.length === 0) {
-				return;
-			}
-			ids = uniq(ids);
-			const query = Select.init(this.db)
-				.table(table)
-				.where(column, 'IN', ids);
-			const { results: indexed } = await query.fetchIndexed(column);
-			records.forEach(r => {
-				r[thisProperty] = indexed[r[spec.thisColumn]] || null;
+			records.forEach(record => {
+				record[property] = grouped[record[onColumn]];
 			});
+			sqlQueries.push(...queries);
 		}
-	}
-
-	/**
-	 * Internal method to fetch belongTo dependent data and splice it into the given result set
-	 * @param {Array} records  The records from fetch()
-	 */
-	async _spliceBelongsTos(records) {
-		if (this._belongsTo.length === 0 || records.length === 0) {
-			return;
-		}
-		const ids = uniq(records.map(r => r.id));
-		for (const spec of this._belongsTo) {
-			const [table, column] = spec.thatTableAndColumn.split('.');
-			const { results: indexed } = await Select.init(this.db)
-				.table(table)
-				.where(column, 'IN', ids)
-				.fetchIndexed(column);
-			records.forEach(r => {
-				r[spec.thisPropery] = indexed[r.id] || null;
-			});
-		}
-	}
-
-	/**
-	 * Internal method to fetch hasMany dependent data and splice it into the given result set
-	 * @param {Array} records  The records from fetch()
-	 */
-	async _spliceHasManys(records) {
-		if (this._hasMany.length === 0 || records.length === 0) {
-			return;
-		}
-		const ids = uniq(records.map(r => r.id));
-		for (const spec of this._hasMany) {
-			const [table, column] = spec.thatTableAndColumn.split('.');
-			const query = Select.init()
-				.table(table)
-				.where(column, 'IN', ids);
-			const { results: grouped } = await query.fetchGrouped(column);
-			records.forEach(r => {
-				r[spec.thisPropery] = grouped[r.id] || [];
-			});
-		}
-	}
-
-	/**
-	 * Internal method to fetch habtm dependent data and splice it into the given result set
-	 * @param {Array} records  The records from fetch()
-	 * @example
-	 * const query = Select.parse('SELECT * FROM users');
-	 * query.habtm(
-	 *   'hubs',
-	 *   'SELECT user_id, client_id FROM clients_users WHERE user_id IN (?)',
-	 *   'SELECT * FROM clients WHERE id IN(?)'
-	 * );
-	 */
-	async _spliceHabtms(records) {
-		if (this._habtm.length === 0 || records.length === 0) {
-			return;
-		}
-		const ids = uniq(records.map(r => r.id));
-		// TODO: get this working!
-		for (const spec of this._habtm) {
-			// const { joinTableQuery, foreignTable } = spec;
-			// const joinTableLookup = await this.db.selectGrouped('user_id', joinTableQuery, ids);
-			// const foreignIds = uniq(values(joinTableLookup));
-			// const foreignQuery = Select.init()
-			// 	.table(foreignTable)
-			// 	.where('id', 'IN', foreignIds);
-			// const foreignRecords = await foreignQuery.fetchIndexed('id');
-			// const { thisProperty, idsColumn, join, throughTable, subqueryHandler } = spec;
-			// const subquery = Select.init()
-			// 	.table(throughTable)
-			// 	.leftJoin(join)
-			// 	.where(`${throughTable}.${idsColumn}`, 'IN', ids);
-			// if (subqueryHandler) {
-			// 	subqueryHandler(subquery);
-			// }
-			// const grouped = await subquery.fetchIndexed(idsColumn);
-			// records.forEach(r => {
-			// 	r[thisProperty] = grouped[r.id] || [];
-			// });
-		}
+		return sqlQueries;
 	}
 
 	/**
@@ -738,7 +716,7 @@ class Select {
 
 	/**
 	 * Utility function to add conditions for a clause (WHERE, HAVING)
-	 * @param {String} collection  The collection to add the clauses to
+	 * @param {Array} collection  The collection to add the clauses to (e.g. this._wheres or this._havings)
 	 * @param {Array} criteria  A list of expressions to stringify
 	 * @property {*} criteria[0]  The expression or name of the column on which to match
 	 * @property {*} [criteria[1]]  The comparison operator; defaults to "="
@@ -800,9 +778,11 @@ class Select {
 			operator.length > 0 &&
 			substrCount(column, '?') === operator.length
 		) {
+			// column is a string with question marks and operator is an array of replacements
+			// e.g. query.where('SUBSTR(prefs, ?, ?) = role', [1, 4]);
 			const values = operator;
 			let i = 0;
-			const sql = column.replace(/(%)?\?(%)?/, ($0, $1, $2) => {
+			const sql = column.replace(/(%|)\?(%|)/g, ($0, $1, $2) => {
 				const escNoQuotes = this.escapeQuoteless(values[i++]);
 				return `'${$1}${escNoQuotes}${$2}'`;
 			});
@@ -858,7 +838,7 @@ class Select {
 		} else if (operator === 'IN' || operator === 'NOT IN') {
 			// in clause that is not array
 			value = mysql.escape(value);
-			collection.push(`${column} ${operator} (${value})`);
+			collection.push(`${column} ${operator}(${value})`);
 		} else {
 			value = mysql.escape(value);
 			collection.push(`${column} ${operator} ${value}`);
@@ -938,9 +918,14 @@ class Select {
 		this._conditions(this._havings, args);
 		return this;
 	}
+
+	/**
+	 * Add an OR with conditions under the HAVING clause
+	 * @param {Array[]} conditions
+	 * @returns {Select}
+	 */
 	orHaving(conditions) {
 		const criteria = [];
-		// TODO: something wrong with this loop
 		conditions.forEach(condition => {
 			this._conditions(criteria, condition);
 		});
@@ -1025,7 +1010,7 @@ class Select {
 		if (escaped.slice(0, 1) === "'" && escaped.slice(-1) === "'") {
 			return escaped.slice(1, -1);
 		}
-		return value;
+		return String(value);
 	}
 }
 

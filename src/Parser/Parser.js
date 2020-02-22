@@ -1,7 +1,6 @@
 const capitalize = require('lodash.capitalize');
 const camelCase = require('lodash.camelcase');
 const upperFirst = require('lodash.upperfirst');
-const trim = require('lodash.trim');
 
 /**
  * Parse SQL and populate onto a Select query object
@@ -100,6 +99,11 @@ class Parser {
 		return true;
 	}
 
+	/**
+	 * Handle SQL_CALC_FOUND_ROWS and column names
+	 * @param {String} clause  The clause after the SELECT
+	 * @private
+	 */
 	_handleSelect(clause) {
 		let columns = clause.split(/s*,s*/);
 		// now handle parenthesis expressions that contain commas
@@ -131,47 +135,93 @@ class Parser {
 		});
 	}
 
+	/**
+	 * Handle table names
+	 * @param {String} clause  The clause after the FROM
+	 * @private
+	 */
 	_handleFrom(clause) {
 		const tables = clause.split(/\s*,\s*/);
 		tables.forEach(table => this.query.table(table));
 	}
 
-	_handleJoin(clause) {
-		this.query.innerJoin(clause);
-	}
-
+	/**
+	 * Handle INNER JOIN statements
+	 * @param {String} clause  The clause after the INNER JOIN
+	 * @private
+	 */
 	_handleInnerJoin(clause) {
 		this.query.innerJoin(clause);
 	}
 
+	/**
+	 * Handle LEFT JOIN statements
+	 * @param {String} clause  The clause after the LEFT JOIN
+	 * @private
+	 */
 	_handleLeftJoin(clause) {
 		this.query.leftJoin(clause);
 	}
 
+	/**
+	 * Handle LEFT OUTER JOIN statements
+	 * @param {String} clause  The clause after the LEFT OUTER JOIN
+	 * @private
+	 */
 	_handleLeftOuterJoin(clause) {
 		this.query.leftOuterJoin(clause);
 	}
 
+	/**
+	 * Handle RIGHT JOIN statements
+	 * @param {String} clause  The clause after the RIGHT JOIN
+	 * @private
+	 */
 	_handleRightJoin(clause) {
 		this.query.rightJoin(clause);
 	}
 
+	/**
+	 * Handle RIGHT OUTER JOIN statements
+	 * @param {String} clause  The clause after the RIGHT OUTER JOIN
+	 * @private
+	 */
 	_handleRightOuterJoin(clause) {
 		this.query.rightOuterJoin(clause);
 	}
 
+	/**
+	 * Handle CROSS JOIN statements
+	 * @param {String} clause  The clause after the CROSS JOIN
+	 * @private
+	 */
 	_handleCrossJoin(clause) {
 		this.query.crossJoin(clause);
 	}
 
+	/**
+	 * Handle FULL JOIN statements
+	 * @param {String} clause  The clause after the FULL JOIN
+	 * @private
+	 */
 	_handleFullJoin(clause) {
 		this.query.fullJoin(clause);
 	}
 
+	/**
+	 * Handle FULL OUTER JOIN statements
+	 * @param {String} clause  The clause after the FULL OUTER JOIN
+	 * @private
+	 */
 	_handleFullOuterJoin(clause) {
 		this.query.fullOuterJoin(clause);
 	}
 
+	/**
+	 * Handle WHERE conditions
+	 * @param {String} clause  All the conditions after WHERE
+	 * @private
+	 */
 	_handleWhere(clause) {
 		if (/^(1|'1'|true)$/i.test(clause)) {
 			this.query._wheres.push(clause);
@@ -180,6 +230,11 @@ class Parser {
 		}
 	}
 
+	/**
+	 * Handle HAVING statements
+	 * @param {String} clause  All the conditions after HAVING
+	 * @private
+	 */
 	_handleHaving(clause) {
 		this._handleConditions('having', clause);
 	}
@@ -192,7 +247,7 @@ class Parser {
 	_handleConditions(type, clause) {
 		const andGroups = clause.split(/\bAND\b/i);
 		andGroups.forEach(andGroup => {
-			const orPieces = andGroup.split(/\bOR\b/i).map(trim);
+			const orPieces = andGroup.split(/\bOR\b/i).map(str => str.trim());
 			if (orPieces.length === 1) {
 				// no OR operators
 				const fn = type; // either where or having
@@ -205,22 +260,48 @@ class Parser {
 		});
 	}
 
+	/**
+	 * Handle GROUP BY statements
+	 * @param {String} clause  The clauses after the GROUP BY
+	 * @private
+	 */
 	_handleGroupBy(clause) {
 		const columns = clause.split(/\s*,\s*/);
 		columns.forEach(column => this.query.groupBy(column));
 	}
 
+	/**
+	 * Handle ORDER BY statements
+	 * @param {String} clause  The clause after the ORDER BY
+	 * @private
+	 */
 	_handleOrderBy(clause) {
 		const columns = clause.split(/\s*,\s*/);
 		columns.forEach(column => this.query.orderBy(column));
 	}
 
+	/**
+	 * Handle LIMIT statements including "LIMIT #" and "LIMIT #, #"
+	 * @param {String} clause  The clause after the LIMIT
+	 * @private
+	 */
 	_handleLimit(clause) {
-		this.limit(clause);
+		const offsetLimit = clause.match(/^(\d+)\s*,\s*(\d+)$/);
+		if (offsetLimit) {
+			this.query.offset(offsetLimit[1]);
+			this.query.limit(offsetLimit[2]);
+		} else {
+			this.query.limit(clause);
+		}
 	}
 
+	/**
+	 * Handle OFFSET statements
+	 * @param {String} clause  The number after the OFFSET
+	 * @private
+	 */
 	_handleOffset(clause) {
-		this.offset(clause);
+		this.query.offset(clause);
 	}
 }
 

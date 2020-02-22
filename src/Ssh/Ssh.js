@@ -2,6 +2,9 @@ const os = require('os');
 const fs = require('fs');
 const Client = require('ssh2').Client;
 
+/**
+ * Class to allow connecting to a DB through an ssh tunnel
+ */
 class Ssh {
 	/**
 	 * Specify connection details including, host, port, user, privateKey
@@ -38,7 +41,6 @@ class Ssh {
 	tunnelTo(db) {
 		return new Promise((resolve, reject) => {
 			if (!db.config || !db.config.host || !db.config.port) {
-				console.log('rejecting tunnelTo');
 				reject(new Error('Db config must have host and port.'));
 			}
 			this.connection = new Client();
@@ -68,7 +70,9 @@ class Ssh {
 	 * Close the ssh tunnel
 	 */
 	end() {
-		this.connection.end();
+		if (this.connection) {
+			this.connection.end();
+		}
 	}
 }
 
