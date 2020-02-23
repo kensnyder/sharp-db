@@ -833,7 +833,8 @@ class Select {
 				quoted = `'${quoteless}%'`;
 			} else if (likeMatch[2] === '%?') {
 				quoted = `'%${quoteless}'`;
-			} else if (likeMatch[2] === '%?%') {
+			} else {
+				// likeMatch[2] === '%?%'
 				quoted = `'%${quoteless}%'`;
 			}
 			collection.push(`${column} ${likeMatch[1]} ${quoted}`);
@@ -890,13 +891,19 @@ class Select {
 	 * @return {Select}
 	 */
 	whereBetween(column, twoValueArray) {
-		const isNullish = v => v === undefined || v === null || v === false;
+		const isNullish = v =>
+			v === undefined || v === null || v === false || isNaN(v);
 		if (!isNullish(twoValueArray[0]) && !isNullish(twoValueArray[1])) {
 			this.where(column, 'BETWEEN', twoValueArray);
 		} else if (!isNullish(twoValueArray[0]) && isNullish(twoValueArray[1])) {
 			this.where(column, '>=', twoValueArray[0]);
 		} else if (isNullish(twoValueArray[0]) && !isNullish(twoValueArray[1])) {
 			this.where(column, '<=', twoValueArray[1]);
+		} else {
+			// both are nullish!
+			throw new Error(
+				'Select.whereBetween(): Array must have at least 1 non nullish value'
+			);
 		}
 		return this;
 	}

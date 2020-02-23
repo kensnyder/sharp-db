@@ -211,6 +211,20 @@ describe('Select', function() {
 			query.whereBetween('attempts', [8]);
 			expect(query._wheres[0]).toBe('`attempts` >= 8');
 		});
+		it('should throw error when both are nullish', function() {
+			const bothNull = () => {
+				const query = new Select();
+				query.whereBetween('attempts', [null, null]);
+			};
+			expect(bothNull).toThrow();
+		});
+		it('should throw error when array is empty', function() {
+			const emptyArray = () => {
+				const query = new Select();
+				query.whereBetween('attempts', []);
+			};
+			expect(emptyArray).toThrow();
+		});
 	});
 	describe('foundRows()', () => {
 		it('should handle a simple query', () => {
