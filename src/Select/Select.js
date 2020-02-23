@@ -248,9 +248,10 @@ class Select {
 	}
 
 	/**
-	 *
-	 * @param {String} property
-	 * @param {Select} siblingQuery
+	 * Specify data from a sibling table be spliced in
+	 * Can be used for one-to-one or many-to-one relationships
+	 * @param {String} property  The name of the property into which to splice
+	 * @param {Select} siblingQuery  The Select query to fetch the sibling data
 	 * @returns {Select}
 	 * @chainable
 	 */
@@ -260,9 +261,10 @@ class Select {
 	}
 
 	/**
-	 *
-	 * @param {String} property
-	 * @param {Select} childQuery
+	 * Specify data from a child table to be spliced in
+	 * Can be used for one-to-many or many-to-many relationships
+	 * @param {String} property  The name of the property into which to splice
+	 * @param {Select} childQuery  The Select query to fetch the child data
 	 * @returns {Select}
 	 */
 	withChildData(property, childQuery) {
@@ -338,12 +340,21 @@ class Select {
 	}
 
 	/**
-	 * Fetch each record as an array of values or an array of key-value pairs
+	 * Fetch each record as an object with key-value pairs
 	 * @return {Promise<Object>}
 	 */
 	fetchHash(options = {}) {
 		options.sql = this.toString();
 		return this.db.selectHash(options, this._bound);
+	}
+
+	/**
+	 * Fetch each record as an array of values
+	 * @return {Promise<Object>}
+	 */
+	fetchList(options = {}) {
+		options.sql = this.toString();
+		return this.db.selectList(options, this._bound);
 	}
 
 	/**
@@ -363,9 +374,6 @@ class Select {
 	async fetchIndexed(byField, options = {}) {
 		options.sql = this.toString();
 		const { queries, results, fields } = await this.fetch(options);
-		if (!Array.isArray(results)) {
-			return false;
-		}
 		const indexed = {};
 		results.forEach(r => (indexed[r[byField]] = r));
 		return { queries, results: indexed, fields };
@@ -383,9 +391,6 @@ class Select {
 	async fetchGrouped(byField, options = {}) {
 		options.sql = this.toString();
 		const { query, results, fields } = await this.fetch(options);
-		if (!Array.isArray(results)) {
-			return false;
-		}
 		const grouped = {};
 		results.forEach(r => {
 			if (!grouped[r[byField]]) {
@@ -588,6 +593,16 @@ class Select {
 	}
 
 	/**
+	 * Add multiple table to the "FROM" clause
+	 * @param {Array} tableNames  The names of the tables to query
+	 * @return {Select}
+	 */
+	tables(tableNames) {
+		this._tables.push(...tableNames);
+		return this;
+	}
+
+	/**
 	 * Add a table to the "FROM" clause (same as .table())
 	 * @param {String} tableName  The name of the table to query
 	 * @return {Select}
@@ -598,7 +613,7 @@ class Select {
 	}
 
 	/**
-	 * Add an INNER JOIN expression (same as ->innerJoin())
+	 * Add an INNER JOIN expression (same as .innerJoin())
 	 * @param {String} expression  The expression following the INNER JOIN keyword
 	 * @example query.join('posts p ON p.id = c.post_id');
 	 * @return {Select}

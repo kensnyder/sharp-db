@@ -405,15 +405,27 @@
                       </a></li>
                       
                       <li><a
+                        href='#selecttoboundsql'
+                        class='regular pre-open'>
+                        #toBoundSql
+                      </a></li>
+                      
+                      <li><a
                         href='#selectreset'
                         class='regular pre-open'>
                         #reset
                       </a></li>
                       
                       <li><a
-                        href='#selecthasone'
+                        href='#selectwithsiblingdata'
                         class='regular pre-open'>
-                        #hasOne
+                        #withSiblingData
+                      </a></li>
+                      
+                      <li><a
+                        href='#selectwithchilddata'
+                        class='regular pre-open'>
+                        #withChildData
                       </a></li>
                       
                       <li><a
@@ -477,33 +489,27 @@
                       </a></li>
                       
                       <li><a
+                        href='#selectgetfoundrowssql'
+                        class='regular pre-open'>
+                        #getFoundRowsSql
+                      </a></li>
+                      
+                      <li><a
                         href='#selectfoundrows'
                         class='regular pre-open'>
                         #foundRows
                       </a></li>
                       
                       <li><a
-                        href='#select_splicehasones'
+                        href='#select_splicesiblingdata'
                         class='regular pre-open'>
-                        #_spliceHasOnes
+                        #_spliceSiblingData
                       </a></li>
                       
                       <li><a
-                        href='#select_splicebelongstos'
+                        href='#select_splicechilddata'
                         class='regular pre-open'>
-                        #_spliceBelongsTos
-                      </a></li>
-                      
-                      <li><a
-                        href='#select_splicehasmanys'
-                        class='regular pre-open'>
-                        #_spliceHasManys
-                      </a></li>
-                      
-                      <li><a
-                        href='#select_splicehabtms'
-                        class='regular pre-open'>
-                        #_spliceHabtms
+                        #_spliceChildData
                       </a></li>
                       
                       <li><a
@@ -630,6 +636,12 @@
                         href='#selecthaving'
                         class='regular pre-open'>
                         #having
+                      </a></li>
+                      
+                      <li><a
+                        href='#selectorhaving'
+                        class='regular pre-open'>
+                        #orHaving
                       </a></li>
                       
                       <li><a
@@ -5307,6 +5319,61 @@ Class Select</p>
       </div>
     </div>
   
+    <div class='border-bottom' id='selecttoboundsql'>
+      <div class="clearfix small pointer toggle-sibling">
+        <div class="py1 contain">
+            <a class='icon pin-right py1 dark-link caret-right'>▸</a>
+            <span class='code strong strong truncate'>toBoundSql()</span>
+        </div>
+      </div>
+      <div class="clearfix display-none toggle-target">
+        <section class='p2 mb2 clearfix bg-white minishadow'>
+
+  
+
+  <p>Get normalized SQL with all parameters bound</p>
+
+    <div class='pre p1 fill-light mt0'>toBoundSql(): <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String">String</a></div>
+  
+  
+
+  
+  
+  
+  
+  
+  
+
+  
+
+  
+
+  
+    
+      <div class='py1 quiet mt1 prose-big'>Returns</div>
+      <code><a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String">String</a></code>:
+        
+
+      
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+</section>
+
+      </div>
+    </div>
+  
     <div class='border-bottom' id='selectreset'>
       <div class="clearfix small pointer toggle-sibling">
         <div class="py1 contain">
@@ -5377,11 +5444,11 @@ Valid components: option, column, table, where, orWhere, having, groupBy, orderB
       </div>
     </div>
   
-    <div class='border-bottom' id='selecthasone'>
+    <div class='border-bottom' id='selectwithsiblingdata'>
       <div class="clearfix small pointer toggle-sibling">
         <div class="py1 contain">
             <a class='icon pin-right py1 dark-link caret-right'>▸</a>
-            <span class='code strong strong truncate'>hasOne(thisProperty, thatTableAndColumn)</span>
+            <span class='code strong strong truncate'>withSiblingData(property, siblingQuery)</span>
         </div>
       </div>
       <div class="clearfix display-none toggle-target">
@@ -5389,8 +5456,10 @@ Valid components: option, column, table, where, orWhere, having, groupBy, orderB
 
   
 
-  
-    <div class='pre p1 fill-light mt0'>hasOne(thisProperty: any, thatTableAndColumn: any): <a href="#select">Select</a></div>
+  <p>Specify data from a sibling table be spliced in
+Can be used for one-to-one or many-to-one relationships</p>
+
+    <div class='pre p1 fill-light mt0'>withSiblingData(property: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String">String</a>, siblingQuery: <a href="#select">Select</a>): <a href="#select">Select</a></div>
   
   
 
@@ -5407,16 +5476,97 @@ Valid components: option, column, table, where, orWhere, having, groupBy, orderB
       
         <div class='space-bottom0'>
           <div>
-            <span class='code bold'>thisProperty</span> <code class='quiet'>(any)</code>
-	    
+            <span class='code bold'>property</span> <code class='quiet'>(<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String">String</a>)</code>
+	    The name of the property into which to splice
+
           </div>
           
         </div>
       
         <div class='space-bottom0'>
           <div>
-            <span class='code bold'>thatTableAndColumn</span> <code class='quiet'>(any)</code>
-	    
+            <span class='code bold'>siblingQuery</span> <code class='quiet'>(<a href="#select">Select</a>)</code>
+	    The Select query to fetch the sibling data
+
+          </div>
+          
+        </div>
+      
+    </div>
+  
+
+  
+
+  
+    
+      <div class='py1 quiet mt1 prose-big'>Returns</div>
+      <code><a href="#select">Select</a></code>:
+        
+
+      
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+</section>
+
+      </div>
+    </div>
+  
+    <div class='border-bottom' id='selectwithchilddata'>
+      <div class="clearfix small pointer toggle-sibling">
+        <div class="py1 contain">
+            <a class='icon pin-right py1 dark-link caret-right'>▸</a>
+            <span class='code strong strong truncate'>withChildData(property, childQuery)</span>
+        </div>
+      </div>
+      <div class="clearfix display-none toggle-target">
+        <section class='p2 mb2 clearfix bg-white minishadow'>
+
+  
+
+  <p>Specify data from a child table to be spliced in
+Can be used for one-to-many or many-to-many relationships</p>
+
+    <div class='pre p1 fill-light mt0'>withChildData(property: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String">String</a>, childQuery: <a href="#select">Select</a>): <a href="#select">Select</a></div>
+  
+  
+
+  
+  
+  
+  
+  
+  
+
+  
+    <div class='py1 quiet mt1 prose-big'>Parameters</div>
+    <div class='prose'>
+      
+        <div class='space-bottom0'>
+          <div>
+            <span class='code bold'>property</span> <code class='quiet'>(<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String">String</a>)</code>
+	    The name of the property into which to splice
+
+          </div>
+          
+        </div>
+      
+        <div class='space-bottom0'>
+          <div>
+            <span class='code bold'>childQuery</span> <code class='quiet'>(<a href="#select">Select</a>)</code>
+	    The Select query to fetch the child data
+
           </div>
           
         </div>
@@ -5541,7 +5691,7 @@ Valid components: option, column, table, where, orWhere, having, groupBy, orderB
       <div class="clearfix small pointer toggle-sibling">
         <div class="py1 contain">
             <a class='icon pin-right py1 dark-link caret-right'>▸</a>
-            <span class='code strong strong truncate'>unbind(placeholder)</span>
+            <span class='code strong strong truncate'>unbind(placeholder = null)</span>
         </div>
       </div>
       <div class="clearfix display-none toggle-target">
@@ -5551,7 +5701,7 @@ Valid components: option, column, table, where, orWhere, having, groupBy, orderB
 
   <p>Unbind a previously bound property</p>
 
-    <div class='pre p1 fill-light mt0'>unbind(placeholder: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String">String</a>): <a href="#select">Select</a></div>
+    <div class='pre p1 fill-light mt0'>unbind(placeholder: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String">String</a>?): <a href="#select">Select</a></div>
   
   
 
@@ -5568,7 +5718,8 @@ Valid components: option, column, table, where, orWhere, having, groupBy, orderB
       
         <div class='space-bottom0'>
           <div>
-            <span class='code bold'>placeholder</span> <code class='quiet'>(<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String">String</a>)</code>
+            <span class='code bold'>placeholder</span> <code class='quiet'>(<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String">String</a>?
+            = <code>null</code>)</code>
 	    
           </div>
           
@@ -6173,6 +6324,86 @@ Valid components: option, column, table, where, orWhere, having, groupBy, orderB
       </div>
     </div>
   
+    <div class='border-bottom' id='selectgetfoundrowssql'>
+      <div class="clearfix small pointer toggle-sibling">
+        <div class="py1 contain">
+            <a class='icon pin-right py1 dark-link caret-right'>▸</a>
+            <span class='code strong strong truncate'>getFoundRowsSql(countExpr, normalize)</span>
+        </div>
+      </div>
+      <div class="clearfix display-none toggle-target">
+        <section class='p2 mb2 clearfix bg-white minishadow'>
+
+  
+
+  <p>Get SQL needed to return the found rows of this query</p>
+
+    <div class='pre p1 fill-light mt0'>getFoundRowsSql(countExpr: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String">String</a>, normalize: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Boolean">Boolean</a>): <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String">String</a></div>
+  
+  
+
+  
+  
+  
+  
+  
+  
+
+  
+    <div class='py1 quiet mt1 prose-big'>Parameters</div>
+    <div class='prose'>
+      
+        <div class='space-bottom0'>
+          <div>
+            <span class='code bold'>countExpr</span> <code class='quiet'>(<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String">String</a>
+            = <code>&#39;*&#39;</code>)</code>
+	    The expression to use inside the COUNT()
+
+          </div>
+          
+        </div>
+      
+        <div class='space-bottom0'>
+          <div>
+            <span class='code bold'>normalize</span> <code class='quiet'>(<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Boolean">Boolean</a>
+            = <code>false</code>)</code>
+	    If true, return a normalized sql
+
+          </div>
+          
+        </div>
+      
+    </div>
+  
+
+  
+
+  
+    
+      <div class='py1 quiet mt1 prose-big'>Returns</div>
+      <code><a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String">String</a></code>:
+        
+
+      
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+</section>
+
+      </div>
+    </div>
+  
     <div class='border-bottom' id='selectfoundrows'>
       <div class="clearfix small pointer toggle-sibling">
         <div class="py1 contain">
@@ -6254,11 +6485,11 @@ Valid components: option, column, table, where, orWhere, having, groupBy, orderB
       </div>
     </div>
   
-    <div class='border-bottom' id='select_splicehasones'>
+    <div class='border-bottom' id='select_splicesiblingdata'>
       <div class="clearfix small pointer toggle-sibling">
         <div class="py1 contain">
             <a class='icon pin-right py1 dark-link caret-right'>▸</a>
-            <span class='code strong strong truncate'>_spliceHasOnes(records)</span>
+            <span class='code strong strong truncate'>_spliceSiblingData(records, queries)</span>
         </div>
       </div>
       <div class="clearfix display-none toggle-target">
@@ -6266,9 +6497,9 @@ Valid components: option, column, table, where, orWhere, having, groupBy, orderB
 
   
 
-  <p>Internal method to fetch hasOne dependent data and splice it into the given result set</p>
+  <p>Fetch sibling data and splice it into the given result set</p>
 
-    <div class='pre p1 fill-light mt0'>_spliceHasOnes(records: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array">Array</a>)</div>
+    <div class='pre p1 fill-light mt0'>_spliceSiblingData(records: any, queries: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array">Array</a>)</div>
   
   
 
@@ -6285,8 +6516,16 @@ Valid components: option, column, table, where, orWhere, having, groupBy, orderB
       
         <div class='space-bottom0'>
           <div>
-            <span class='code bold'>records</span> <code class='quiet'>(<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array">Array</a>)</code>
-	    Records from .fetch()
+            <span class='code bold'>records</span> <code class='quiet'>(any)</code>
+	    
+          </div>
+          
+        </div>
+      
+        <div class='space-bottom0'>
+          <div>
+            <span class='code bold'>queries</span> <code class='quiet'>(<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array">Array</a>)</code>
+	    The final SQL statements that were executed
 
           </div>
           
@@ -6315,11 +6554,11 @@ Valid components: option, column, table, where, orWhere, having, groupBy, orderB
       </div>
     </div>
   
-    <div class='border-bottom' id='select_splicebelongstos'>
+    <div class='border-bottom' id='select_splicechilddata'>
       <div class="clearfix small pointer toggle-sibling">
         <div class="py1 contain">
             <a class='icon pin-right py1 dark-link caret-right'>▸</a>
-            <span class='code strong strong truncate'>_spliceBelongsTos(records)</span>
+            <span class='code strong strong truncate'>_spliceChildData(records, queries)</span>
         </div>
       </div>
       <div class="clearfix display-none toggle-target">
@@ -6327,9 +6566,9 @@ Valid components: option, column, table, where, orWhere, having, groupBy, orderB
 
   
 
-  <p>Internal method to fetch belongTo dependent data and splice it into the given result set</p>
+  <p>Fetch child data and splice it into the given result set</p>
 
-    <div class='pre p1 fill-light mt0'>_spliceBelongsTos(records: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array">Array</a>)</div>
+    <div class='pre p1 fill-light mt0'>_spliceChildData(records: any, queries: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array">Array</a>)</div>
   
   
 
@@ -6346,69 +6585,16 @@ Valid components: option, column, table, where, orWhere, having, groupBy, orderB
       
         <div class='space-bottom0'>
           <div>
-            <span class='code bold'>records</span> <code class='quiet'>(<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array">Array</a>)</code>
-	    The records from fetch()
-
+            <span class='code bold'>records</span> <code class='quiet'>(any)</code>
+	    
           </div>
           
         </div>
-      
-    </div>
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-</section>
-
-      </div>
-    </div>
-  
-    <div class='border-bottom' id='select_splicehasmanys'>
-      <div class="clearfix small pointer toggle-sibling">
-        <div class="py1 contain">
-            <a class='icon pin-right py1 dark-link caret-right'>▸</a>
-            <span class='code strong strong truncate'>_spliceHasManys(records)</span>
-        </div>
-      </div>
-      <div class="clearfix display-none toggle-target">
-        <section class='p2 mb2 clearfix bg-white minishadow'>
-
-  
-
-  <p>Internal method to fetch hasMany dependent data and splice it into the given result set</p>
-
-    <div class='pre p1 fill-light mt0'>_spliceHasManys(records: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array">Array</a>)</div>
-  
-  
-
-  
-  
-  
-  
-  
-  
-
-  
-    <div class='py1 quiet mt1 prose-big'>Parameters</div>
-    <div class='prose'>
       
         <div class='space-bottom0'>
           <div>
-            <span class='code bold'>records</span> <code class='quiet'>(<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array">Array</a>)</code>
-	    The records from fetch()
+            <span class='code bold'>queries</span> <code class='quiet'>(<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array">Array</a>)</code>
+	    The final SQL statements that were executed
 
           </div>
           
@@ -6423,78 +6609,6 @@ Valid components: option, column, table, where, orWhere, having, groupBy, orderB
 
   
 
-  
-
-  
-
-  
-
-  
-
-  
-</section>
-
-      </div>
-    </div>
-  
-    <div class='border-bottom' id='select_splicehabtms'>
-      <div class="clearfix small pointer toggle-sibling">
-        <div class="py1 contain">
-            <a class='icon pin-right py1 dark-link caret-right'>▸</a>
-            <span class='code strong strong truncate'>_spliceHabtms(records)</span>
-        </div>
-      </div>
-      <div class="clearfix display-none toggle-target">
-        <section class='p2 mb2 clearfix bg-white minishadow'>
-
-  
-
-  <p>Internal method to fetch habtm dependent data and splice it into the given result set</p>
-
-    <div class='pre p1 fill-light mt0'>_spliceHabtms(records: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array">Array</a>)</div>
-  
-  
-
-  
-  
-  
-  
-  
-  
-
-  
-    <div class='py1 quiet mt1 prose-big'>Parameters</div>
-    <div class='prose'>
-      
-        <div class='space-bottom0'>
-          <div>
-            <span class='code bold'>records</span> <code class='quiet'>(<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array">Array</a>)</code>
-	    The records from fetch()
-
-          </div>
-          
-        </div>
-      
-    </div>
-  
-
-  
-
-  
-
-  
-
-  
-    <div class='py1 quiet mt1 prose-big'>Example</div>
-    
-      
-      <pre class='p1 overflow-auto round fill-light'><span class="hljs-keyword">const</span> query = Select.parse(<span class="hljs-string">'SELECT * FROM users'</span>);
-query.habtm(
-  <span class="hljs-string">'hubs'</span>,
-  <span class="hljs-string">'SELECT user_id, client_id FROM clients_users WHERE user_id IN (?)'</span>,
-  <span class="hljs-string">'SELECT * FROM clients WHERE id IN(?)'</span>
-);</pre>
-    
   
 
   
@@ -7612,7 +7726,7 @@ query.habtm(
 
   <p>Utility function to add conditions for a clause (WHERE, HAVING)</p>
 
-    <div class='pre p1 fill-light mt0'>_conditions(collection: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String">String</a>, criteria: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array">Array</a>): <a href="#select">Select</a></div>
+    <div class='pre p1 fill-light mt0'>_conditions(collection: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array">Array</a>, criteria: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array">Array</a>): <a href="#select">Select</a></div>
   
   
 
@@ -7629,8 +7743,8 @@ query.habtm(
       
         <div class='space-bottom0'>
           <div>
-            <span class='code bold'>collection</span> <code class='quiet'>(<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String">String</a>)</code>
-	    The collection to add the clauses to
+            <span class='code bold'>collection</span> <code class='quiet'>(<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array">Array</a>)</code>
+	    The collection to add the clauses to (e.g. this._wheres or this._havings)
 
           </div>
           
@@ -8090,6 +8204,74 @@ query.habtm(
             <span class='code bold'>value</span> <code class='quiet'>(any?)</code>
 	    The value to test against
 
+          </div>
+          
+        </div>
+      
+    </div>
+  
+
+  
+
+  
+    
+      <div class='py1 quiet mt1 prose-big'>Returns</div>
+      <code><a href="#select">Select</a></code>:
+        
+
+      
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+</section>
+
+      </div>
+    </div>
+  
+    <div class='border-bottom' id='selectorhaving'>
+      <div class="clearfix small pointer toggle-sibling">
+        <div class="py1 contain">
+            <a class='icon pin-right py1 dark-link caret-right'>▸</a>
+            <span class='code strong strong truncate'>orHaving(conditions)</span>
+        </div>
+      </div>
+      <div class="clearfix display-none toggle-target">
+        <section class='p2 mb2 clearfix bg-white minishadow'>
+
+  
+
+  <p>Add an OR with conditions under the HAVING clause</p>
+
+    <div class='pre p1 fill-light mt0'>orHaving(conditions: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array">Array</a>&#x3C;<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array">Array</a>>): <a href="#select">Select</a></div>
+  
+  
+
+  
+  
+  
+  
+  
+  
+
+  
+    <div class='py1 quiet mt1 prose-big'>Parameters</div>
+    <div class='prose'>
+      
+        <div class='space-bottom0'>
+          <div>
+            <span class='code bold'>conditions</span> <code class='quiet'>(<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array">Array</a>&#x3C;<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array">Array</a>>)</code>
+	    
           </div>
           
         </div>

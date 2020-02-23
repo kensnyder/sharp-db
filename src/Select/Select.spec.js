@@ -1,12 +1,17 @@
 jest.mock('mysql2');
 const mysqlMock = require('mysql2');
 const Select = require('../Select/Select.js');
-const prettify = require('pretty-var-export');
+
+const normalizeWhitespace = s => s.replace(/\s+/g, ' ').trim();
 
 describe('Select', function() {
 	describe('class', function() {
 		it('should be instantiable', function() {
 			const query = new Select();
+			expect(query).toBeInstanceOf(Select);
+		});
+		it('should allow init', function() {
+			const query = Select.init();
 			expect(query).toBeInstanceOf(Select);
 		});
 	});
@@ -210,20 +215,41 @@ describe('Select', function() {
 	describe('foundRows()', () => {
 		it('should handle a simple query', () => {
 			const query = Select.parse('SELECT * FROM a');
-			const actual = query.getFoundRowsSql().replace(/\s+/g, ' ');
+			const actual = normalizeWhitespace(query.getFoundRowsSql());
+			expect(actual).toBe('SELECT COUNT(*) AS foundRows FROM a');
+		});
+		it('should handle a distinct', () => {
+			const query = Select.parse('SELECT * FROM a');
+			const actual = query.getFoundRowsSql('DISTINCT department_id', true);
+			expect(actual).toBe(
+				'SELECT COUNT(DISTINCT department_id) AS foundRows FROM a'
+			);
+		});
+		it('should produce a new Select object', () => {
+			const query = Select.parse('SELECT * FROM a');
+			const actual = query.getFoundRowsQuery().normalized();
 			expect(actual).toBe('SELECT COUNT(*) AS foundRows FROM a');
 		});
 		it('should handle queries with HAVING', () => {
 			const query = Select.parse(
 				'SELECT category, COUNT(*) FROM posts GROUP BY category HAVING COUNT(*) > 1'
 			);
-			const actual = query.getFoundRowsSql().replace(/\s+/g, ' ');
+			const actual = normalizeWhitespace(query.getFoundRowsSql());
 			expect(actual).toBe(
 				'SELECT COUNT(*) AS foundRows FROM ( SELECT category, COUNT(*) FROM posts GROUP BY category HAVING COUNT(*) > 1 ) AS subq'
 			);
 			expect(query.getFoundRowsSql(null, true)).toBe(
 				'SELECT COUNT(*) AS foundRows FROM (SELECT category, COUNT(*) FROM posts GROUP BY category HAVING COUNT(*) > 1) AS subq'
 			);
+		});
+		it('should fetch count()', async () => {
+			mysqlMock.pushResponse({
+				results: [{ foundRows: 3 }],
+				fields: [{ name: 'foundRows' }],
+			});
+			const query = new Select();
+			const { results } = await query.foundRows();
+			expect(results).toEqual(3);
 		});
 	});
 	describe('LIMIT and OFFSET', () => {
@@ -232,7 +258,7 @@ describe('Select', function() {
 			query.limit(2);
 			query.offset(4);
 			expect(query.normalized()).toBe('SELECT * FROM a LIMIT 2 OFFSET 4');
-			expect(query.toString().replace(/\s+/g, ' ')).toBe(
+			expect(normalizeWhitespace(query.toString())).toBe(
 				'SELECT * FROM a LIMIT 2 OFFSET 4'
 			);
 		});
@@ -257,6 +283,20 @@ describe('Select', function() {
 			const emptyQuery = new Select();
 			expect(query).toEqual(emptyQuery);
 		});
+		it('should reset nullable props', () => {
+			const query = Select.parse('SELECT * FROM a LIMIT 10 OFFSET 0');
+			query.reset(['limit', 'offset']);
+			const expected = 'SELECT * FROM a';
+			expect(query.normalized()).toEqual(expected);
+		});
+		it('should reset OFFSET when resetting page', () => {
+			const query = Select.parse('SELECT * FROM a');
+			query.limit(10);
+			query.page(2);
+			query.reset(['limit', 'page']);
+			const expected = 'SELECT * FROM a';
+			expect(query.normalized()).toEqual(expected);
+		});
 	});
 	describe('page()', () => {
 		it('should allow 1', () => {
@@ -269,7 +309,7 @@ describe('Select', function() {
 			query.page(3);
 			query.limit(10);
 			expect(query.normalized()).toBe('SELECT * FROM a LIMIT 10 OFFSET 20');
-			expect(query.toString().replace(/\s+/g, ' ')).toBe(
+			expect(normalizeWhitespace(query.toString())).toBe(
 				'SELECT * FROM a LIMIT 10 OFFSET 20'
 			);
 		});
@@ -412,7 +452,7 @@ describe('Select', function() {
 			query.table('users');
 			query.columns(['id', 'name']);
 			const { queries, results, fields } = await query.fetch();
-			expect(queries[0].replace(/\s+/g, ' ')).toBe(
+			expect(normalizeWhitespace(queries[0])).toBe(
 				'SELECT id, name FROM users'
 			);
 			expect(results).toEqual(response.results);
@@ -504,15 +544,129 @@ describe('Select', function() {
 			expect(queries).toHaveLength(2);
 		});
 	});
-	describe('foundRows()', () => {
-		it('should fetch count()', async () => {
+	describe('fetchFirst()', () => {
+		it('should fetch single row', async () => {
 			mysqlMock.pushResponse({
-				results: [{ foundRows: 3 }],
-				fields: [{ name: 'foundRows' }],
+				results: [{ id: 1, name: 'John' }],
 			});
+			const query = Select.parse('SELECT * FROM users');
+			const { results } = await query.fetchFirst();
+			expect(results).toEqual({ id: 1, name: 'John' });
+		});
+	});
+	describe('fetchHash()', () => {
+		it('should fetch object', async () => {
+			mysqlMock.pushResponse({
+				results: [
+					{ id: 1, name: 'John' },
+					{ id: 2, name: 'Jane' },
+				],
+				fields: [{ name: 'id' }, { name: 'name' }],
+			});
+			const query = Select.parse('SELECT id, name FROM users');
+			const { results } = await query.fetchHash();
+			expect(results).toEqual({ '1': 'John', '2': 'Jane' });
+		});
+	});
+	describe('fetchList()', () => {
+		it('should fetch array', async () => {
+			mysqlMock.pushResponse({
+				results: [
+					{ id: 1, name: 'John' },
+					{ id: 2, name: 'Jane' },
+				],
+				fields: [{ name: 'id' }, { name: 'name' }],
+			});
+			const query = Select.parse('SELECT id, name FROM users');
+			const { results } = await query.fetchList();
+			expect(results).toEqual([1, 2]);
+		});
+	});
+	describe('fetchValue()', () => {
+		it('should fetch array', async () => {
+			mysqlMock.pushResponse({
+				results: [{ name: 'John' }],
+				fields: [{ name: 'name' }],
+			});
+			const query = Select.parse('SELECT name FROM users WHERE id = 1');
+			const { results } = await query.fetchValue();
+			expect(results).toBe('John');
+		});
+	});
+	describe('fetchIndexed()', () => {
+		it('should fetch object', async () => {
+			mysqlMock.pushResponse({
+				results: [
+					{ id: 1, name: 'John' },
+					{ id: 2, name: 'Jane' },
+				],
+			});
+			const query = Select.parse('SELECT * FROM users');
+			const { results } = await query.fetchIndexed('id');
+			expect(results).toEqual({
+				'1': { id: 1, name: 'John' },
+				'2': { id: 2, name: 'Jane' },
+			});
+		});
+	});
+	describe('fetchGrouped()', () => {
+		it('should fetch object', async () => {
+			mysqlMock.pushResponse({
+				results: [
+					{ id: 1, name: 'John', department_id: 1 },
+					{ id: 2, name: 'Jane', department_id: 1 },
+					{ id: 3, name: 'Jean', department_id: 2 },
+				],
+			});
+			const query = Select.parse('SELECT * FROM users');
+			const { results } = await query.fetchGrouped('department_id');
+			expect(results).toEqual({
+				'1': [
+					{ id: 1, name: 'John', department_id: 1 },
+					{ id: 2, name: 'Jane', department_id: 1 },
+				],
+				'2': [{ id: 3, name: 'Jean', department_id: 2 }],
+			});
+		});
+	});
+	describe('toString() and normalized()', () => {
+		it('should build every type()', async () => {
 			const query = new Select();
-			const { results } = await query.foundRows();
-			expect(results).toEqual(3);
+			query.option('SQL_CALC_FOUND_ROWS');
+			query.column('id');
+			query.columns(['name', 'email']);
+			query.from('users');
+			query.tables(['avatars', 'addresses']);
+			query.join('avatars ON avatars.user_id = users.id');
+			query.join('addresses ON addresses.user_id = users.id');
+			query.where('users.id', 1);
+			query.limit(1);
+			const expected = normalizeWhitespace(`
+				SELECT SQL_CALC_FOUND_ROWS
+				id, name, email
+				FROM users, avatars, addresses
+				INNER JOIN avatars ON avatars.user_id = users.id
+				INNER JOIN addresses ON addresses.user_id = users.id
+				WHERE users.id = 1
+				LIMIT 1
+			`);
+			expect(normalizeWhitespace(query.toString())).toEqual(expected);
+			expect(query.normalized()).toEqual(expected);
+		});
+		it('should default columns to *', async () => {
+			const query = new Select();
+			query.from('users');
+			const expected = 'SELECT * FROM users';
+			expect(normalizeWhitespace(query.toString())).toEqual(expected);
+			expect(query.normalized()).toEqual(expected);
+		});
+		it('should handle ORDER BY', async () => {
+			const query = new Select();
+			query.from('users');
+			query.orderBy('fname');
+			const expected = 'SELECT * FROM users ORDER BY fname';
+			expect(normalizeWhitespace(query.toString())).toEqual(expected);
+			expect(query.normalized()).toEqual(expected);
 		});
 	});
 });
