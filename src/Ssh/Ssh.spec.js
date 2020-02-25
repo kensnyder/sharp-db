@@ -1,13 +1,13 @@
 jest.mock('ssh2');
 jest.mock('fs');
 const fs = require('fs');
-const ssh2 = require('ssh2');
+const ssh2Mock = require('ssh2');
 const Ssh = require('../Ssh/Ssh.js');
 
 describe('Ssh', () => {
 	it('should tunnel', async () => {
 		const stream = {};
-		ssh2.pushResponse({
+		ssh2Mock.pushResponse({
 			err: null,
 			stream,
 		});
@@ -18,7 +18,7 @@ describe('Ssh', () => {
 		expect(db.config.stream).toBe(stream);
 	});
 	it('should handle tunnel errors', async () => {
-		ssh2.pushResponse({
+		ssh2Mock.pushResponse({
 			err: new Error('oops'),
 			stream: null,
 		});
@@ -38,11 +38,30 @@ describe('Ssh', () => {
 			expect(e.message).toBe('Db config must have host and port.');
 		}
 	});
+	it('should handle additional config values', () => {
+		const conn = new Ssh({
+			foo: 'bar',
+			password: 'abc123',
+		});
+		expect(conn.config.foo).toBe('bar');
+	});
 	it('should handle private key strings', () => {
 		const conn = new Ssh({
 			privateKey: 'abc123',
 		});
 		expect(conn.config.privateKey).toBe('abc123');
+	});
+	it('should handle password strings', () => {
+		const conn = new Ssh({
+			password: 'abc123',
+		});
+		expect(conn.config.password).toBe('abc123');
+	});
+	it('should handle password env', () => {
+		process.env.DB_SSH_PASSWORD = 'def456';
+		const conn = new Ssh({});
+		expect(conn.config.password).toBe('def456');
+		process.env.DB_SSH_PASSWORD = undefined;
 	});
 	it('should handle private key env', () => {
 		process.env.DB_SSH_PRIVATE_KEY = 'def456';

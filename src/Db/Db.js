@@ -509,7 +509,7 @@ class Db {
 		const escFields = fields.map(field => this.quote(field));
 		const escFieldsString = fields.length ? escFields.join(', ') : '*';
 		const escTable = this.quote(table);
-		const escWhere = this.buildWheres(criteria) || '1';
+		const escWhere = this.buildWheres(criteria);
 		const sql = `SELECT ${escFieldsString} FROM ${escTable} WHERE ${escWhere} ${extra}`.trim();
 		return this.select(sql);
 	}
@@ -570,8 +570,8 @@ class Db {
 	 * @property {Object[]} fields  Info about the selected fields
 	 * @property {Number} insertId  The id of the last inserted record
 	 */
-	selectOrCreate(table, criteria, newValues = {}) {
-		return this.selectFrom(table, [], criteria).then(
+	selectOrCreate(table, criteria, newValues) {
+		return this.selectFrom(table, ['*'], criteria).then(
 			({ query, results, fields }) => {
 				if (results.length > 0) {
 					return {
@@ -622,7 +622,6 @@ class Db {
 	 * @property {Number} changedRows  The number of rows affected by the statement
 	 */
 	async insertIntoOnDuplicateKeyUpdate(table, insert, update) {
-		await this.connectOnce();
 		// build insert expression
 		const sets = [];
 		forOwn(insert, (value, field) => {
@@ -649,6 +648,7 @@ class Db {
 		// combine
 		const sql = `INSERT INTO ${table} SET ${setSql} ON DUPLICATE KEY UPDATE ${updateSql}`;
 		// run
+		await this.connectOnce();
 		return new Promise((resolve, reject) => {
 			const query = this.connection.query(sql, (error, results) => {
 				if (error) {
@@ -811,8 +811,8 @@ class Db {
 	 */
 	bindArgs(sql, args) {
 		const options = typeof sql == 'object' ? sql : { sql };
-		if (typeof options.sql !== 'string') {
-			options.sql = '';
+		if (options.sql === '' || typeof options.sql !== 'string') {
+			throw new Error('SQL cannot be empty');
 		}
 		if (!Array.isArray(args)) {
 			args = [];
@@ -849,11 +849,15 @@ class Db {
 
 	/**
 	 * Escape a value for use in a raw query without apostrophes
-	 * @param {*} value  The value to escape
+	 * @param {String|Number|Boolean|null} value  The value to escape
 	 * @return {String}
 	 */
 	escapeQuoteless(value) {
-		return mysql.escape(value).slice(1, -1);
+		let escaped = mysql.escape(value);
+		if (escaped.slice(0, 1) === "'" && escaped.slice(-1) === "'") {
+			escaped = escaped.slice(1, -1);
+		}
+		return escaped;
 	}
 
 	/**
@@ -862,15 +866,12 @@ class Db {
 	 * @return {*}
 	 */
 	quote(identifier) {
-		if (identifier === '*') {
-			return identifier;
-		}
 		if (/[`()]/.test(identifier)) {
 			return identifier;
 		}
 		let quoted = mysql.escapeId(identifier);
-		if (/\.`\*`$/.test(quoted)) {
-			quoted.slice(0, -3) + '*';
+		if (/`\*`$/.test(quoted)) {
+			quoted = quoted.slice(0, -3) + '*';
 		}
 		return quoted;
 	}

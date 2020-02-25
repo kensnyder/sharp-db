@@ -557,6 +557,94 @@ describe('Select', function() {
 			expect(results).toEqual(expectedResult);
 			expect(queries).toHaveLength(2);
 		});
+		it('should fetch sibling data recursively', async () => {
+			mysqlMock.pushResponse({
+				results: [
+					{ id: 11, published_by: 1, headline: 'Elvis is alive' },
+					{ id: 12, published_by: 2, headline: 'He proclaimed foobar' },
+					{ id: 13, published_by: 3, headline: 'Stock market up' },
+					{ id: 14, published_by: 4, headline: 'Pigs can fly' },
+				],
+				fields: [
+					{ name: 'id' },
+					{ name: 'published_by' },
+					{ name: 'headline' },
+				],
+			});
+			mysqlMock.pushResponse({
+				results: [
+					{ id: 1, name: 'John' },
+					{ id: 2, name: 'Jane' },
+					{ id: 4, name: 'Nina' },
+				],
+				fields: [{ name: 'id' }, { name: 'name' }],
+			});
+			mysqlMock.pushResponse({
+				results: [
+					{ user_id: 1, url: '/avatars/John.jpg' },
+					{ user_id: 2, url: '/avatars/Jane.jpg' },
+				],
+				fields: [{ name: 'user_id' }, { name: 'url' }],
+			});
+			const expectedResult = [
+				{
+					id: 11,
+					headline: 'Elvis is alive',
+					published_by: 1,
+					publisher: {
+						id: 1,
+						name: 'John',
+						avatar: {
+							user_id: 1,
+							url: '/avatars/John.jpg',
+						},
+					},
+				},
+				{
+					id: 12,
+					headline: 'He proclaimed foobar',
+					published_by: 2,
+					publisher: {
+						id: 2,
+						name: 'Jane',
+						avatar: {
+							user_id: 2,
+							url: '/avatars/Jane.jpg',
+						},
+					},
+				},
+				{
+					id: 13,
+					headline: 'Stock market up',
+					published_by: 3,
+					publisher: undefined,
+				},
+				{
+					id: 14,
+					headline: 'Pigs can fly',
+					published_by: 4,
+					publisher: {
+						id: 4,
+						name: 'Nina',
+						avatar: undefined,
+					},
+				},
+			];
+			const avatarsQuery = Select.parse(
+				'SELECT user_id, url FROM avatars WHERE user_id IN(:id)'
+			);
+			const usersQuery = Select.parse(
+				'SELECT id, name FROM users WHERE id IN(:published_by)'
+			);
+			const postsQuery = Select.parse(
+				'SELECT id, published_by, headline FROM posts'
+			);
+			postsQuery.withSiblingData('publisher', usersQuery);
+			usersQuery.withSiblingData('avatar', avatarsQuery);
+			const { queries, results } = await postsQuery.fetch();
+			expect(results).toEqual(expectedResult);
+			expect(queries).toHaveLength(3);
+		});
 	});
 	describe('fetchFirst()', () => {
 		it('should fetch single row', async () => {

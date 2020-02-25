@@ -78,6 +78,7 @@ SSH Tunnel Options
 | `host` | DB_SSH_HOST | "localhost" |
 | `port` | DB_SSH_PORT | 22 |
 | `user` | DB_SSH_USER | _none_ |
+| `password` | DB_SSH_PASSWORD | _none_ |
 | `privateKey` | DB_SSH_PRIVATE_KEY | _none_ |
 | `localPort` | DB_SSH_LOCAL_PORT | 12346 |
 

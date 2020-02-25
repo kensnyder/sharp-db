@@ -30,6 +30,8 @@ class Ssh {
 					encoding: 'utf8',
 				});
 			}
+		} else if (config.password || env.DB_SSH_PASSWORD) {
+			this.config.password = config.password || env.DB_SSH_PASSWORD;
 		}
 	}
 
