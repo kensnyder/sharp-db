@@ -66,10 +66,14 @@ class Db {
 		 * @type {Object}
 		 */
 		this.connection = mysql.createConnection(this.config);
-		this.connection.connect(err => {
-			if (err && err.fatal) {
-				throw new Error(`[${err.code}] ${err.sqlMessage}`);
-			}
+		return new Promise((resolve, reject) => {
+			this.connection.connect(err => {
+				if (err) {
+					reject(new Error(`[${err.code}] ${err.sqlMessage}`));
+				} else {
+					resolve();
+				}
+			});
 		});
 	}
 
@@ -88,7 +92,7 @@ class Db {
 	 */
 	end() {
 		return new Promise((resolve, reject) => {
-			if (this.connection && this.connection.end) {
+			if (this.connection) {
 				const idx = Db.instances.indexOf(this);
 				if (idx > -1) {
 					Db.instances.splice(idx, 1);

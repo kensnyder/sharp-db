@@ -1,13 +1,27 @@
 const realMysql2 = jest.requireActual('mysql2');
 
 const nextResponses = [];
+const nextConnects = [];
+const nextEnds = [];
 
 class Connection {
 	connect(oncomplete) {
-		oncomplete(null);
+		setTimeout(() => {
+			if (nextConnects.length === 0) {
+				oncomplete(null);
+			} else {
+				oncomplete(nextConnects.shift());
+			}
+		}, 0);
 	}
 	end(oncomplete) {
-		oncomplete(null);
+		setTimeout(() => {
+			if (nextEnds.length === 0) {
+				oncomplete(null);
+			} else {
+				oncomplete(nextEnds.shift());
+			}
+		}, 0);
 	}
 	destroy() {}
 	query(options, resultHandler) {
@@ -35,6 +49,12 @@ const mysql2 = {
 	},
 	pushResponse(resp) {
 		nextResponses.push(resp);
+	},
+	pushConnect(resp) {
+		nextConnects.push(resp);
+	},
+	pushEnd(resp) {
+		nextEnds.push(resp);
 	},
 };
 

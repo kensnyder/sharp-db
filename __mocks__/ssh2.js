@@ -9,14 +9,22 @@ class Client {
 			handler(resp.err, resp.stream);
 		}
 	}
-	end() {}
+	end() {
+		if (ssh2.nextEndCallbacks.length) {
+			ssh2.nextEndCallbacks.shift()();
+		}
+	}
 }
 
 const ssh2 = {
 	Client,
 	responses: [],
+	nextEndCallbacks: [],
 	pushResponse(resp) {
 		ssh2.responses.push(resp);
+	},
+	onNextEnd(func) {
+		ssh2.nextEndCallbacks.push(func);
 	},
 };
 
