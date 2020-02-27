@@ -1,5 +1,9 @@
 # sharp-db
 
+[![Build Status](https://travis-ci.org/kensnyder/sharp-db.svg?branch=master&v=1.0.0)](https://travis-ci.org/kensnyder/sharp-db)
+[![Code Coverage](https://codecov.io/gh/kensnyder/sharp-db/branch/master/graph/badge.svg?v=1.0.0)](https://codecov.io/gh/kensnyder/sharp-db)
+[![MIT License](https://img.shields.io/github/license/kensnyder/sharp-db.svg?v=1.0.0)](https://opensource.org/licenses/MIT)
+
 Classes for running SQL and building select queries in MySQL
 
 ## Installation
@@ -199,7 +203,7 @@ const { results: usersById } = await db.selectIndexed('id', sql);
 
 Example results:
 ```js
-{
+results = {
   "1": { id: 1, name: "John" },
   "2": { id: 2, name: "Jane" },
 }
@@ -215,7 +219,7 @@ const { results: usersGroupedByOrg } = await db.selectGrouped('org', sql);
 
 Example results:
 ```js
-{
+results = {
     "Marketing": [
         { id: 1, name: "John", org: "Marketing" },
         { id: 2, name: "Jane", org: "Marketing" },
@@ -262,7 +266,7 @@ WHERE users.is_active = ?
 nesting tables will return a data structure such as:
 
 ```js
-[
+results = [
 	{
 		users: {
 			id: 1,
@@ -330,19 +334,21 @@ Example:
 const query = Select.parse('SELECT id, name FROM users');
 query.withSiblingData(
     'homeAddress',
-    `SELECT * FROM addresses
-    WHERE addresses.user_id IN(:id)
-    AND addresses.type = 'home'
-    AND addresses.deleted_at IS NULL
-    `,
+    Select.parse(`
+        SELECT * FROM addresses
+        WHERE addresses.user_id IN(:id)
+        AND addresses.type = 'home'
+        AND addresses.deleted_at IS NULL
+    `),
 );
 query.withSiblingData(
     'workAddress',
-    `SELECT * FROM addresses
-    WHERE addresses.user_id IN(:id)
-    AND addresses.type = 'work'
-    AND addresses.deleted_at IS NULL
-    `,
+    Select.parse(`
+        SELECT * FROM addresses
+        WHERE addresses.user_id IN(:id)
+        AND addresses.type = 'work'
+        AND addresses.deleted_at IS NULL
+    `),
 );
 const { results } = await query.fetch();
 ```
@@ -399,19 +405,19 @@ Example:
 const query = Select.parse('SELECT id, headline, published_by FROM posts');
 query.withChildData(
     'theComments',
-    'SELECT * FROM comments WHERE comments.post_id IN(:id)'
+    Select.parse('SELECT * FROM comments WHERE comments.post_id IN(:id)')
 );
 query.withChildData(
     'theTags',
-    `
-    SELECT posts_tags.post_id, tags.* FROM tags
-    INNER JOIN posts_tags ON posts_tags.tag_id = tags.id
-    WHERE posts_tags.post_id IN(:id)
-    `
+    Select.parse(`
+        SELECT posts_tags.post_id, tags.* FROM tags
+        INNER JOIN posts_tags ON posts_tags.tag_id = tags.id
+        WHERE posts_tags.post_id IN(:id)
+    `)
 );
 query.withSiblingData(
     'thePublisher',
-    'SELECT id, name FROM users WHERE user_id IN(:published_by)'
+    Select.parse('SELECT id, name FROM users WHERE user_id IN(:published_by)')
 );
 const { results } = await query.fetch();
 ```
