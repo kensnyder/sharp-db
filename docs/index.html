@@ -459,6 +459,12 @@
                       </a></li>
                       
                       <li><a
+                        href='#selectfetchlist'
+                        class='regular pre-open'>
+                        #fetchList
+                      </a></li>
+                      
+                      <li><a
                         href='#selectfetchvalue'
                         class='regular pre-open'>
                         #fetchValue
@@ -534,6 +540,12 @@
                         href='#selecttable'
                         class='regular pre-open'>
                         #table
+                      </a></li>
+                      
+                      <li><a
+                        href='#selecttables'
+                        class='regular pre-open'>
+                        #tables
                       </a></li>
                       
                       <li><a
@@ -3252,8 +3264,7 @@ Specify connection details for MySQL and optionally SSH</p>
       
         <div class='space-bottom0'>
           <div>
-            <span class='code bold'>newValues</span> <code class='quiet'>(<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>
-            = <code>{}</code>)</code>
+            <span class='code bold'>newValues</span> <code class='quiet'>(<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>)</code>
 	    The values to use to insert if the record doesn't exist
 
           </div>
@@ -4192,7 +4203,7 @@ db.bindArgs(array(<span class="hljs-string">'SELECT * FROM users WHERE id = :id'
 
   <p>Escape a value for use in a raw query without apostrophes</p>
 
-    <div class='pre p1 fill-light mt0'>escapeQuoteless(value: any): <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String">String</a></div>
+    <div class='pre p1 fill-light mt0'>escapeQuoteless(value: (<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String">String</a> | <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number">Number</a> | <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Boolean">Boolean</a> | null)): <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String">String</a></div>
   
   
 
@@ -4209,7 +4220,7 @@ db.bindArgs(array(<span class="hljs-string">'SELECT * FROM users WHERE id = :id'
       
         <div class='space-bottom0'>
           <div>
-            <span class='code bold'>value</span> <code class='quiet'>(any)</code>
+            <span class='code bold'>value</span> <code class='quiet'>((<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String">String</a> | <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number">Number</a> | <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Boolean">Boolean</a> | null))</code>
 	    The value to escape
 
           </div>
@@ -5907,9 +5918,78 @@ Can be used for one-to-many or many-to-many relationships</p>
 
   
 
-  <p>Fetch each record as an array of values or an array of key-value pairs</p>
+  <p>Fetch each record as an object with key-value pairs</p>
 
     <div class='pre p1 fill-light mt0'>fetchHash(options: any): <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Promise">Promise</a>&#x3C;<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>></div>
+  
+  
+
+  
+  
+  
+  
+  
+  
+
+  
+    <div class='py1 quiet mt1 prose-big'>Parameters</div>
+    <div class='prose'>
+      
+        <div class='space-bottom0'>
+          <div>
+            <span class='code bold'>options</span> <code class='quiet'>(any
+            = <code>{}</code>)</code>
+	    
+          </div>
+          
+        </div>
+      
+    </div>
+  
+
+  
+
+  
+    
+      <div class='py1 quiet mt1 prose-big'>Returns</div>
+      <code><a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Promise">Promise</a>&#x3C;<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>></code>:
+        
+
+      
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+</section>
+
+      </div>
+    </div>
+  
+    <div class='border-bottom' id='selectfetchlist'>
+      <div class="clearfix small pointer toggle-sibling">
+        <div class="py1 contain">
+            <a class='icon pin-right py1 dark-link caret-right'>▸</a>
+            <span class='code strong strong truncate'>fetchList(options)</span>
+        </div>
+      </div>
+      <div class="clearfix display-none toggle-target">
+        <section class='p2 mb2 clearfix bg-white minishadow'>
+
+  
+
+  <p>Fetch each record as an array of values</p>
+
+    <div class='pre p1 fill-light mt0'>fetchList(options: any): <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Promise">Promise</a>&#x3C;<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>></div>
   
   
 
@@ -6899,6 +6979,75 @@ Can be used for one-to-many or many-to-many relationships</p>
       </div>
     </div>
   
+    <div class='border-bottom' id='selecttables'>
+      <div class="clearfix small pointer toggle-sibling">
+        <div class="py1 contain">
+            <a class='icon pin-right py1 dark-link caret-right'>▸</a>
+            <span class='code strong strong truncate'>tables(tableNames)</span>
+        </div>
+      </div>
+      <div class="clearfix display-none toggle-target">
+        <section class='p2 mb2 clearfix bg-white minishadow'>
+
+  
+
+  <p>Add multiple table to the "FROM" clause</p>
+
+    <div class='pre p1 fill-light mt0'>tables(tableNames: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array">Array</a>): <a href="#select">Select</a></div>
+  
+  
+
+  
+  
+  
+  
+  
+  
+
+  
+    <div class='py1 quiet mt1 prose-big'>Parameters</div>
+    <div class='prose'>
+      
+        <div class='space-bottom0'>
+          <div>
+            <span class='code bold'>tableNames</span> <code class='quiet'>(<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array">Array</a>)</code>
+	    The names of the tables to query
+
+          </div>
+          
+        </div>
+      
+    </div>
+  
+
+  
+
+  
+    
+      <div class='py1 quiet mt1 prose-big'>Returns</div>
+      <code><a href="#select">Select</a></code>:
+        
+
+      
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+</section>
+
+      </div>
+    </div>
+  
     <div class='border-bottom' id='selectfrom'>
       <div class="clearfix small pointer toggle-sibling">
         <div class="py1 contain">
@@ -6980,7 +7129,7 @@ Can be used for one-to-many or many-to-many relationships</p>
 
   
 
-  <p>Add an INNER JOIN expression (same as ->innerJoin())</p>
+  <p>Add an INNER JOIN expression (same as .innerJoin())</p>
 
     <div class='pre p1 fill-light mt0'>join(expression: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String">String</a>): <a href="#select">Select</a></div>
   

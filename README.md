@@ -15,8 +15,24 @@ npm install --save sharp-db
 ## Table of Contents
 
 * [Db](#db)
+    * [Connection](#connection)
+    * [Instantiation](#instantiation)
+    * [SSH Tunneling](#ssh-tunneling)
+    * [Basic Use](#basic-use)
+    * [Bindings](#bindings)
+    * [Methods](#methods)
+    * [Useful query options](#useful-query-options)
 * [Select](#select)
-* [Parser](#parser)
+    * [Select.parse()](#select-parse)
+    * [Building the Query](#building-the-query)
+    * [Fetching Data](#fetching-data)
+    * [Counting Results](#counting-results)
+    * [Set the `Db` instance](#specifying-the-db-instance-to-use)
+    * [Dependent Data](#dependent-data)
+    * [Other Methods](#other-methods)
+    * [Select.parse() Limitations](#selectparse-limitations)
+* [How to Contribute](./CONTRIBUTING.md)
+* [ISC License](./LICENSE.md)
 
 ## Db
 
@@ -88,11 +104,11 @@ SSH Tunnel Options
 
 See all options in [ssh2's npm package](https://github.com/mscdex/ssh2#client-methods).
 
-### Code examples
+### Basic use
 
 All code examples below assume the `Db` instance has been stored in `db`.
 
-### Plain select queries
+#### Plain select queries
 
 ```js
 const { query, results, fields } = await db.select('SELECT * FROM users');
@@ -106,22 +122,24 @@ Relevant properties of each `fields` item:
 | Item | Description | Example |
 |---|---|---|
 | `characterSet` | [Character set constant](https://github.com/mysqljs/mysql/blob/master/lib/protocol/constants/charsets.js) | 45 |
-| `encoding` | Character Set name | utf8 |
+| `encoding` | Character set name | utf8 |
 | `name` | Name of column | my_column |
 | `columnLength` | Number of *bytes* of field | 400 |
 | `columnType` | [Data type constant](https://github.com/mysqljs/mysql/blob/master/lib/protocol/constants/types.js) | 253 |
 | `flags` | [Field flag constant](https://github.com/mysqljs/mysql/blob/master/lib/protocol/constants/field_flags.js) | 33 |
 
-### Binding values
+### Bindings
 
-#### Binding with question marks
+Question-mark and colon-prefixed bindings are supported.
+
+#### Binding with Question Marks
 
 ```js
 const sql = 'SELECT * FROM users WHERE is_active = ? AND department_id = ?';
 const { results: users } = await db.select(sql, true, 5);
 ```
 
-#### Named bindings
+#### Named Bindings
 
 ```js
 const sql = 'SELECT * FROM users WHERE is_active = :isActive AND department_id = :departmentId';
@@ -143,7 +161,9 @@ const { results: users } = await db.select(sql, {
 });
 ```
 
-### selectFirst(sql, ...bindValues)
+### Methods
+
+#### selectFirst(sql, ...bindValues)
 
 Get only the first row.
 
@@ -153,7 +173,7 @@ const { results: row } = await db.selectFirst(sql);
 
 Example results: `{ id: 1, name: "John" }`
 
-### selectValue(sql, ...bindValues)
+#### selectValue(sql, ...bindValues)
 
 Get only the first column of the first row.
 
@@ -163,7 +183,7 @@ const { results: value } = await db.selectValue(sql);
 
 Example results: `"John"`
 
-### selectHash(sql, ...bindValues)
+#### selectHash(sql, ...bindValues)
 
 Get an Object with column-value pairs.
 
@@ -173,7 +193,7 @@ const { results: hash } = await db.selectHash(sql);
 
 Example results: `{ "1": "John", "2": "Jane" }`
 
-### selectList(sql, ...bindValues)
+#### selectList(sql, ...bindValues)
 
 Get an Array of values for the first column of the first row.
 
@@ -183,7 +203,7 @@ const { results: list } = await db.selectList(sql);
 
 Example results: `["John", "Jane"]`
 
-### selectExists(sql, ...bindValues)
+#### selectExists(sql, ...bindValues)
 
 Return true if query returns any rows.
 
@@ -193,7 +213,7 @@ const { results: doesExist } = await db.selectExists(sql);
 
 Example results: `true`
 
-### selectIndexed(indexColumn, sql, ...bindValues)
+#### selectIndexed(indexColumn, sql, ...bindValues)
 
 Return an Object where every result row is indexed by the given field.
 
@@ -209,7 +229,7 @@ results = {
 }
 ```
 
-### selectGrouped(groupColumn, sql, ...bindValues)
+#### selectGrouped(groupColumn, sql, ...bindValues)
 
 Return an Object where every result row is indexed by the given field.
 
@@ -230,7 +250,7 @@ results = {
 }
 ```
 
-### Useful query options
+### Useful Query Options
 
 SQL can actually be an Object with options.
 
@@ -252,7 +272,7 @@ const options = {
 const { results } = await db.select(options);
 ```
 
-#### nestTables example
+#### nestTables Example
 
 Given a query of:
 
@@ -294,7 +314,9 @@ results = [
 ]
 ```
 
-### selectFrom(table, fields, values)
+#### selectFrom(table, fields, values)
+
+Build and run a simple select statement.
 
 ```js
 const { results } = await db.selectFrom('users', ['fname','lname'], {
@@ -304,29 +326,225 @@ const { results } = await db.selectFrom('users', ['fname','lname'], {
 });
 ```
 
-insert
-update
-delete
+#### insert(sql, ...bindVars)
 
-insertInto
-insertIntoExtended
-updateTable
-deleteFrom
+Run an insert statement; return the id of the new record if applicable.
 
+```js
+const { insertId } = await db.insert("INSERT INTO users SET name='John', email='john@example.com'");
+```
+
+#### insertInto(table, values)
+
+Build and run an insert statement; return the id of the new record if applicable.
+
+```js
+const { insertId } = await db.insertInto('users', {
+	name: 'John',
+    email: 'john@example.com',
+});
+```
+
+#### insertExtended(table, rows)
+
+Build and run an extended insert statement; return the id of the last record if applicable.
+
+```js
+const { insertId } = await db.insertExtended('users', [
+    { name: 'John', email: 'john@example.com' },
+    { name: 'Jane', email: 'jane@example.com' },
+]);
+```
+
+#### insertIntoOnDuplicateKeyUpdate(table, insert, update)
+
+Build and run an insert statement; return the id of the new record if applicable.
+
+```js
+const { insertId, affectedRows } = await db.insertIntoOnDuplicateKeyUpdate(
+    'users',
+    {
+        sso_ref: 'A123456',
+        name: 'Jane Doe',
+        created_at: '2020-02-02',
+    },
+    {
+        name: 'Jane Doe Carter',
+        modified_at: '2020-02-02',
+    }
+);
+```
+
+#### update(sql, ...bindValues)
+
+Run an update statement; return the number of affected rows.
+
+```js
+const { affectedRows } = await db.update(
+    "UPDATE users SET name = ? WHERE id = ?",
+    'Jane Doe Carter',
+    5
+);
+```
+
+#### updateTable(table, set, where)
+
+Build and run an update statement; return the number of affected rows.
+
+```js
+const { affectedRows } = await db.updateTable(
+    'users',
+    { name: 'Jane Doe Carter' },
+    { id: 5 }
+);
+```
+
+#### delete(sql, ...bindValues)
+
+Run a delete statement; return the number of affected rows.
+
+```js
+const { affectedRows } = await db.delete(
+    "DELETE FROM users WHERE id = ? LIMIT 1",
+    5
+);
+```
+
+#### deleteFrom(table, where, limit)
+
+Build and run a delete statement; return the number of affected rows.
+
+```js
+const { affectedRows } = await db.deleteFrom('users', { id: 5 }, 1);
+```
 
 ## Select
 
 A Select object represents a SQL SELECT query and allows dynamically adding
 clauses including JOIN, WHERE, ORDER BY, LIMIT, OFFSET.
 
+### Select.parse()
 
+The easiest way to define a base query is to use `Select.parse(sql)` and then
+add criteria as needed.
 
+```js
+const query = Select.parse(`
+    SELECT u.id, u.fname, u.lname, u.email, p.phone
+    FROM users
+    LEFT JOIN phone_numbers p ON p.user_id = u.id
+      AND p.type = 'main'
+    WHERE u.is_active = 1
+`);
+if (email) {
+    query.where('u.email', email);
+}
+if (areaCode) {
+    query.where('p.phone', 'LIKE ?%', areaCode);
+}
+query.sort(sortField);
+query.limit(limitTo);
+```
 
-### Dependent data
+You can also define binding in the base query itself.
+
+```js
+const query = Select.parse(`
+    SELECT u.id, u.fname, u.lname, u.email, a.city, a.zip
+    FROM users
+    LEFT JOIN addresses a ON a.user_id = u.id
+    WHERE a.state = :state
+`);
+query.bind('state', state);
+```
+
+And you can bind multiple values at once.
+
+```js
+const query = Select.parse(`
+    SELECT u.id, u.fname, u.lname, u.email, a.city, a.zip
+    FROM users
+    LEFT JOIN addresses a ON a.user_id = u.id
+    WHERE a.state = :state
+      AND a.city IN (:city)
+`);
+query.bind({ state, city });
+```
+
+### Building the Query
+
+The following are the most common methods for building queries.
+
+- `query.columns(columnNames)` - Add column names to fetch
+- `query.column(columnName)` - Add a column name to fetch
+- `query.table(tableName)` - Specify the table in the FROM clause
+- `query.from(tableName)` - Same as above
+- `query.innerJoin(expression)` - Add an INNER JOIN expression
+- `query.leftJoin(expression)` - Add a LEFT JOIN expression
+- `query.fullJoin(expression)` - Add a FULL JOIN expression
+- `query.rightJoin(expression)` - Add a RIGHT JOIN expression
+- `query.crossJoin(expression)` - Add a CROSS JOIN expression
+- `query.leftOuterJoin(expression)` - Add a LEFT OUTER JOIN expression
+- `query.fullOuterJoin(expression)` - Add a FULL OUTER JOIN expression
+- `query.rightOuterJoin(expression)` - Add a ROUTER OUTER JOIN expression
+- `query.groupBy(column)` - Group by a column or expression
+- `query.where(column, operator, value)` - Require column satisfy operator
+- `query.where(column, value)` - Require column equal a value
+- `query.where(expression)` - Add an arbitrary WHERE expression
+- `query.where(columnValuePairs)` - Add multiple conditions
+- `query.whereBetween(column, twoValueArray)` - Require value BETWEEN, < or >
+- `query.orWhere(conditions)` - Specify multiple `where()`s joined by `OR`
+- `query.having(column, operator, value)` - Having column satisfy operator
+- `query.having(column, value)` - Having column equal value
+- `query.having(column, value)` - Having column equal value
+- `query.having(expression)` - Having an arbitrary expression
+- `query.orHaving(expressions)` - Multiple `having()`s joined by OR
+- `query.orderBy(column)` - Add ORDER BY clause
+- `query.sortField(column, mapNames)` - Add ORDER BY clause with mapNames
+- `query.limit(num)` - Limit by the given number
+- `query.offset(num)` - Specify an offset
+- `query.page(num)` - Automatically calculate offset based on limit and page
+
+### Fetching Data
+
+The methods to fetch data mirror those of Db.
+
+- `query.fetch()` - equivalent to `db.select()`
+- `query.fetchFirst()` - equivalent to `db.selectFirst()`
+- `query.fetchHashed()` - equivalent to `db.selectHashed()`
+- `query.fetchList()` - equivalent to `db.selectList()`
+- `query.fetchValue()` - equivalent to `db.selectValue()`
+- `query.fetchIndexed(byField)` - equivalent to `db.selectIndexed(byField)`
+- `query.fetchGrouped(byField)` - equivalent to `db.selectGrouped(byField)`
+
+### Counting Results
+
+One powerful feature of Select is that it can construct a count query to fetch
+the number of results that would have been returned if there were no LIMIT.
+
+```js
+const query = Select.parse('SELECT id, name FROM users LIMIT 5');
+const { results: users } = query.fetch();
+const { results: count } = query.foundRows();
+// will run the following query:
+// SELECT COUNT(*) AS foundRows FROM users
+```
+
+### Specifying the `Db` Instance to Use
+
+There are three ways to specify the `Db` instance to fetch data with:
+
+1. `Select.parse(sql, db)`
+1. `new Select(db)`
+1. `query.db = db`
+
+If no instance is specified, `Db.factory()` is used.
+
+### Dependent Data
 
 A Select object can splice in sibling or child data for each row.
 
-### withSiblingData(propertyName, siblingSql)
+#### withSiblingData(propertyName, siblingSql)
 
 Example:
 
@@ -397,7 +615,7 @@ results = [
 ]
 ```
 
-### withChildData(propertyName, childSql)
+#### withChildData(propertyName, childSql)
 
 Example:
 
@@ -472,13 +690,72 @@ results = [
 ]
 ```
 
+### Other methods
 
+Select has a few other useful methods.
 
+- `query.getClone()` - Get an exact copy of this query object
+- `query.unjoin(table)` - Remove a join expression
+- `query.escape(value)` - Escape a raw value
+- `query.escapeQuoteless(value)` - Escape a value but avoid wrapping in quotes
+- `query.toString()` - Get prettified SQL that would be run
+- `query.normalized()` - Get raw SQL that would be run
+- `query.toBoundSql()` - Get raw SQL with bindings replaced
+- `query.reset(field)` - Reset a single aspect of the query (e.g. where, having)
+- `query.reset()` - Reset query to an empty state
 
+### Select.parse() Limitations
 
-## Parser
+`Select.parse()` uses regular expressions and is not a true parser. The intent
+is to be fast and useful for 99% of situations.
 
-### Parser Limitations
+Below are some limitations illustrated by example.
 
-The parser has several limitations.
-The intent is to be fast and useful for 99% of situations.
+#### Nested Subqueries
+
+Most subqueries can be parsed but sub-subqueries don't work.
+
+```sql
+SELECT * FROM categories_posts WHERE category_id IN(
+    SELECT id FROM categories WHERE client_id IN(
+        SELECT client_id FROM affiliations WHERE name LIKE :name
+    )
+)
+```
+
+#### Keywords in Strings
+
+If you need to use keywords in strings, use bindings.
+
+```sql
+SELECT id, CONCAT('WHERE ', expr) FROM users WHERE name = :name
+```
+
+But instead you can use a binding:
+
+```sql
+SELECT id, CONCAT(:binding, expr) FROM users WHERE name = :name
+```
+
+#### Keywords in Bindings
+
+Binding names cannot be SQL clause keywords (even if lower cased).
+
+```sql
+SELECT CONCAT(:where, fname) FROM users WHERE id = :id
+```
+
+#### Nested OR and AND Clauses
+
+Nested logic doesn't work.
+
+```sql
+SELECT * FROM users
+WHERE (
+    fname = :fname AND (
+        lname LIKE '%john' OR lname LIKE 'john%'
+    ) OR (
+        id > 0 AND is_active IS NOT NULL
+    )
+)
+```

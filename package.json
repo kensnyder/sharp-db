@@ -18,7 +18,8 @@
     "Db",
     "Select",
     "MySQL",
-    "mysql2"
+    "mysql2",
+    "ssh"
   ],
   "author": "kendsnyder@gmail.com",
   "license": "ISC",
@@ -36,7 +37,7 @@
     "lodash.upperfirst": "^4.3.1",
     "mysql2": "^2.1.0",
     "quickly-count-substrings": "^1.0.0",
-    "ssh2": "^0.8.7"
+    "ssh2": "^0.8.8"
   },
   "devDependencies": {
     "chalk": "^3.0.0",
@@ -45,7 +46,7 @@
     "jest": "^25.1.0",
     "moment": "^2.24.0",
     "prettier": "^1.19.1",
-    "pretty-var-export": "^1.0.1",
+    "pretty-var-export": "^1.0.2",
     "prompts": "^2.3.1",
     "walkdir": "^0.4.1"
   }

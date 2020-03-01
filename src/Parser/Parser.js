@@ -47,7 +47,7 @@ class Parser {
 		// IF() in FROM clause
 		sql = sql.replace(/\bIF\s*\(.+\)\s+AS\s+[^\s,]+/, extractor);
 		// IN (SELECT *) in JOINs, WHERE or HAVING
-		sql = sql.replace(/\bIN\s*\(SELECT\s.+?\)/, extractor);
+		sql = sql.replace(/\bIN\s*\(\s*SELECT\s.+?\)/, extractor);
 		return { sql, subqueries };
 	}
 
