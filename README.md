@@ -1,6 +1,6 @@
 # sharp-db
 
-[![Build Status](https://travis-ci.org/kensnyder/sharp-db.svg?branch=master&v=1.0.0)](https://travis-ci.org/kensnyder/sharp-db)
+[![Build Status](https://travis-ci.com/kensnyder/sharp-db.svg?branch=master&v=1.0.0)](https://travis-ci.org/kensnyder/sharp-db)
 [![Code Coverage](https://codecov.io/gh/kensnyder/sharp-db/branch/master/graph/badge.svg?v=1.0.0)](https://codecov.io/gh/kensnyder/sharp-db)
 [![MIT License](https://img.shields.io/github/license/kensnyder/sharp-db.svg?v=1.0.0)](https://opensource.org/licenses/MIT)
 
@@ -340,7 +340,7 @@ Build and run an insert statement; return the id of the new record if applicable
 
 ```js
 const { insertId } = await db.insertInto('users', {
-	name: 'John',
+    name: 'John',
     email: 'john@example.com',
 });
 ```
@@ -416,6 +416,26 @@ Build and run a delete statement; return the number of affected rows.
 
 ```js
 const { affectedRows } = await db.deleteFrom('users', { id: 5 }, 1);
+```
+
+#### query(sql, ...bindValues)
+
+Run any type of statement.
+
+```js
+const { query, results, fields } = await db.query(
+    'SELECT * FROM users'
+);
+```
+
+#### multiQuery(sql, ...bindValues)
+
+Run multiple statements delimited by semicolon.
+
+```js
+const { query, results, fields } = await db.query(
+    'SELECT * FROM users; SELECT * FROM tags'
+);
 ```
 
 ## Select
@@ -534,8 +554,8 @@ const { results: count } = query.foundRows();
 
 There are three ways to specify the `Db` instance to fetch data with:
 
-1. `Select.parse(sql, db)`
-1. `new Select(db)`
+1. `query = Select.parse(sql, db)`
+1. `query = new Select(db)`
 1. `query.db = db`
 
 If no instance is specified, `Db.factory()` is used.
@@ -698,8 +718,8 @@ Select has a few other useful methods.
 - `query.unjoin(table)` - Remove a join expression
 - `query.escape(value)` - Escape a raw value
 - `query.escapeQuoteless(value)` - Escape a value but avoid wrapping in quotes
-- `query.toString()` - Get prettified SQL that would be run
-- `query.normalized()` - Get raw SQL that would be run
+- `query.toString()` - Get prettified SQL
+- `query.normalized()` - Get raw SQL (all whitespace is spaces)
 - `query.toBoundSql()` - Get raw SQL with bindings replaced
 - `query.reset(field)` - Reset a single aspect of the query (e.g. where, having)
 - `query.reset()` - Reset query to an empty state
