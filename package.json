@@ -7,6 +7,7 @@
     "test": "npx jest",
     "test-watch": "npx jest --watch",
     "coverage": "npx jest --collectCoverage",
+    "view-coverage": "open ./coverage/lcov-report/index.html",
     "docs": "npx documentation build src/** -f html -o docs",
     "open-docs": "open './docs/index.html'"
   },
@@ -37,7 +38,7 @@
     "lodash.upperfirst": "^4.3.1",
     "mysql2": "^2.1.0",
     "quickly-count-substrings": "^1.0.0",
-    "ssh2": "^0.8.8"
+    "ssh2": "^0.8.9"
   },
   "devDependencies": {
     "chalk": "^3.0.0",
@@ -45,9 +46,9 @@
     "documentation": "^12.1.4",
     "jest": "^25.1.0",
     "moment": "^2.24.0",
-    "prettier": "^1.19.1",
+    "prettier": "^2.0.0",
     "pretty-var-export": "^1.0.2",
-    "prompts": "^2.3.1",
+    "prompts": "^2.3.2",
     "walkdir": "^0.4.1"
   }
 }
