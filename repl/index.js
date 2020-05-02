@@ -1,5 +1,5 @@
 const prettify = require('pretty-var-export');
-const { red, green, yellow } = require('chalk');
+const { red, green, yellow } = require('ansi-colors');
 const terminal = require('./lib/terminal.js');
 const chooseConnection = require('./lib/chooseConnection.js');
 const inputConnection = require('./lib/inputConnection.js');
