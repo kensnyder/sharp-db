@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset='utf-8'>
-  <title>sharp-db 1.0.0 | Documentation</title>
+  <title>sharp-db 1.1.0 | Documentation</title>
   <meta name='description' content='Classes for running SQL and building select queries in MySQL'>
   <meta name='viewport' content='width=device-width,initial-scale=1'>
   <link href='assets/bass.css' rel='stylesheet'>
@@ -15,14 +15,99 @@
       <div id='split-left' class='overflow-auto fs0 height-viewport-100'>
         <div class='py1 px2'>
           <h3 class='mb0 no-anchor'>sharp-db</h3>
-          <div class='mb1'><code>1.0.0</code></div>
+          <div class='mb1'><code>1.1.0</code></div>
           <input
             placeholder='Filter'
             id='filter-input'
             class='col12 block input'
+            spellcheck='false'
+            autocapitalize='off'
+            autocorrect='off'
             type='text' />
           <div id='toc'>
             <ul class='list-reset h5 py1-ul'>
+              
+                
+                <li><a
+                  href='#databroker'
+                  class=" toggle-sibling">
+                  DataBroker
+                  <span class='icon'>▸</span>
+                </a>
+                
+                <div class='toggle-target display-none'>
+                  
+                  
+                    <ul class='list-reset py1-ul pl1'>
+                      <li class='h5'><span>Instance members</span></li>
+                      
+                      <li><a
+                        href='#databrokerdb'
+                        class='regular pre-open'>
+                        #db
+                      </a></li>
+                      
+                      <li><a
+                        href='#databrokernow'
+                        class='regular pre-open'>
+                        #now
+                      </a></li>
+                      
+                      <li><a
+                        href='#databrokeruniqid'
+                        class='regular pre-open'>
+                        #uniqid
+                      </a></li>
+                      
+                      <li><a
+                        href='#databrokerdeleted'
+                        class='regular pre-open'>
+                        #deleted
+                      </a></li>
+                      
+                      <li><a
+                        href='#databrokerids'
+                        class='regular pre-open'>
+                        #ids
+                      </a></li>
+                      
+                      <li><a
+                        href='#databrokerinsert'
+                        class='regular pre-open'>
+                        #insert
+                      </a></li>
+                      
+                      <li><a
+                        href='#databrokerdelete'
+                        class='regular pre-open'>
+                        #delete
+                      </a></li>
+                      
+                      <li><a
+                        href='#databrokercleanup'
+                        class='regular pre-open'>
+                        #cleanup
+                      </a></li>
+                      
+                      <li><a
+                        href='#databrokercreatedandmodified'
+                        class='regular pre-open'>
+                        #createdAndModified
+                      </a></li>
+                      
+                      <li><a
+                        href='#databrokercreated_and_modified'
+                        class='regular pre-open'>
+                        #created_and_modified
+                      </a></li>
+                      
+                    </ul>
+                  
+                  
+                  
+                </div>
+                
+                </li>
               
                 
                 <li><a
@@ -755,6 +840,708 @@
   
   <div class='clearfix'>
     
+    <h3 class='fl m0' id='databroker'>
+      DataBroker
+    </h3>
+    
+    
+  </div>
+  
+
+  <p>Class for working with real data in unit tests</p>
+
+    <div class='pre p1 fill-light mt0'>new DataBroker(db: <a href="#db">Db</a>)</div>
+  
+  
+
+  
+  
+  
+  
+  
+  
+
+  
+    <div class='py1 quiet mt1 prose-big'>Parameters</div>
+    <div class='prose'>
+      
+        <div class='space-bottom0'>
+          <div>
+            <span class='code bold'>db</span> <code class='quiet'>(<a href="#db">Db</a>
+            = <code>null</code>)</code>
+	    The database to read/write into
+
+          </div>
+          
+        </div>
+      
+    </div>
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    <div class='py1 quiet mt1 prose-big'>Instance Members</div>
+    <div class="clearfix">
+  
+    <div class='border-bottom' id='databrokerdb'>
+      <div class="clearfix small pointer toggle-sibling">
+        <div class="py1 contain">
+            <a class='icon pin-right py1 dark-link caret-right'>▸</a>
+            <span class='code strong strong truncate'>db</span>
+        </div>
+      </div>
+      <div class="clearfix display-none toggle-target">
+        <section class='p2 mb2 clearfix bg-white minishadow'>
+
+  
+
+  <p>The database to read/write to</p>
+
+    <div class='pre p1 fill-light mt0'>db</div>
+  
+    <p>
+      Type:
+      <a href="#db">Db</a>
+    </p>
+  
+  
+
+  
+  
+  
+  
+  
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+</section>
+
+      </div>
+    </div>
+  
+    <div class='border-bottom' id='databrokernow'>
+      <div class="clearfix small pointer toggle-sibling">
+        <div class="py1 contain">
+            <a class='icon pin-right py1 dark-link caret-right'>▸</a>
+            <span class='code strong strong truncate'>now</span>
+        </div>
+      </div>
+      <div class="clearfix display-none toggle-target">
+        <section class='p2 mb2 clearfix bg-white minishadow'>
+
+  
+
+  <p>The current date</p>
+
+    <div class='pre p1 fill-light mt0'>now</div>
+  
+    <p>
+      Type:
+      <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Date">Date</a>
+    </p>
+  
+  
+
+  
+  
+  
+  
+  
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+</section>
+
+      </div>
+    </div>
+  
+    <div class='border-bottom' id='databrokeruniqid'>
+      <div class="clearfix small pointer toggle-sibling">
+        <div class="py1 contain">
+            <a class='icon pin-right py1 dark-link caret-right'>▸</a>
+            <span class='code strong strong truncate'>uniqid</span>
+        </div>
+      </div>
+      <div class="clearfix display-none toggle-target">
+        <section class='p2 mb2 clearfix bg-white minishadow'>
+
+  
+
+  <p>A unique id suitable for a unit test</p>
+
+    <div class='pre p1 fill-light mt0'>uniqid</div>
+  
+    <p>
+      Type:
+      <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String">String</a>
+    </p>
+  
+  
+
+  
+  
+  
+  
+  
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+</section>
+
+      </div>
+    </div>
+  
+    <div class='border-bottom' id='databrokerdeleted'>
+      <div class="clearfix small pointer toggle-sibling">
+        <div class="py1 contain">
+            <a class='icon pin-right py1 dark-link caret-right'>▸</a>
+            <span class='code strong strong truncate'>deleted</span>
+        </div>
+      </div>
+      <div class="clearfix display-none toggle-target">
+        <section class='p2 mb2 clearfix bg-white minishadow'>
+
+  
+
+  <p>Arrays of deleted indexed by table name</p>
+
+    <div class='pre p1 fill-light mt0'>deleted</div>
+  
+    <p>
+      Type:
+      <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>
+    </p>
+  
+  
+
+  
+  
+  
+  
+  
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+</section>
+
+      </div>
+    </div>
+  
+    <div class='border-bottom' id='databrokerids'>
+      <div class="clearfix small pointer toggle-sibling">
+        <div class="py1 contain">
+            <a class='icon pin-right py1 dark-link caret-right'>▸</a>
+            <span class='code strong strong truncate'>ids</span>
+        </div>
+      </div>
+      <div class="clearfix display-none toggle-target">
+        <section class='p2 mb2 clearfix bg-white minishadow'>
+
+  
+
+  <p>Arrays of newly inserted ids indexed by table name</p>
+
+    <div class='pre p1 fill-light mt0'>ids</div>
+  
+    <p>
+      Type:
+      <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>
+    </p>
+  
+  
+
+  
+  
+  
+  
+  
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+</section>
+
+      </div>
+    </div>
+  
+    <div class='border-bottom' id='databrokerinsert'>
+      <div class="clearfix small pointer toggle-sibling">
+        <div class="py1 contain">
+            <a class='icon pin-right py1 dark-link caret-right'>▸</a>
+            <span class='code strong strong truncate'>insert(table, values)</span>
+        </div>
+      </div>
+      <div class="clearfix display-none toggle-target">
+        <section class='p2 mb2 clearfix bg-white minishadow'>
+
+  
+
+  <p>Insert records that can be cleaned up later</p>
+
+    <div class='pre p1 fill-light mt0'>insert(table: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String">String</a>, values: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>): <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Promise">Promise</a>&#x3C;<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number">Number</a>></div>
+  
+  
+
+  
+  
+  
+  
+  
+  
+
+  
+    <div class='py1 quiet mt1 prose-big'>Parameters</div>
+    <div class='prose'>
+      
+        <div class='space-bottom0'>
+          <div>
+            <span class='code bold'>table</span> <code class='quiet'>(<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String">String</a>)</code>
+	    The name of the table to insert into
+
+          </div>
+          
+        </div>
+      
+        <div class='space-bottom0'>
+          <div>
+            <span class='code bold'>values</span> <code class='quiet'>(<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>)</code>
+	    The record to insert
+
+          </div>
+          
+        </div>
+      
+    </div>
+  
+
+  
+
+  
+    
+      <div class='py1 quiet mt1 prose-big'>Returns</div>
+      <code><a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Promise">Promise</a>&#x3C;<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number">Number</a>></code>:
+        Resolves with the id of the new record
+
+      
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+</section>
+
+      </div>
+    </div>
+  
+    <div class='border-bottom' id='databrokerdelete'>
+      <div class="clearfix small pointer toggle-sibling">
+        <div class="py1 contain">
+            <a class='icon pin-right py1 dark-link caret-right'>▸</a>
+            <span class='code strong strong truncate'>delete(table, criteria)</span>
+        </div>
+      </div>
+      <div class="clearfix display-none toggle-target">
+        <section class='p2 mb2 clearfix bg-white minishadow'>
+
+  
+
+  <p>Delete records that can be re-inserted later</p>
+
+    <div class='pre p1 fill-light mt0'>delete(table: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String">String</a>, criteria: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>): <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Promise">Promise</a>&#x3C;<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array">Array</a>&#x3C;<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>>></div>
+  
+  
+
+  
+  
+  
+  
+  
+  
+
+  
+    <div class='py1 quiet mt1 prose-big'>Parameters</div>
+    <div class='prose'>
+      
+        <div class='space-bottom0'>
+          <div>
+            <span class='code bold'>table</span> <code class='quiet'>(<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String">String</a>)</code>
+	    The name of the table to delete from
+
+          </div>
+          
+        </div>
+      
+        <div class='space-bottom0'>
+          <div>
+            <span class='code bold'>criteria</span> <code class='quiet'>(<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>)</code>
+	    The criteria to match the records
+
+          </div>
+          
+        </div>
+      
+    </div>
+  
+
+  
+
+  
+    
+      <div class='py1 quiet mt1 prose-big'>Returns</div>
+      <code><a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Promise">Promise</a>&#x3C;<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array">Array</a>&#x3C;<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>>></code>:
+        An array of all the records
+
+      
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+</section>
+
+      </div>
+    </div>
+  
+    <div class='border-bottom' id='databrokercleanup'>
+      <div class="clearfix small pointer toggle-sibling">
+        <div class="py1 contain">
+            <a class='icon pin-right py1 dark-link caret-right'>▸</a>
+            <span class='code strong strong truncate'>cleanup()</span>
+        </div>
+      </div>
+      <div class="clearfix display-none toggle-target">
+        <section class='p2 mb2 clearfix bg-white minishadow'>
+
+  
+
+  <p>Delete insertions and restore deleted</p>
+
+    <div class='pre p1 fill-light mt0'>cleanup(): <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Promise">Promise</a>&#x3C;<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number">Number</a>></div>
+  
+  
+
+  
+  
+  
+  
+  
+  
+
+  
+
+  
+
+  
+    
+      <div class='py1 quiet mt1 prose-big'>Returns</div>
+      <code><a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Promise">Promise</a>&#x3C;<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number">Number</a>></code>:
+        The total number of rows affected
+
+      
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+</section>
+
+      </div>
+    </div>
+  
+    <div class='border-bottom' id='databrokercreatedandmodified'>
+      <div class="clearfix small pointer toggle-sibling">
+        <div class="py1 contain">
+            <a class='icon pin-right py1 dark-link caret-right'>▸</a>
+            <span class='code strong strong truncate'>createdAndModified(userId)</span>
+        </div>
+      </div>
+      <div class="clearfix display-none toggle-target">
+        <section class='p2 mb2 clearfix bg-white minishadow'>
+
+  
+
+  <p>Get value for createdAt, createdBy, modifiedAt and modifiedBy</p>
+
+    <div class='pre p1 fill-light mt0'>createdAndModified(userId: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number">Number</a>): {createdAt: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Date">Date</a>, createdBy: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number">Number</a>, modifiedAt: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Date">Date</a>, modifiedBy: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number">Number</a>}</div>
+  
+  
+
+  
+  
+  
+  
+  
+  
+
+  
+    <div class='py1 quiet mt1 prose-big'>Parameters</div>
+    <div class='prose'>
+      
+        <div class='space-bottom0'>
+          <div>
+            <span class='code bold'>userId</span> <code class='quiet'>(<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number">Number</a>
+            = <code>1</code>)</code>
+	    The user id to use for createdBy and modifiedBy
+
+          </div>
+          
+        </div>
+      
+    </div>
+  
+
+  
+
+  
+    
+      <div class='py1 quiet mt1 prose-big'>Returns</div>
+      <code>{createdAt: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Date">Date</a>, createdBy: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number">Number</a>, modifiedAt: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Date">Date</a>, modifiedBy: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number">Number</a>}</code>:
+        
+
+      
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+</section>
+
+      </div>
+    </div>
+  
+    <div class='border-bottom' id='databrokercreated_and_modified'>
+      <div class="clearfix small pointer toggle-sibling">
+        <div class="py1 contain">
+            <a class='icon pin-right py1 dark-link caret-right'>▸</a>
+            <span class='code strong strong truncate'>created_and_modified(userId)</span>
+        </div>
+      </div>
+      <div class="clearfix display-none toggle-target">
+        <section class='p2 mb2 clearfix bg-white minishadow'>
+
+  
+
+  <p>Get value for created_at, created_by, modified_at and modified_by</p>
+
+    <div class='pre p1 fill-light mt0'>created_and_modified(userId: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number">Number</a>): {modified_by: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number">Number</a>, created_at: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Date">Date</a>, modified_at: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Date">Date</a>, created_by: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number">Number</a>}</div>
+  
+  
+
+  
+  
+  
+  
+  
+  
+
+  
+    <div class='py1 quiet mt1 prose-big'>Parameters</div>
+    <div class='prose'>
+      
+        <div class='space-bottom0'>
+          <div>
+            <span class='code bold'>userId</span> <code class='quiet'>(<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number">Number</a>
+            = <code>1</code>)</code>
+	    The user id to use for created_by and modified_by
+
+          </div>
+          
+        </div>
+      
+    </div>
+  
+
+  
+
+  
+    
+      <div class='py1 quiet mt1 prose-big'>Returns</div>
+      <code>{modified_by: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number">Number</a>, created_at: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Date">Date</a>, modified_at: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Date">Date</a>, created_by: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number">Number</a>}</code>:
+        
+
+      
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+</section>
+
+      </div>
+    </div>
+  
+</div>
+
+  
+
+  
+
+  
+</section>
+
+          
+        
+          
+          <section class='p2 mb2 clearfix bg-white minishadow'>
+
+  
+  <div class='clearfix'>
+    
     <h3 class='fl m0' id='db'>
       Db
     </h3>
@@ -801,6 +1588,8 @@
         </div>
       
     </div>
+  
+
   
 
   
@@ -881,6 +1670,21 @@ Specify connection details for MySQL and optionally SSH</p>
   
 
   
+    <div class='py1 quiet mt1 prose-big'>Related</div>
+    
+      
+        <a href="https://github.com/mysqljs/mysql#connection-options">https://github.com/mysqljs/mysql#connection-options</a>
+
+      
+    
+      
+        <a href="https://github.com/mscdex/ssh2#client-methods">https://github.com/mscdex/ssh2#client-methods</a>
+
+      
+    
+  
+
+  
 
   
 
@@ -933,6 +1737,8 @@ Specify connection details for MySQL and optionally SSH</p>
 
       
     
+  
+
   
 
   
@@ -1001,6 +1807,8 @@ Specify connection details for MySQL and optionally SSH</p>
   
 
   
+
+  
 </section>
 
       </div>
@@ -1034,6 +1842,8 @@ Specify connection details for MySQL and optionally SSH</p>
   
   
   
+  
+
   
 
   
@@ -1113,6 +1923,8 @@ Specify connection details for MySQL and optionally SSH</p>
   
 
   
+
+  
 </section>
 
       </div>
@@ -1165,6 +1977,8 @@ Specify connection details for MySQL and optionally SSH</p>
   
 
   
+
+  
 </section>
 
       </div>
@@ -1193,6 +2007,8 @@ Specify connection details for MySQL and optionally SSH</p>
   
   
   
+  
+
   
 
   
@@ -1264,6 +2080,8 @@ Specify connection details for MySQL and optionally SSH</p>
   
 
   
+
+  
 </section>
 
       </div>
@@ -1292,6 +2110,8 @@ Specify connection details for MySQL and optionally SSH</p>
   
   
   
+  
+
   
 
   
@@ -1366,6 +2186,8 @@ Specify connection details for MySQL and optionally SSH</p>
   
 
   
+
+  
 </section>
 
       </div>
@@ -1408,6 +2230,8 @@ Specify connection details for MySQL and optionally SSH</p>
 
       
     
+  
+
   
 
   
@@ -1524,6 +2348,8 @@ Specify connection details for MySQL and optionally SSH</p>
   
 
   
+
+  
 </section>
 
       </div>
@@ -1614,6 +2440,8 @@ Specify connection details for MySQL and optionally SSH</p>
 
       
     
+  
+
   
 
   
@@ -1730,6 +2558,8 @@ Specify connection details for MySQL and optionally SSH</p>
   
 
   
+
+  
 </section>
 
       </div>
@@ -1833,6 +2663,8 @@ Specify connection details for MySQL and optionally SSH</p>
   
 
   
+
+  
 </section>
 
       </div>
@@ -1923,6 +2755,8 @@ Specify connection details for MySQL and optionally SSH</p>
 
       
     
+  
+
   
 
   
@@ -2048,6 +2882,8 @@ Specify connection details for MySQL and optionally SSH</p>
   
 
   
+
+  
 </section>
 
       </div>
@@ -2147,6 +2983,8 @@ Specify connection details for MySQL and optionally SSH</p>
 
       
     
+  
+
   
 
   
@@ -2263,6 +3101,8 @@ Specify connection details for MySQL and optionally SSH</p>
   
 
   
+
+  
 </section>
 
       </div>
@@ -2353,6 +3193,8 @@ Specify connection details for MySQL and optionally SSH</p>
 
       
     
+  
+
   
 
   
@@ -2469,6 +3311,8 @@ Specify connection details for MySQL and optionally SSH</p>
   
 
   
+
+  
 </section>
 
       </div>
@@ -2552,6 +3396,8 @@ Specify connection details for MySQL and optionally SSH</p>
 
       
     
+  
+
   
 
   
@@ -2668,6 +3514,8 @@ Specify connection details for MySQL and optionally SSH</p>
   
 
   
+
+  
 </section>
 
       </div>
@@ -2751,6 +3599,8 @@ Specify connection details for MySQL and optionally SSH</p>
 
       
     
+  
+
   
 
   
@@ -2889,6 +3739,8 @@ Specify connection details for MySQL and optionally SSH</p>
   
 
   
+
+  
 </section>
 
       </div>
@@ -2989,6 +3841,8 @@ Specify connection details for MySQL and optionally SSH</p>
 
       
     
+  
+
   
 
   
@@ -3106,6 +3960,8 @@ Specify connection details for MySQL and optionally SSH</p>
   
 
   
+
+  
 </section>
 
       </div>
@@ -3197,6 +4053,8 @@ Specify connection details for MySQL and optionally SSH</p>
 
       
     
+  
+
   
 
   
@@ -3330,6 +4188,8 @@ Specify connection details for MySQL and optionally SSH</p>
   
 
   
+
+  
 </section>
 
       </div>
@@ -3414,6 +4274,8 @@ Specify connection details for MySQL and optionally SSH</p>
 
       
     
+  
+
   
 
   
@@ -3541,6 +4403,8 @@ if a key conflicts, update the given fields</p>
   
 
   
+
+  
 </section>
 
       </div>
@@ -3625,6 +4489,8 @@ if a key conflicts, update the given fields</p>
 
       
     
+  
+
   
 
   
@@ -3752,6 +4618,8 @@ if a key conflicts, update the given fields</p>
   
 
   
+
+  
 </section>
 
       </div>
@@ -3866,6 +4734,8 @@ if a key conflicts, update the given fields</p>
   
 
   
+
+  
 </section>
 
       </div>
@@ -3922,6 +4792,8 @@ if a key conflicts, update the given fields</p>
 
       
     
+  
+
   
 
   
@@ -4001,6 +4873,8 @@ if a key conflicts, update the given fields</p>
 
       
     
+  
+
   
 
   
@@ -4098,6 +4972,8 @@ db.buildWhere(<span class="hljs-string">'id NOT IN'</span>, [<span class="hljs-n
   
 
   
+
+  
     <div class='py1 quiet mt1 prose-big'>Example</div>
     
       
@@ -4184,6 +5060,8 @@ db.bindArgs(array(<span class="hljs-string">'SELECT * FROM users WHERE id = :id'
   
 
   
+
+  
 </section>
 
       </div>
@@ -4253,6 +5131,8 @@ db.bindArgs(array(<span class="hljs-string">'SELECT * FROM users WHERE id = :id'
   
 
   
+
+  
 </section>
 
       </div>
@@ -4308,6 +5188,8 @@ db.bindArgs(array(<span class="hljs-string">'SELECT * FROM users WHERE id = :id'
 
       
     
+  
+
   
 
   
@@ -4430,6 +5312,8 @@ db.bindArgs(array(<span class="hljs-string">'SELECT * FROM users WHERE id = :id'
   
 
   
+
+  
     <div class='py1 quiet mt1 prose-big'>Example</div>
     
       
@@ -4516,6 +5400,8 @@ db.bindArgs(array(<span class="hljs-string">'SELECT * FROM users WHERE id = :id'
   
 
   
+
+  
     <div class='py1 quiet mt1 prose-big'>Instance Members</div>
     <div class="clearfix">
   
@@ -4570,6 +5456,8 @@ db.bindArgs(array(<span class="hljs-string">'SELECT * FROM users WHERE id = :id'
 
       
     
+  
+
   
 
   
@@ -4652,6 +5540,8 @@ db.bindArgs(array(<span class="hljs-string">'SELECT * FROM users WHERE id = :id'
   
 
   
+
+  
 </section>
 
       </div>
@@ -4696,6 +5586,8 @@ db.bindArgs(array(<span class="hljs-string">'SELECT * FROM users WHERE id = :id'
         </div>
       
     </div>
+  
+
   
 
   
@@ -4782,6 +5674,8 @@ db.bindArgs(array(<span class="hljs-string">'SELECT * FROM users WHERE id = :id'
   
 
   
+
+  
 </section>
 
       </div>
@@ -4838,6 +5732,8 @@ db.bindArgs(array(<span class="hljs-string">'SELECT * FROM users WHERE id = :id'
 
       
     
+  
+
   
 
   
@@ -4921,6 +5817,8 @@ db.bindArgs(array(<span class="hljs-string">'SELECT * FROM users WHERE id = :id'
   
 
   
+
+  
 </section>
 
       </div>
@@ -4980,6 +5878,8 @@ Class Select</p>
         </div>
       
     </div>
+  
+
   
 
   
@@ -5068,6 +5968,8 @@ Class Select</p>
   
 
   
+
+  
 </section>
 
       </div>
@@ -5125,6 +6027,8 @@ Class Select</p>
 
       
     
+  
+
   
 
   
@@ -5215,6 +6119,8 @@ Class Select</p>
   
 
   
+
+  
 </section>
 
       </div>
@@ -5257,6 +6163,8 @@ Class Select</p>
 
       
     
+  
+
   
 
   
@@ -5325,6 +6233,8 @@ Class Select</p>
   
 
   
+
+  
 </section>
 
       </div>
@@ -5367,6 +6277,8 @@ Class Select</p>
 
       
     
+  
+
   
 
   
@@ -5437,6 +6349,8 @@ Valid components: option, column, table, where, orWhere, having, groupBy, orderB
 
       
     
+  
+
   
 
   
@@ -5529,6 +6443,8 @@ Can be used for one-to-one or many-to-one relationships</p>
   
 
   
+
+  
 </section>
 
       </div>
@@ -5608,6 +6524,8 @@ Can be used for one-to-many or many-to-many relationships</p>
   
 
   
+
+  
 </section>
 
       </div>
@@ -5674,6 +6592,8 @@ Can be used for one-to-many or many-to-many relationships</p>
 
       
     
+  
+
   
 
   
@@ -5762,6 +6682,8 @@ Can be used for one-to-many or many-to-many relationships</p>
   
 
   
+
+  
 </section>
 
       </div>
@@ -5819,6 +6741,8 @@ Can be used for one-to-many or many-to-many relationships</p>
 
       
     
+  
+
   
 
   
@@ -5901,6 +6825,8 @@ Can be used for one-to-many or many-to-many relationships</p>
   
 
   
+
+  
 </section>
 
       </div>
@@ -5957,6 +6883,8 @@ Can be used for one-to-many or many-to-many relationships</p>
 
       
     
+  
+
   
 
   
@@ -6039,6 +6967,8 @@ Can be used for one-to-many or many-to-many relationships</p>
   
 
   
+
+  
 </section>
 
       </div>
@@ -6095,6 +7025,8 @@ Can be used for one-to-many or many-to-many relationships</p>
 
       
     
+  
+
   
 
   
@@ -6186,6 +7118,8 @@ Can be used for one-to-many or many-to-many relationships</p>
   
 
   
+
+  
 </section>
 
       </div>
@@ -6256,6 +7190,8 @@ Can be used for one-to-many or many-to-many relationships</p>
   
 
   
+
+  
     <div class='py1 quiet mt1 prose-big'>Example</div>
     
       
@@ -6314,6 +7250,8 @@ Can be used for one-to-many or many-to-many relationships</p>
 
       
     
+  
+
   
 
   
@@ -6399,6 +7337,8 @@ Can be used for one-to-many or many-to-many relationships</p>
   
 
   
+
+  
 </section>
 
       </div>
@@ -6466,6 +7406,8 @@ Can be used for one-to-many or many-to-many relationships</p>
 
       
     
+  
+
   
 
   
@@ -6560,6 +7502,8 @@ Can be used for one-to-many or many-to-many relationships</p>
   
 
   
+
+  
 </section>
 
       </div>
@@ -6612,6 +7556,8 @@ Can be used for one-to-many or many-to-many relationships</p>
         </div>
       
     </div>
+  
+
   
 
   
@@ -6698,6 +7644,8 @@ Can be used for one-to-many or many-to-many relationships</p>
   
 
   
+
+  
 </section>
 
       </div>
@@ -6754,6 +7702,8 @@ Can be used for one-to-many or many-to-many relationships</p>
 
       
     
+  
+
   
 
   
@@ -6836,6 +7786,8 @@ Can be used for one-to-many or many-to-many relationships</p>
   
 
   
+
+  
 </section>
 
       </div>
@@ -6892,6 +7844,8 @@ Can be used for one-to-many or many-to-many relationships</p>
 
       
     
+  
+
   
 
   
@@ -6974,6 +7928,8 @@ Can be used for one-to-many or many-to-many relationships</p>
   
 
   
+
+  
 </section>
 
       </div>
@@ -7030,6 +7986,8 @@ Can be used for one-to-many or many-to-many relationships</p>
 
       
     
+  
+
   
 
   
@@ -7112,6 +8070,8 @@ Can be used for one-to-many or many-to-many relationships</p>
   
 
   
+
+  
 </section>
 
       </div>
@@ -7168,6 +8128,8 @@ Can be used for one-to-many or many-to-many relationships</p>
 
       
     
+  
+
   
 
   
@@ -7248,6 +8210,8 @@ Can be used for one-to-many or many-to-many relationships</p>
   
 
   
+
+  
     <div class='py1 quiet mt1 prose-big'>Example</div>
     
       
@@ -7318,6 +8282,8 @@ Can be used for one-to-many or many-to-many relationships</p>
 
       
     
+  
+
   
 
   
@@ -7398,6 +8364,8 @@ Can be used for one-to-many or many-to-many relationships</p>
   
 
   
+
+  
     <div class='py1 quiet mt1 prose-big'>Example</div>
     
       
@@ -7468,6 +8436,8 @@ Can be used for one-to-many or many-to-many relationships</p>
 
       
     
+  
+
   
 
   
@@ -7548,6 +8518,8 @@ Can be used for one-to-many or many-to-many relationships</p>
   
 
   
+
+  
     <div class='py1 quiet mt1 prose-big'>Example</div>
     
       
@@ -7618,6 +8590,8 @@ Can be used for one-to-many or many-to-many relationships</p>
 
       
     
+  
+
   
 
   
@@ -7698,6 +8672,8 @@ Can be used for one-to-many or many-to-many relationships</p>
   
 
   
+
+  
     <div class='py1 quiet mt1 prose-big'>Example</div>
     
       
@@ -7773,6 +8749,8 @@ Can be used for one-to-many or many-to-many relationships</p>
   
 
   
+
+  
     <div class='py1 quiet mt1 prose-big'>Example</div>
     
       
@@ -7843,6 +8821,8 @@ Can be used for one-to-many or many-to-many relationships</p>
 
       
     
+  
+
   
 
   
@@ -7934,6 +8914,8 @@ Can be used for one-to-many or many-to-many relationships</p>
 
       
     
+  
+
   
 
   
@@ -8046,6 +9028,8 @@ Can be used for one-to-many or many-to-many relationships</p>
   
 
   
+
+  
 </section>
 
       </div>
@@ -8141,6 +9125,8 @@ Can be used for one-to-many or many-to-many relationships</p>
   
 
   
+
+  
 </section>
 
       </div>
@@ -8219,6 +9205,8 @@ Can be used for one-to-many or many-to-many relationships</p>
   
 
   
+
+  
 </section>
 
       </div>
@@ -8275,6 +9263,8 @@ Can be used for one-to-many or many-to-many relationships</p>
 
       
     
+  
+
   
 
   
@@ -8383,6 +9373,8 @@ Can be used for one-to-many or many-to-many relationships</p>
   
 
   
+
+  
 </section>
 
       </div>
@@ -8438,6 +9430,8 @@ Can be used for one-to-many or many-to-many relationships</p>
 
       
     
+  
+
   
 
   
@@ -8520,6 +9514,8 @@ Can be used for one-to-many or many-to-many relationships</p>
   
 
   
+
+  
 </section>
 
       </div>
@@ -8586,6 +9582,8 @@ Can be used for one-to-many or many-to-many relationships</p>
 
       
     
+  
+
   
 
   
@@ -8675,6 +9673,8 @@ Can be used for one-to-many or many-to-many relationships</p>
   
 
   
+
+  
 </section>
 
       </div>
@@ -8731,6 +9731,8 @@ Can be used for one-to-many or many-to-many relationships</p>
 
       
     
+  
+
   
 
   
@@ -8813,6 +9815,8 @@ Can be used for one-to-many or many-to-many relationships</p>
   
 
   
+
+  
 </section>
 
       </div>
@@ -8882,6 +9886,8 @@ Can be used for one-to-many or many-to-many relationships</p>
   
 
   
+
+  
 </section>
 
       </div>
@@ -8938,6 +9944,8 @@ Can be used for one-to-many or many-to-many relationships</p>
 
       
     
+  
+
   
 
   
@@ -9022,6 +10030,8 @@ Can be used for one-to-many or many-to-many relationships</p>
   
 
   
+
+  
     <div class='py1 quiet mt1 prose-big'>Instance Members</div>
     <div class="clearfix">
   
@@ -9089,6 +10099,8 @@ Can be used for one-to-many or many-to-many relationships</p>
   
 
   
+
+  
 </section>
 
       </div>
@@ -9117,6 +10129,8 @@ Can be used for one-to-many or many-to-many relationships</p>
   
   
   
+  
+
   
 
   

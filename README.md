@@ -1,8 +1,8 @@
 # sharp-db
 
-[![Build Status](https://travis-ci.com/kensnyder/sharp-db.svg?branch=master&v=1.0.1)](https://travis-ci.org/kensnyder/sharp-db)
-[![Code Coverage](https://codecov.io/gh/kensnyder/sharp-db/branch/master/graph/badge.svg?v=1.0.1)](https://codecov.io/gh/kensnyder/sharp-db)
-[![MIT License](https://img.shields.io/github/license/kensnyder/sharp-db.svg?v=1.0.1)](https://opensource.org/licenses/MIT)
+[![Build Status](https://travis-ci.com/kensnyder/sharp-db.svg?branch=master&v=1.1.0)](https://travis-ci.org/kensnyder/sharp-db)
+[![Code Coverage](https://codecov.io/gh/kensnyder/sharp-db/branch/master/graph/badge.svg?v=1.1.0)](https://codecov.io/gh/kensnyder/sharp-db)
+[![ISC License](https://img.shields.io/github/license/kensnyder/sharp-db.svg?v=1.1.0)](https://opensource.org/licenses/ISC)
 
 Classes for running SQL and building select queries in MySQL
 
@@ -23,7 +23,7 @@ npm install --save sharp-db
     * [Methods](#methods)
     * [Useful query options](#useful-query-options)
 * [Select](#select)
-    * [Select.parse()](#select-parse)
+    * [Select.parse()](#selectparse)
     * [Building the Query](#building-the-query)
     * [Fetching Data](#fetching-data)
     * [Counting Results](#counting-results)
@@ -455,6 +455,7 @@ The easiest way to define a base query is to use `Select.parse(sql)` and then
 add criteria as needed.
 
 ```js
+const { Select } = require('sharp-db');
 const query = Select.parse(`
     SELECT u.id, u.fname, u.lname, u.email, p.phone
     FROM users
