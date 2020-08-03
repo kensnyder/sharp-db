@@ -1,5 +1,4 @@
 const realMysql2 = jest.requireActual('mysql2');
-
 const nextResponses = [];
 const nextConnects = [];
 const nextEnds = [];
@@ -49,12 +48,15 @@ const mysql2 = {
 	},
 	pushResponse(resp) {
 		nextResponses.push(resp);
+		return this;
 	},
 	pushConnect(resp) {
 		nextConnects.push(resp);
+		return this;
 	},
 	pushEnd(resp) {
 		nextEnds.push(resp);
+		return this;
 	},
 };
 

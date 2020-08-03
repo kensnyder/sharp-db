@@ -31,6 +31,10 @@ npm install --save sharp-db
     * [Dependent Data](#dependent-data)
     * [Other Methods](#other-methods)
     * [Select.parse() Limitations](#selectparse-limitations)
+* [DataBroker](#databroker)
+    * [Use in Integration Tests](#use-in-integration-tests)
+    * [Insertions](#insertions)
+    * [Deletions](#deletions)
 * [How to Contribute](./CONTRIBUTING.md)
 * [ISC License](./LICENSE.md)
 
@@ -56,6 +60,7 @@ See node's mysqljs for [other options](https://github.com/mysqljs/mysql#connecti
 Connect to MySQL server
 
 ```js
+const { Db } = require('sharp-db');
 // read options from ENV
 const db1 = Db.factory();
 
@@ -76,6 +81,7 @@ const db2Again = Db.factory();
 Connect to MySQL through an SSH tunnel
 
 ```js
+const { Db } = require('sharp-db');
 const db = Db.factory({
     // MySQL connection as first argument
     host: '127.0.0.1',
@@ -736,6 +742,7 @@ Below are some limitations illustrated by example.
 Most subqueries can be parsed but sub-subqueries don't work.
 
 ```sql
+-- WILL NOT WORK
 SELECT * FROM categories_posts WHERE category_id IN(
     SELECT id FROM categories WHERE client_id IN(
         SELECT client_id FROM affiliations WHERE name LIKE :name
@@ -748,6 +755,7 @@ SELECT * FROM categories_posts WHERE category_id IN(
 If you need to use keywords in strings, use bindings.
 
 ```sql
+-- WILL NOT WORK
 SELECT id, CONCAT('WHERE ', expr) FROM users WHERE name = :name
 ```
 
@@ -762,6 +770,7 @@ SELECT id, CONCAT(:binding, expr) FROM users WHERE name = :name
 Binding names cannot be SQL clause keywords (even if lower cased).
 
 ```sql
+-- WILL NOT WORK
 SELECT CONCAT(:where, fname) FROM users WHERE id = :id
 ```
 
@@ -770,6 +779,7 @@ SELECT CONCAT(:where, fname) FROM users WHERE id = :id
 Nested logic doesn't work.
 
 ```sql
+-- WILL NOT WORK
 SELECT * FROM users
 WHERE (
     fname = :fname AND (
@@ -778,4 +788,48 @@ WHERE (
         id > 0 AND is_active IS NOT NULL
     )
 )
+```
+
+## DataBroker
+
+DataBroker is useful for inserting and deleting data that will needs to be
+removed and restored.
+
+### Use in Integration Tests
+
+With integration tests, it may be useful to insert test data, run assertions
+and then clean up the test data.
+
+### Insertions
+
+Use the `.insert()` method to add records and then call `.cleanup()` to remove
+those records.
+
+Example:
+
+```js
+const { DataBroker, Db } = require('sharp-db');
+const broker = new DataBroker(Db.factory());
+const userId = await broker.insert('users', { name: 'John', is_active: true });
+// the new user ID is also available at broker.ids
+expect(broker.ids.users[0]).toBe(userId);
+// ... integration test using userId ...
+// then clean up all data
+await broker.cleanup();
+```
+
+### Deletions
+
+Example:
+
+```js
+const { DataBroker, Db } = require('sharp-db');
+const broker = new DataBroker(Db.factory());
+// affectedRows will be the count of records deleted
+const affectedRows = await broker.delete('users', { status_id: 5 });
+// the deleted records are available at broker.deleted
+expect(broker.deleted).toHaveLength(affectedRows);
+// ... integration test ...
+// then restore all the deleted all data
+await broker.cleanup();
 ```
