@@ -1,4 +1,4 @@
-const forOwn = require('lodash.forown');
+const forOwn = require('../forOwnDefined/forOwnDefined.js');
 const mysql = require('mysql2');
 const Ssh = require('../Ssh/Ssh.js');
 

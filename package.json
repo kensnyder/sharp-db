@@ -1,6 +1,6 @@
 {
   "name": "sharp-db",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Classes for running SQL and building select queries in MySQL",
   "main": "index.js",
   "scripts": {
@@ -33,7 +33,6 @@
     "lodash.capitalize": "^4.2.1",
     "lodash.clonedeep": "^4.5.0",
     "lodash.escaperegexp": "^4.1.2",
-    "lodash.forown": "^4.4.0",
     "lodash.isempty": "^4.4.0",
     "lodash.upperfirst": "^4.3.1",
     "mysql2": "^2.1.0",
@@ -44,7 +43,7 @@
     "ansi-colors": "^4.1.1",
     "codecov": "^3.7.2",
     "documentation": "^13.0.2",
-    "jest": "^26.2.2",
+    "jest": "^26.4.2",
     "moment": "^2.27.0",
     "prettier": "^2.0.5",
     "pretty-var-export": "^1.1.3",

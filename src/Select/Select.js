@@ -3,7 +3,7 @@ const Parser = require('../Parser/Parser.js');
 const Db = require('../Db/Db.js');
 const cloneDeep = require('lodash.clonedeep');
 const escapeRegExp = require('lodash.escaperegexp');
-const forOwn = require('lodash.forown');
+const forOwn = require('../forOwnDefined/forOwnDefined.js');
 const substrCount = require('quickly-count-substrings');
 
 /**
@@ -80,10 +80,7 @@ class Select {
 			}
 		}
 
-		return lines
-			.filter(Boolean)
-			.join('\n')
-			.trim();
+		return lines.filter(Boolean).join('\n').trim();
 	}
 
 	/**
@@ -116,10 +113,7 @@ class Select {
 			}
 		}
 
-		return lines
-			.filter(Boolean)
-			.join(' ')
-			.trim();
+		return lines.filter(Boolean).join(' ').trim();
 	}
 
 	/**
