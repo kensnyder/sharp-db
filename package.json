@@ -1,6 +1,6 @@
 {
   "name": "sharp-db",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "Classes for running SQL and building select queries in MySQL",
   "main": "index.js",
   "scripts": {

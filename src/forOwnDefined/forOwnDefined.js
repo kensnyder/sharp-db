@@ -6,7 +6,7 @@
 function forOwnDefined(object, iteratee) {
 	for (const key in object) {
 		if (!object.hasOwnProperty(key) || object[key] === undefined) {
-			return;
+			continue;
 		}
 		iteratee(object[key], key, object);
 	}
