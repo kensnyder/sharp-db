@@ -658,7 +658,7 @@ describe('Db', () => {
 			mysqlMock.pushResponse({ results: mockResults });
 			const { query, affectedRows } = await db.updateTable(
 				'users',
-				{ email: 'john@example.com' },
+				{ email: 'john@example.com', foo: undefined },
 				{ id: 5 }
 			);
 			expect(affectedRows).toBe(1);
