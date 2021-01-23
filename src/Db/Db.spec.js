@@ -246,8 +246,8 @@ describe('Db', () => {
 				{ name: 'Josh Doe', department_id: 1 },
 			];
 			const hash = {
-				'1': [mockResults[0], mockResults[2]],
-				'2': [mockResults[1]],
+				1: [mockResults[0], mockResults[2]],
+				2: [mockResults[1]],
 			};
 			mysqlMock.pushResponse({ results: mockResults });
 			const { results } = await db.selectGrouped('department_id', sql);
@@ -936,6 +936,153 @@ describe('Db', () => {
 			} catch (e) {
 				expect(e.message).toBe('foo');
 			}
+		});
+	});
+	describe('exportAsSql()', () => {
+		it('should build export string', async () => {
+			const mockResults = [
+				{ id: 1, fname: 'John' },
+				{ id: 2, fname: 'Jane' },
+			];
+			const mockFields = [{ name: 'id' }, { name: 'fname' }];
+			mysqlMock.pushResponse({ results: mockResults, fields: mockFields });
+			const {
+				results,
+				fields,
+				query,
+				affectedRows,
+				chunks,
+			} = await db.exportAsSql('users');
+			expect(results).toBe(
+				`
+INSERT INTO \`users\` (\`id\`,\`fname\`) VALUES
+(1,'John'),
+(2,'Jane');
+			`.trim()
+			);
+			expect(fields).toEqual(mockFields);
+			expect(query).toBe('SELECT * FROM `users` WHERE 1');
+			expect(affectedRows).toBe(2);
+			expect(chunks).toBe(1);
+		});
+		it('should export 0 records', async () => {
+			const mockResults = [];
+			const mockFields = [{ name: 'id' }, { name: 'fname' }];
+			mysqlMock.pushResponse({ results: mockResults, fields: mockFields });
+			const {
+				results,
+				fields,
+				query,
+				affectedRows,
+				chunks,
+			} = await db.exportAsSql('users');
+			expect(results).toBe('');
+			expect(fields).toEqual(mockFields);
+			expect(query).toBe('SELECT * FROM `users` WHERE 1');
+			expect(affectedRows).toBe(0);
+			expect(chunks).toBe(0);
+		});
+		it('should discard ids', async () => {
+			const mockResults = [
+				{ id: 1, fname: 'John' },
+				{ id: 2, fname: 'Jane' },
+			];
+			const mockFields = [{ name: 'id' }, { name: 'fname' }];
+			mysqlMock.pushResponse({ results: mockResults, fields: mockFields });
+			const { results } = await db.exportAsSql(
+				'users',
+				{},
+				{ discardIds: true }
+			);
+			expect(results).toBe(
+				`
+INSERT INTO \`users\` (\`id\`,\`fname\`) VALUES
+(NULL,'John'),
+(NULL,'Jane');
+			`.trim()
+			);
+		});
+		it('should add truncate statement', async () => {
+			const mockResults = [
+				{ id: 1, fname: 'John' },
+				{ id: 2, fname: 'Jane' },
+			];
+			const mockFields = [{ name: 'id' }, { name: 'fname' }];
+			mysqlMock.pushResponse({ results: mockResults, fields: mockFields });
+			const { results } = await db.exportAsSql(
+				'users',
+				{},
+				{ truncateTable: true }
+			);
+			expect(results).toBe(
+				`
+TRUNCATE TABLE \`users\`;
+INSERT INTO \`users\` (\`id\`,\`fname\`) VALUES
+(1,'John'),
+(2,'Jane');
+			`.trim()
+			);
+		});
+		it('should add lock tables statement', async () => {
+			const mockResults = [
+				{ id: 1, fname: 'John' },
+				{ id: 2, fname: 'Jane' },
+			];
+			const mockFields = [{ name: 'id' }, { name: 'fname' }];
+			mysqlMock.pushResponse({ results: mockResults, fields: mockFields });
+			const { results } = await db.exportAsSql(
+				'users',
+				{},
+				{ lockTables: true }
+			);
+			expect(results).toBe(
+				`
+LOCK TABLES \`users\` WRITE;
+INSERT INTO \`users\` (\`id\`,\`fname\`) VALUES
+(1,'John'),
+(2,'Jane');
+UNLOCK TABLES;
+			`.trim()
+			);
+		});
+		it('should disable and re-enable foreign key checks', async () => {
+			const mockResults = [
+				{ id: 1, fname: 'John' },
+				{ id: 2, fname: 'Jane' },
+			];
+			const mockFields = [{ name: 'id' }, { name: 'fname' }];
+			mysqlMock.pushResponse({ results: mockResults, fields: mockFields });
+			const { results } = await db.exportAsSql(
+				'users',
+				{},
+				{ disableForeignKeyChecks: true }
+			);
+			expect(results).toBe(
+				`
+/*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;
+INSERT INTO \`users\` (\`id\`,\`fname\`) VALUES
+(1,'John'),
+(2,'Jane');
+/*!40014 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS */;
+			`.trim()
+			);
+		});
+		it('should split inserts into chunks', async () => {
+			const mockResults = [
+				{ id: 1, fname: 'John' },
+				{ id: 2, fname: 'Jane' },
+			];
+			const mockFields = [{ name: 'id' }, { name: 'fname' }];
+			mysqlMock.pushResponse({ results: mockResults, fields: mockFields });
+			const { results } = await db.exportAsSql('users', {}, { chunkSize: 1 });
+			expect(results).toBe(
+				`
+INSERT INTO \`users\` (\`id\`,\`fname\`) VALUES
+(1,'John');
+INSERT INTO \`users\` (\`id\`,\`fname\`) VALUES
+(2,'Jane');
+			`.trim()
+			);
 		});
 	});
 	describe('end()', () => {

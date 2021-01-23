@@ -1,6 +1,7 @@
 const forOwn = require('../forOwnDefined/forOwnDefined.js');
 const mysql = require('mysql2');
 const Ssh = require('../Ssh/Ssh.js');
+const chunk = require('lodash/chunk');
 
 /**
  * Simple database class for mysql
@@ -495,12 +496,13 @@ class Db {
 	 * Build a SELECT statement and return result rows
 	 * @param {String} table  The name of the table
 	 * @param {Array} fields  An array of field names to select
-	 * @param {Object} criteria  Params to construct the WHERE clause
+	 * @param {Object} criteria  Params to construct the WHERE clause - see Db#buildWhere
 	 * @param {String} extra  Additional raw SQL such as GROUP BY, ORDER BY, or LIMIT
 	 * @return {Promise<Object>}
 	 * @property {String} query  The final SQL that was executed
 	 * @property {Array} results  The result rows
 	 * @property {Object[]} fields  Info about the selected fields
+	 * @see Db#buildWhere
 	 */
 	selectFrom(table, fields = [], criteria = {}, extra = '') {
 		if (!Array.isArray(fields)) {
@@ -705,11 +707,12 @@ class Db {
 	 * Build an UPDATE statement and run it
 	 * @param {String} table  The name of the table
 	 * @param {Object} set  An array of column => value pairs to update
-	 * @param {Object} where  Params to construct the WHERE clause
+	 * @param {Object} where  Params to construct the WHERE clause - see Db#buildWhere
 	 * @return {Promise<Object>}
 	 * @property {String} query  The final SQL that was executed
 	 * @property {Number} affectedRows  The number of rows matching the WHERE criteria
 	 * @property {Number} changedRows  The number of rows affected by the statement
+	 * @see Db#buildWhere
 	 */
 	updateTable(table, set, where = {}) {
 		const sets = [];
@@ -729,12 +732,13 @@ class Db {
 	/**
 	 * Construct a delete query and run
 	 * @param {String} table  The name of the table from which to delete
-	 * @param {Object} where  WHERE conditions on which to delete
+	 * @param {Object} where  WHERE conditions on which to delete - see Db#buildWhere
 	 * @param {Number} limit  Limit deletion to this many records
 	 * @return {Promise<Object>}
 	 * @property {String} query  The final SQL that was executed
 	 * @property {Number} affectedRows  The number of rows matching the WHERE criteria
 	 * @property {Number} changedRows  The number of rows affected by the statement
+	 * @see Db#buildWhere
 	 */
 	async deleteFrom(table, where, limit = null) {
 		await this.connectOnce();
@@ -748,9 +752,128 @@ class Db {
 	}
 
 	/**
-	 * Build a where clause from an object of field-value pairs
+	 * Construct INSERT statements suitable for a backup
+	 * @param {String} table  The name of the table from which to fetch records
+	 * @param {Object} where  WHERE conditions on which to fetch records - see Db#buildWhere
+	 * @see Db#buildWhere
+	 * @param {Object} options  Additional options
+	 * @property {Number} limit  Limit export to this many records
+	 * @property {Number} chunkSize  If > 0, restrict INSERT STATEMENTS to a maximum of this many records
+	 * @property {Boolean} discardIds  If true, columns selected as "id" will have a NULL value
+	 * @property {Boolean} disableForeignKeyChecks  If true, add statements to disable and re-enable foreign key checks
+	 * @property {Boolean} lockTables  If true, add statements to lock and unlock tables
+	 * @return {Promise<Object>}
+	 * @property {String} results  The exported SQL
+	 * @property {String} query  The SQL that was executed to fetch records
+	 * @property {Object[]} fields  Details on the fields fetched
+	 * @property {Number} affectedRows  The number of rows matching the WHERE criteria
+	 * @property {Number} chunks  The number of chunks of rows
+	 */
+	async exportAsSql(
+		table,
+		where = {},
+		{
+			limit = 0,
+			chunkSize = 250,
+			discardIds = false,
+			truncateTable = false,
+			disableForeignKeyChecks = false,
+			lockTables = false,
+		} = {}
+	) {
+		await this.connectOnce();
+		// get results
+		const addl = limit > 0 ? `LIMIT ${limit}` : '';
+		const { results: rows, fields, query } = await this.selectFrom(
+			table,
+			[],
+			where,
+			addl
+		);
+		if (rows.length === 0) {
+			return {
+				results: '',
+				fields,
+				query,
+				affectedRows: 0,
+				chunks: 0,
+			};
+		}
+		// build column names
+		const quotedFields = [];
+		for (const field of fields) {
+			quotedFields.push(this.quote(field.name));
+		}
+		const fieldsString = quotedFields.join(',');
+		const quotedTable = this.quote(table);
+		// start building lines of sql to insert
+		const lines = [];
+		if (disableForeignKeyChecks) {
+			lines.push(
+				'/*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;'
+			);
+		}
+		if (lockTables) {
+			lines.push(`LOCK TABLES ${quotedTable} WRITE;`);
+		}
+		if (truncateTable) {
+			lines.push(`TRUNCATE TABLE ${quotedTable};`);
+		}
+		// take rows in chunks so a single statement isn't too long
+		const chunks = chunk(rows, chunkSize);
+		for (const chunkOfRows of chunks) {
+			const rowStrings = [];
+			for (const values of chunkOfRows) {
+				const escapedValues = [];
+				// collect the value for each field
+				for (const field of fields) {
+					if (discardIds && field.name === 'id') {
+						escapedValues.push('NULL');
+					} else {
+						escapedValues.push(this.escape(values[field.name]));
+					}
+				}
+				const valuesString = escapedValues.join(',');
+				rowStrings.push(`(${valuesString})`);
+			}
+			const insertsString = rowStrings.join(',\n');
+			lines.push(
+				`INSERT INTO ${quotedTable} (${fieldsString}) VALUES\n${insertsString};`
+			);
+		}
+		if (lockTables) {
+			lines.push('UNLOCK TABLES;');
+		}
+		if (disableForeignKeyChecks) {
+			lines.push('/*!40014 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS */;');
+		}
+		return {
+			results: lines.join('\n'),
+			fields,
+			query,
+			affectedRows: rows.length,
+			chunks: chunks.length,
+		};
+	}
+
+	/**
+	 * Build a where clause from an object of field-value pairs.
+	 * Used internally by #selectFrom, #updateTable, #deleteFrom
+	 * @see Db#buildWhere
 	 * @param {Object} wheres  An object with field-value pairs (field may be field space operator)
 	 * @return {String}
+	 * @example
+	 * db.buildWheres({
+	 *     'start_date BETWEEN: ['2012-01-01','2013-01-01'],
+	 *     'start_date >': '2013-01-01',
+	 *     'start_date !=': '2013-01-01',
+	 *     'start_date': null, // `start_date` IS NULL
+	 *     'start_date !=': null, // `start_date` IS NOT NULL
+	 *     id: [1,2,3], // `id` IN (1,2,3)
+	 *     'id !=': [1,2,3], // `id` NOT IN (1,2,3)
+	 *     'id IN': [1,2,3], // `id` IN (1,2,3)
+	 *     'id NOT IN': [1,2,3], // `id` NOT IN (1,2,3)
+	 * })
 	 */
 	buildWheres(wheres) {
 		const clauses = [];
