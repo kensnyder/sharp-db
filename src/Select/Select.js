@@ -1,8 +1,8 @@
 const mysql = require('mysql2');
 const Parser = require('../Parser/Parser.js');
 const Db = require('../Db/Db.js');
-const cloneDeep = require('lodash/clonedeep');
-const escapeRegExp = require('lodash/escaperegexp');
+const cloneDeep = require('lodash/cloneDeep');
+const escapeRegExp = require('lodash/escapeRegExp');
 const forOwn = require('../forOwnDefined/forOwnDefined.js');
 const substrCount = require('quickly-count-substrings');
 

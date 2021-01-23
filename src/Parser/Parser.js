@@ -1,6 +1,6 @@
 const capitalize = require('lodash/capitalize');
-const camelCase = require('lodash/camelcase');
-const upperFirst = require('lodash/upperfirst');
+const camelCase = require('lodash/camelCase');
+const upperFirst = require('lodash/upperFirst');
 
 /**
  * Parse SQL and populate onto a Select query object
