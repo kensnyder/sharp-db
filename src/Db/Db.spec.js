@@ -42,8 +42,23 @@ describe('Db', () => {
 		});
 	});
 	describe('binding', () => {
+		it('should bind strings', () => {
+			const bound = db.bindArgs('WHERE a = ?', ['foo']);
+			expect(bound.sql).toBe("WHERE a = 'foo'");
+		});
+		it('should bind String object', () => {
+			const bound = db.bindArgs('WHERE a = ?', [new String('foo')]);
+			expect(bound.sql).toBe("WHERE a = 'foo'");
+		});
 		it('should bind numbers', () => {
 			const bound = db.bindArgs('WHERE a = ? AND b = ?', [1, 2]);
+			expect(bound.sql).toBe('WHERE a = 1 AND b = 2');
+		});
+		it('should bind Number object', () => {
+			const bound = db.bindArgs('WHERE a = ? AND b = ?', [
+				new Number(1),
+				new Number(2),
+			]);
 			expect(bound.sql).toBe('WHERE a = 1 AND b = 2');
 		});
 		it('should bind true', () => {
@@ -58,6 +73,14 @@ describe('Db', () => {
 			const bound = db.bindArgs('WHERE is_active = ?', [false]);
 			expect(bound.sql).toBe('WHERE is_active = false');
 		});
+		it('should bind Boolean true Object', () => {
+			const bound = db.bindArgs('WHERE is_active = ?', [new Boolean(true)]);
+			expect(bound.sql).toBe('WHERE is_active = true');
+		});
+		it('should bind Boolean false Object', () => {
+			const bound = db.bindArgs('WHERE is_active = ?', [new Boolean(false)]);
+			expect(bound.sql).toBe('WHERE is_active = false');
+		});
 		it('should bind arrays', () => {
 			const bound = db.bindArgs('WHERE id IN(?)', [[1, 2, 3]]);
 			expect(bound.sql).toBe('WHERE id IN(1, 2, 3)');
@@ -66,13 +89,19 @@ describe('Db', () => {
 			const bound = db.bindArgs('SET a = ?', [null]);
 			expect(bound.sql).toBe('SET a = NULL');
 		});
+		it('should bind Date Objects', () => {
+			const now = '2021-01-25 10:34:36.472';
+			const date = new Date('2021-01-25 10:34:36.472');
+			const bound = db.bindArgs('SET at = ?', [date]);
+			expect(bound.sql).toBe(`SET at = '${now}'`);
+		});
 		it('should do nothing on empty arrays', () => {
 			const bound = db.bindArgs('SET a = 1', []);
 			expect(bound.sql).toBe('SET a = 1');
 		});
 		it('should do nothing on undefined', () => {
-			const bound = db.bindArgs('SET a = 1', undefined);
-			expect(bound.sql).toBe('SET a = 1');
+			const bound = db.bindArgs('SET a = ?', undefined);
+			expect(bound.sql).toBe('SET a = ?');
 		});
 		it('should throw errors if SQL is empty string', () => {
 			const bindEmpty = () => {

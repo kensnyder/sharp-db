@@ -2,6 +2,7 @@ const forOwn = require('../forOwnDefined/forOwnDefined.js');
 const mysql = require('mysql2');
 const Ssh = require('../Ssh/Ssh.js');
 const chunk = require('lodash/chunk');
+const { isPlainObject } = require('is-plain-object');
 
 /**
  * Simple database class for mysql
@@ -951,7 +952,14 @@ class Db {
 		}
 		options.values = undefined;
 		args.forEach(arg => {
-			if (arg && typeof arg === 'object' && !Array.isArray(arg)) {
+			if (
+				arg instanceof Boolean ||
+				arg instanceof Number ||
+				arg instanceof String
+			) {
+				arg = arg.valueOf();
+			}
+			if (isPlainObject(arg)) {
 				options.sql = options.sql.replace(/:([\w_]+)/g, ($0, $1) => {
 					if (arg.hasOwnProperty($1) && arg[$1] !== undefined) {
 						return mysql.escape(arg[$1]);
