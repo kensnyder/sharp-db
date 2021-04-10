@@ -1,6 +1,6 @@
 {
   "name": "sharp-db",
-  "version": "1.3.1",
+  "version": "1.3.2",
   "description": "Classes for running SQL and building select queries in MySQL",
   "main": "index.js",
   "scripts": {
@@ -30,7 +30,7 @@
   "homepage": "https://github.com/kensnyder/sharp-db#readme",
   "dependencies": {
     "is-plain-object": "^5.0.0",
-    "lodash": "^4.17.20",
+    "lodash": "^4.17.21",
     "mysql2": "^2.2.5",
     "quickly-count-substrings": "^1.0.0",
     "ssh2": "^0.8.9"
@@ -38,12 +38,12 @@
   "devDependencies": {
     "ansi-colors": "^4.1.1",
     "codecov": "^3.8.1",
-    "documentation": "^13.1.1",
+    "documentation": "^13.2.1",
     "jest": "^26.6.3",
     "moment": "^2.29.1",
     "prettier": "^2.2.1",
     "pretty-var-export": "^1.1.3",
-    "prompts": "^2.4.0",
+    "prompts": "^2.4.1",
     "walkdir": "^0.4.1"
   }
 }

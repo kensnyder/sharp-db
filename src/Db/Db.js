@@ -930,7 +930,8 @@ class Db {
 	 * Bind an array of arguments to a query
 	 * @param {String|Object} sql  The base SQL query
 	 * @param {Array} args  An array of values to bind
-	 * @return {String}
+	 * @return {Object}
+	 * @property {String} sql  The final SQL with bound values replaced
 	 * @example
 	 * db.select('SELECT * FROM users WHERE id = ?', 100);
 	 * db.bindArgs(array('SELECT * FROM users WHERE id = ?', 100)); // SELECT * FROM users WHERE id = '100'

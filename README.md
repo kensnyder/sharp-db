@@ -1,15 +1,15 @@
 # sharp-db
 
-[![Build Status](https://travis-ci.com/kensnyder/sharp-db.svg?branch=master&v=1.3.1)](https://travis-ci.org/kensnyder/sharp-db)
-[![Code Coverage](https://codecov.io/gh/kensnyder/sharp-db/branch/master/graph/badge.svg?v=1.3.1)](https://codecov.io/gh/kensnyder/sharp-db)
-[![ISC License](https://img.shields.io/github/license/kensnyder/sharp-db.svg?v=1.3.1)](https://opensource.org/licenses/ISC)
+[![Build Status](https://travis-ci.com/kensnyder/sharp-db.svg?branch=master&v=1.3.2)](https://travis-ci.org/kensnyder/sharp-db)
+[![Code Coverage](https://codecov.io/gh/kensnyder/sharp-db/branch/master/graph/badge.svg?v=1.3.2)](https://codecov.io/gh/kensnyder/sharp-db)
+[![ISC License](https://img.shields.io/github/license/kensnyder/sharp-db.svg?v=1.3.2)](https://opensource.org/licenses/ISC)
 
 Classes for running SQL and building select queries in MySQL
 
 ## Installation
 
 ```bash
-npm install --save sharp-db
+npm install sharp-db
 ```
 
 ## Table of Contents
@@ -21,7 +21,8 @@ npm install --save sharp-db
     * [Basic Use](#basic-use)
     * [Bindings](#bindings)
     * [Methods](#methods)
-    * [Useful query options](#useful-query-options)
+    * [Useful Query Options](#useful-query-options)
+	* [Solutions to Common Problems](#solutions-to-common-problems)
 * [Select](#select)
     * [Select.parse()](#selectparse)
     * [Building the Query](#building-the-query)
@@ -74,6 +75,9 @@ const db2 = new Db({
 
 // instance that was last created
 const db2Again = Db.factory();
+
+// Don't forget to close the connection when done
+db1.destroy();
 ```
 
 ### SSH Tunneling
@@ -117,10 +121,15 @@ All code examples below assume the `Db` instance has been stored in `db`.
 #### Plain select queries
 
 ```js
+const { Db } = require('sharp-db');
+const db = Db.factory();
 const { query, results, fields } = await db.select('SELECT * FROM users');
 // query is the final query executed after value binding
 // results is an Array of objects representing the query results
 // fields is an Array of objects representing the columns that were returned
+
+// Don't forget to close the connection when done
+db.destroy();
 ```
 
 Relevant properties of each `fields` item:
@@ -444,6 +453,28 @@ const { query, results, fields } = await db.query(
 );
 ```
 
+### Solutions to Common Problems
+
+#### `Error: Can't add new command when connection is in closed state`
+
+Make sure you use `await` your results before closing your connection.
+
+#### `Error: read ECONNRESET` or `Emitted 'error' event on Client instance`
+
+Your SSH connection may have timed out. To keep connection alive, you
+can send keepalive packets.
+
+```js
+const sshConfig = {
+	// ...
+	// How often (in milliseconds) to send SSH-level keepalive packets to the server (in a similar way as OpenSSH's ServerAliveInterval config option). Set to 0 to disable. Default: 0
+	keepaliveInterval: 30,
+	// How many consecutive, unanswered SSH-level keepalive packets that can be sent to the server before disconnection (similar to OpenSSH's ServerAliveCountMax config option). Default: 3
+	keepaliveCountMax: 120,
+}
+const db = new Db(mysqlConfig, sshConfig);
+```
+
 ## Select
 
 A Select object represents a SQL SELECT query and allows dynamically adding
@@ -513,7 +544,7 @@ The following are the most common methods for building queries.
 - `query.crossJoin(expression)` - Add a CROSS JOIN expression
 - `query.leftOuterJoin(expression)` - Add a LEFT OUTER JOIN expression
 - `query.fullOuterJoin(expression)` - Add a FULL OUTER JOIN expression
-- `query.rightOuterJoin(expression)` - Add a ROUTER OUTER JOIN expression
+- `query.rightOuterJoin(expression)` - Add a RIGHT OUTER JOIN expression
 - `query.groupBy(column)` - Group by a column or expression
 - `query.where(column, operator, value)` - Require column satisfy operator
 - `query.where(column, value)` - Require column equal a value
@@ -551,8 +582,8 @@ the number of results that would have been returned if there were no LIMIT.
 
 ```js
 const query = Select.parse('SELECT id, name FROM users LIMIT 5');
-const { results: users } = query.fetch();
-const { results: count } = query.foundRows();
+const { results: users } = await query.fetch();
+const { results: count } = await query.foundRows();
 // will run the following query:
 // SELECT COUNT(*) AS foundRows FROM users
 ```
