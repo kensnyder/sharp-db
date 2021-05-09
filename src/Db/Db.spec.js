@@ -118,13 +118,14 @@ describe('Db', () => {
 	});
 	describe('connect()', () => {
 		it('should handle errors', async () => {
-			mysqlMock.pushConnect({
-				fatal: 'Error!',
-			});
+			const error = new Error('foo');
+			error.fatal = true;
+			mysqlMock.pushConnect(error);
 			try {
 				await db.connect();
 			} catch (e) {
 				expect(e).toBeInstanceOf(Error);
+				expect(e.fatal).toBe(true);
 			}
 		});
 	});
@@ -136,7 +137,7 @@ describe('Db', () => {
 			try {
 				await db.select('SELECT * FROM users');
 			} catch (e) {
-				expect(e.message).toBe('foo');
+				expect(e.message).toContain('foo');
 			}
 		});
 		it('should return result arrays', async () => {
@@ -242,7 +243,7 @@ describe('Db', () => {
 			try {
 				await db.selectHash('SELECT * FROM users');
 			} catch (e) {
-				expect(e.message).toBe('foo');
+				expect(e.message).toContain('foo');
 			}
 		});
 	});
@@ -262,7 +263,7 @@ describe('Db', () => {
 			try {
 				await db.selectList('SELECT * FROM users');
 			} catch (e) {
-				expect(e.message).toBe('foo');
+				expect(e.message).toContain('foo');
 			}
 		});
 	});
@@ -289,7 +290,7 @@ describe('Db', () => {
 			try {
 				await db.selectGrouped('department_id', 'SELECT * FROM users');
 			} catch (e) {
-				expect(e.message).toBe('foo');
+				expect(e.message).toContain('foo');
 			}
 		});
 	});
@@ -315,7 +316,7 @@ describe('Db', () => {
 			try {
 				await db.selectIndexed('id', 'SELECT * FROM users');
 			} catch (e) {
-				expect(e.message).toBe('foo');
+				expect(e.message).toContain('foo');
 			}
 		});
 	});
@@ -337,7 +338,7 @@ describe('Db', () => {
 			try {
 				await db.selectFirst('SELECT * FROM users');
 			} catch (e) {
-				expect(e.message).toBe('foo');
+				expect(e.message).toContain('foo');
 			}
 		});
 	});
@@ -365,7 +366,7 @@ describe('Db', () => {
 			try {
 				await db.selectValue('SELECT * FROM users');
 			} catch (e) {
-				expect(e.message).toBe('foo');
+				expect(e.message).toContain('foo');
 			}
 		});
 	});
@@ -385,7 +386,7 @@ describe('Db', () => {
 			try {
 				await db.selectExists('SELECT * FROM users');
 			} catch (e) {
-				expect(e.message).toBe('foo');
+				expect(e.message).toContain('foo');
 			}
 		});
 	});
@@ -403,7 +404,7 @@ describe('Db', () => {
 			try {
 				await db.insert(sql);
 			} catch (e) {
-				expect(e.message).toBe('bar');
+				expect(e.message).toContain('bar');
 			}
 		});
 	});
@@ -421,7 +422,7 @@ describe('Db', () => {
 			try {
 				await db.update(sql);
 			} catch (e) {
-				expect(e.message).toBe('foo');
+				expect(e.message).toContain('foo');
 			}
 		});
 	});
@@ -647,7 +648,7 @@ describe('Db', () => {
 			try {
 				await db.insertIntoOnDuplicateKeyUpdate('test', { a: 1 }, { b: 2 });
 			} catch (e) {
-				expect(e.message).toBe('foo');
+				expect(e.message).toContain('foo');
 			}
 		});
 	});
@@ -944,7 +945,7 @@ describe('Db', () => {
 			try {
 				await db.query(sql);
 			} catch (e) {
-				expect(e.message).toBe('foo');
+				expect(e.message).toContain('foo');
 			}
 		});
 	});
@@ -963,7 +964,7 @@ describe('Db', () => {
 			try {
 				await db.query(sql);
 			} catch (e) {
-				expect(e.message).toBe('foo');
+				expect(e.message).toContain('foo');
 			}
 		});
 	});
@@ -1021,7 +1022,7 @@ INSERT INTO \`users\` (\`id\`,\`fname\`) VALUES
 			const { results } = await db.exportAsSql(
 				'users',
 				{},
-				{ discardIds: true }
+				{ discardIds: true, limit: 5 }
 			);
 			expect(results).toBe(
 				`
@@ -1192,7 +1193,7 @@ INSERT INTO \`users\` (\`id\`,\`fname\`) VALUES
 			try {
 				await db.end();
 			} catch (e) {
-				expect(e.message).toBe('foo');
+				expect(e.message).toContain('foo');
 			}
 		});
 		it('should end db.ssh when connection is undefined', async () => {

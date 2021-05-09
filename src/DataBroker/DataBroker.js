@@ -1,3 +1,4 @@
+const Db = require('../Db/Db.js');
 const Select = require('../Select/Select.js');
 
 /**
@@ -13,7 +14,7 @@ class DataBroker {
 		 * The database to read/write to
 		 * @type {Db}
 		 */
-		this.db = db;
+		this.db = db || Db.factory();
 		/**
 		 * The current date
 		 * @type {Date}
@@ -99,7 +100,7 @@ class DataBroker {
 	 * @param {Number} userId  The user id to use for createdBy and modifiedBy
 	 * @returns {{createdAt: Date, createdBy: Number, modifiedAt: Date, modifiedBy: Number}}
 	 */
-	createdAndModified(userId = 1) {
+	createdAndModified(userId = 0) {
 		return {
 			createdAt: this.now,
 			createdBy: userId,
@@ -113,7 +114,7 @@ class DataBroker {
 	 * @param {Number} userId  The user id to use for created_by and modified_by
 	 * @returns {{modified_by: Number, created_at: Date, modified_at: Date, created_by: Number}}
 	 */
-	created_and_modified(userId = 1) {
+	created_and_modified(userId = 0) {
 		return {
 			created_at: this.now,
 			created_by: userId,

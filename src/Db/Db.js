@@ -3,6 +3,7 @@ const mysql = require('mysql2');
 const Ssh = require('../Ssh/Ssh.js');
 const chunk = require('lodash/chunk');
 const { isPlainObject } = require('is-plain-object');
+const decorateError = require('../decorateError/decorateError.js');
 
 /**
  * Simple database class for mysql
@@ -23,12 +24,13 @@ class Db {
 		 */
 		this.config = {
 			...config,
-			host: config.host || env.DB_HOST || '127.0.0.1',
-			user: config.user || env.DB_USER || 'root',
-			password: config.password || env.DB_PASSWORD || '',
-			database: config.database || env.DB_DATABASE || undefined,
-			port: config.port || env.DB_PORT || 3306,
-			charset: config.charset || env.DB_CHARSET || 'utf8mb4',
+			host: config.host || env.DB_HOST || env.RDS_HOSTNAME || '127.0.0.1',
+			user: config.user || env.DB_USER || env.RDS_USERNAME || 'root',
+			password: config.password || env.DB_PASSWORD || env.RDS_PASSWORD || '',
+			database:
+				config.database || env.DB_DATABASE || env.RDS_DATABASE || undefined,
+			port: config.port || env.DB_PORT || env.RDS_PORT || 3306,
+			charset: config.charset || env.DB_CHARSET || env.RDS_CHARSET || 'utf8mb4',
 		};
 		if (sshConfig) {
 			/**
@@ -69,9 +71,10 @@ class Db {
 		 */
 		this.connection = mysql.createConnection(this.config);
 		return new Promise((resolve, reject) => {
-			this.connection.connect(err => {
-				if (err) {
-					reject(new Error(`[${err.code}] ${err.sqlMessage}`));
+			this.connection.connect(error => {
+				if (error) {
+					decorateError(error);
+					reject(error);
 				} else {
 					resolve();
 				}
@@ -99,12 +102,13 @@ class Db {
 				if (idx > -1) {
 					Db.instances.splice(idx, 1);
 				}
-				this.connection.end(err => {
+				this.connection.end(error => {
 					if (this.ssh) {
 						this.ssh.end();
 					}
-					if (err) {
-						reject(err);
+					if (error) {
+						decorateError(error);
+						reject(error);
 					} else {
 						resolve();
 					}
@@ -168,6 +172,7 @@ class Db {
 		return new Promise((resolve, reject) => {
 			const query = this.connection.query(options, (error, results, fields) => {
 				if (error) {
+					decorateError(error, options);
 					reject(error);
 				} else {
 					resolve({ query, results, fields });
@@ -207,6 +212,7 @@ class Db {
 		return new Promise((resolve, reject) => {
 			const query = this.connection.query(options, (error, results, fields) => {
 				if (error) {
+					decorateError(error, options);
 					reject(error);
 				} else {
 					resolve({ query, results, fields });
@@ -230,6 +236,7 @@ class Db {
 		return new Promise((resolve, reject) => {
 			const query = this.connection.query(options, (error, results, fields) => {
 				if (error) {
+					decorateError(error, options);
 					reject(error);
 				} else {
 					const key = fields[0].name;
@@ -263,6 +270,7 @@ class Db {
 		return new Promise((resolve, reject) => {
 			const query = this.connection.query(options, (error, results, fields) => {
 				if (error) {
+					decorateError(error, options);
 					reject(error);
 				} else {
 					const name = fields[0].name;
@@ -293,6 +301,7 @@ class Db {
 		return new Promise((resolve, reject) => {
 			const query = this.connection.query(options, (error, results, fields) => {
 				if (error) {
+					decorateError(error, options);
 					reject(error);
 				} else {
 					const groups = {};
@@ -328,6 +337,7 @@ class Db {
 		return new Promise((resolve, reject) => {
 			const query = this.connection.query(options, (error, results, fields) => {
 				if (error) {
+					decorateError(error, options);
 					reject(error);
 				} else {
 					const hash = {};
@@ -359,6 +369,7 @@ class Db {
 		return new Promise((resolve, reject) => {
 			const query = this.connection.query(options, (error, results, fields) => {
 				if (error) {
+					decorateError(error, options);
 					reject(error);
 				} else {
 					resolve({
@@ -386,6 +397,7 @@ class Db {
 		return new Promise((resolve, reject) => {
 			const query = this.connection.query(options, (error, results, fields) => {
 				if (error) {
+					decorateError(error, options);
 					reject(error);
 				} else {
 					let value = undefined;
@@ -441,6 +453,7 @@ class Db {
 		return new Promise((resolve, reject) => {
 			const query = this.connection.query(options, (error, results) => {
 				if (error) {
+					decorateError(error, options);
 					reject(error);
 				} else {
 					resolve({
@@ -469,6 +482,7 @@ class Db {
 		return new Promise((resolve, reject) => {
 			const query = this.connection.query(options, (error, results) => {
 				if (error) {
+					decorateError(error, options);
 					reject(error);
 				} else {
 					resolve({
@@ -659,6 +673,7 @@ class Db {
 		return new Promise((resolve, reject) => {
 			const query = this.connection.query(sql, (error, results) => {
 				if (error) {
+					decorateError(error, { sql });
 					reject(error);
 				} else {
 					resolve({
@@ -941,7 +956,7 @@ class Db {
 	bindArgs(sql, args) {
 		const options = typeof sql == 'object' ? sql : { sql };
 		if (options.sql === '' || typeof options.sql !== 'string') {
-			throw new Error('SQL cannot be empty');
+			throw new Error('SQL must be a non-empty empty string');
 		}
 		if (!Array.isArray(args)) {
 			args = [];
@@ -952,7 +967,8 @@ class Db {
 			args = [sql.values].concat(args);
 		}
 		options.values = undefined;
-		args.forEach(arg => {
+		options.bound = {};
+		args.forEach((arg, i) => {
 			if (
 				arg instanceof Boolean ||
 				arg instanceof Number ||
@@ -963,11 +979,13 @@ class Db {
 			if (isPlainObject(arg)) {
 				options.sql = options.sql.replace(/:([\w_]+)/g, ($0, $1) => {
 					if (arg.hasOwnProperty($1) && arg[$1] !== undefined) {
+						options.bound[$1] = arg[$1];
 						return mysql.escape(arg[$1]);
 					}
 					return $0;
 				});
 			} else {
+				options.bound[String(i)] = arg;
 				options.sql = options.sql.replace('?', mysql.escape(arg));
 			}
 		});

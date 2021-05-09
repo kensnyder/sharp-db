@@ -10,12 +10,36 @@ describe('DataBroker', () => {
 		db = Db.factory();
 		broker = new DataBroker(db);
 	});
+	describe('instance', () => {
+		it('should populate some properties', async () => {
+			expect(broker.db).toBeInstanceOf(Db);
+			expect(broker.now).toBeInstanceOf(Date);
+			expect(typeof broker.uniqid).toBe('string');
+			expect(broker.deleted).toEqual({});
+			expect(broker.ids).toEqual({});
+		});
+	});
+	describe('without Db instance', () => {
+		it('should fallback to Db.factory()', async () => {
+			const broker2 = new DataBroker();
+			expect(broker2.db).toBeInstanceOf(Db);
+		});
+	});
 	describe('insert', () => {
-		it('should insert records', async () => {
+		it('should insert 1 record', async () => {
 			mysqlMock.pushResponse({ results: { insertId: 1 } });
 			const id = await broker.insert('users', { name: 'joe' });
 			expect(id).toBe(1);
 			expect(broker.ids).toEqual({ users: [1] });
+		});
+		it('should insert 2 records', async () => {
+			mysqlMock.pushResponse({ results: { insertId: 1 } });
+			mysqlMock.pushResponse({ results: { insertId: 2 } });
+			const id1 = await broker.insert('users', { name: 'joe' });
+			const id2 = await broker.insert('users', { name: 'jane' });
+			expect(id1).toBe(1);
+			expect(id2).toBe(2);
+			expect(broker.ids).toEqual({ users: [1, 2] });
 		});
 		it('should clean up insertions', async () => {
 			mysqlMock.pushResponse({ results: { insertId: 1 } });
@@ -77,9 +101,29 @@ describe('DataBroker', () => {
 				modifiedBy: userId,
 			});
 		});
+		it('should default user to 0 (camelCase)', async () => {
+			const userId = 0;
+			const fields = broker.createdAndModified();
+			expect(fields).toEqual({
+				createdAt: broker.now,
+				createdBy: userId,
+				modifiedAt: broker.now,
+				modifiedBy: userId,
+			});
+		});
 		it('should support snake_case', async () => {
 			const userId = 3;
 			const fields = broker.created_and_modified(3);
+			expect(fields).toEqual({
+				created_at: broker.now,
+				created_by: userId,
+				modified_at: broker.now,
+				modified_by: userId,
+			});
+		});
+		it('should default user to 0 (snake_case)', async () => {
+			const userId = 0;
+			const fields = broker.created_and_modified();
 			expect(fields).toEqual({
 				created_at: broker.now,
 				created_by: userId,

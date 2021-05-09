@@ -1,8 +1,8 @@
 # sharp-db
 
-[![Build Status](https://travis-ci.com/kensnyder/sharp-db.svg?branch=master&v=1.3.2)](https://travis-ci.org/kensnyder/sharp-db)
-[![Code Coverage](https://codecov.io/gh/kensnyder/sharp-db/branch/master/graph/badge.svg?v=1.3.2)](https://codecov.io/gh/kensnyder/sharp-db)
-[![ISC License](https://img.shields.io/github/license/kensnyder/sharp-db.svg?v=1.3.2)](https://opensource.org/licenses/ISC)
+[![Build Status](https://travis-ci.com/kensnyder/sharp-db.svg?branch=master&v=1.4.0)](https://travis-ci.org/kensnyder/sharp-db)
+[![Code Coverage](https://codecov.io/gh/kensnyder/sharp-db/branch/master/graph/badge.svg?v=1.4.0)](https://codecov.io/gh/kensnyder/sharp-db)
+[![ISC License](https://img.shields.io/github/license/kensnyder/sharp-db.svg?v=1.4.0)](https://opensource.org/licenses/ISC)
 
 Classes for running SQL and building select queries in MySQL
 
@@ -455,11 +455,15 @@ const { query, results, fields } = await db.query(
 
 ### Solutions to Common Problems
 
-#### `Error: Can't add new command when connection is in closed state`
+#### Connection is in closed state
+
+`Error: Can't add new command when connection is in closed state`
 
 Make sure you use `await` your results before closing your connection.
 
-#### `Error: read ECONNRESET` or `Emitted 'error' event on Client instance`
+#### ECONNRESET or error event
+
+`Error: read ECONNRESET` or `Emitted 'error' event on Client instance`
 
 Your SSH connection may have timed out. To keep connection alive, you
 can send keepalive packets.
@@ -773,13 +777,21 @@ Below are some limitations illustrated by example.
 
 Most subqueries can be parsed but sub-subqueries don't work.
 
-```sql
--- WILL NOT WORK
+```js
+// WILL NOT WORK
+const query = Select.parse(`
 SELECT * FROM categories_posts WHERE category_id IN(
     SELECT id FROM categories WHERE client_id IN(
         SELECT client_id FROM affiliations WHERE name LIKE :name
     )
-)
+)`);
+// WILL WORK
+const subquery = Select.parse(`SELECT id FROM categories WHERE client_id IN(
+    SELECT client_id FROM affiliations WHERE name LIKE :name
+)`);
+subquery.bind({ name: 'DogeCoin' });
+const query = Select.parse(`SELECT * FROM categories_posts WHERE`);
+query.where(`category_id IN(${subquery})`);
 ```
 
 #### Keywords in Strings
@@ -788,13 +800,9 @@ If you need to use keywords in strings, use bindings.
 
 ```sql
 -- WILL NOT WORK
-SELECT id, CONCAT('WHERE ', expr) FROM users WHERE name = :name
-```
-
-But instead you can use a binding:
-
-```sql
-SELECT id, CONCAT(:binding, expr) FROM users WHERE name = :name
+SELECT id, CONCAT('WHERE ', expr) FROM users WHERE name = :name;
+-- WILL WORK
+SELECT id, CONCAT(:binding, expr) FROM users WHERE name = :name;
 ```
 
 #### Keywords in Bindings
@@ -803,7 +811,9 @@ Binding names cannot be SQL clause keywords (even if lower cased).
 
 ```sql
 -- WILL NOT WORK
-SELECT CONCAT(:where, fname) FROM users WHERE id = :id
+SELECT CONCAT(:where, fname) FROM users WHERE id = :id;
+-- WILL WORK
+SELECT CONCAT(:title, fname) FROM users WHERE id = :id;
 ```
 
 #### Nested OR and AND Clauses
@@ -820,6 +830,15 @@ WHERE (
         id > 0 AND is_active IS NOT NULL
     )
 )
+```
+
+```js
+// WILL WORK
+const query = Select.parse(`SELECT * FROM users`);
+query.orWhere([
+	"fname = :fname AND (lname LIKE '%john' OR lname LIKE 'john%')",
+	'id > 0 AND is_active IS NOT NULL',
+]);
 ```
 
 ## DataBroker
@@ -841,7 +860,7 @@ Example:
 
 ```js
 const { DataBroker, Db } = require('sharp-db');
-const broker = new DataBroker(Db.factory());
+const broker = new DataBroker(Db.factory(config));
 const userId = await broker.insert('users', { name: 'John', is_active: true });
 // the new user ID is also available at broker.ids
 expect(broker.ids.users[0]).toBe(userId);
@@ -856,7 +875,7 @@ Example:
 
 ```js
 const { DataBroker, Db } = require('sharp-db');
-const broker = new DataBroker(Db.factory());
+const broker = new DataBroker(Db.factory(config));
 // affectedRows will be the count of records deleted
 const affectedRows = await broker.delete('users', { status_id: 5 });
 // the deleted records are available at broker.deleted
