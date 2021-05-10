@@ -55,6 +55,47 @@ describe('DataBroker', () => {
 			);
 			spy.mockRestore();
 		});
+		it('should handle composite keys', async () => {
+			mysqlMock.pushResponse({ results: { insertId: 0 } });
+			const compositeKey = await broker.insert(
+				'posts_images',
+				{
+					post_id: 1,
+					image_id: 2,
+					sort: 1,
+				},
+				{ compositeKey: ['post_id', 'image_id'] }
+			);
+			expect(compositeKey).toEqual({
+				post_id: 1,
+				image_id: 2,
+			});
+			expect(broker.ids).toEqual({
+				posts_images: [{ post_id: 1, image_id: 2 }],
+			});
+		});
+		it('should cleanup insertions with composite keys', async () => {
+			mysqlMock.pushResponse({ results: { insertId: 0 } });
+			mysqlMock.pushResponse({ results: { affectedRows: 1 } });
+			await broker.insert(
+				'posts_images',
+				{
+					post_id: 1,
+					image_id: 2,
+					sort: 1,
+				},
+				{ compositeKey: ['post_id', 'image_id'] }
+			);
+			const spy = jest.spyOn(db, 'update');
+			const affectedRows = await broker.cleanup();
+			expect(broker.ids).toEqual({});
+			expect(affectedRows).toBe(1);
+			expect(spy.mock.calls).toHaveLength(1);
+			expect(spy).toHaveBeenCalledWith(
+				'DELETE FROM `posts_images` WHERE `post_id` = 1 AND `image_id` = 2 LIMIT 1'
+			);
+			spy.mockRestore();
+		});
 	});
 	describe('delete', () => {
 		it('should delete records', async () => {

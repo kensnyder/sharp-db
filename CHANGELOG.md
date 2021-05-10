@@ -1,5 +1,14 @@
 ## Change Log
 
+### v1.5.0 on 2021-05-10
+
+- Add support for composite keys to DataBroker
+
+### v1.4.0 on 2021-05-08
+
+- Update errors to provide more info including SQL that caused error
+- Updated dependencies
+
 ### v1.3.0 on 2021-01-22
 
 - Add Db.exportToSql() function

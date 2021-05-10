@@ -41,15 +41,26 @@ class DataBroker {
 	 * Insert records that can be cleaned up later
 	 * @param {String} table  The name of the table to insert into
 	 * @param {Object} values  The record to insert
-	 * @returns {Promise<Number>}  Resolves with the id of the new record
+	 * @param {Object} options  Additional options
+	 * @property {Array} options.compositeKey  An array of column names that form a composite key
+	 * @returns {Promise<Number|Object>}  Resolves with the id of the new record or the composite key
 	 */
-	async insert(table, values) {
+	async insert(table, values, options = {}) {
 		const { insertId } = await this.db.insertInto(table, values);
 		if (!Array.isArray(this.ids[table])) {
 			this.ids[table] = [];
 		}
-		this.ids[table].push(insertId);
-		return insertId;
+		if (Array.isArray(options.compositeKey)) {
+			const composite = {};
+			for (const column of options.compositeKey) {
+				composite[column] = values[column];
+			}
+			this.ids[table].push(composite);
+			return composite;
+		} else {
+			this.ids[table].push(insertId);
+			return insertId;
+		}
 	}
 
 	/**
@@ -76,13 +87,16 @@ class DataBroker {
 	 * @returns {Promise<Number>}  The total number of rows affected
 	 */
 	async cleanup() {
+		// cleanup inserted records
 		let totalAffectedRows = 0;
 		for (const table of Object.keys(this.ids)) {
-			for (const id of this.ids[table]) {
-				const { affectedRows } = await this.db.deleteFrom(table, { id }, 1);
+			for (const idOrKey of this.ids[table]) {
+				const where = typeof idOrKey === 'number' ? { id: idOrKey } : idOrKey;
+				const { affectedRows } = await this.db.deleteFrom(table, where, 1);
 				totalAffectedRows += affectedRows;
 			}
 		}
+		// re-insert deleted records
 		this.ids = {};
 		for (const table of Object.keys(this.deleted)) {
 			const { affectedRows } = await this.db.insertExtended(

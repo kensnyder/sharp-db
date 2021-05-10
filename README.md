@@ -1,8 +1,8 @@
 # sharp-db
 
-[![Build Status](https://travis-ci.com/kensnyder/sharp-db.svg?branch=master&v=1.4.0)](https://travis-ci.org/kensnyder/sharp-db)
-[![Code Coverage](https://codecov.io/gh/kensnyder/sharp-db/branch/master/graph/badge.svg?v=1.4.0)](https://codecov.io/gh/kensnyder/sharp-db)
-[![ISC License](https://img.shields.io/github/license/kensnyder/sharp-db.svg?v=1.4.0)](https://opensource.org/licenses/ISC)
+[![Build Status](https://travis-ci.com/kensnyder/sharp-db.svg?branch=master&v=1.5.0)](https://travis-ci.org/kensnyder/sharp-db)
+[![Code Coverage](https://codecov.io/gh/kensnyder/sharp-db/branch/master/graph/badge.svg?v=1.5.0)](https://codecov.io/gh/kensnyder/sharp-db)
+[![ISC License](https://img.shields.io/github/license/kensnyder/sharp-db.svg?v=1.5.0)](https://opensource.org/licenses/ISC)
 
 Classes for running SQL and building select queries in MySQL
 
@@ -861,9 +861,32 @@ Example:
 ```js
 const { DataBroker, Db } = require('sharp-db');
 const broker = new DataBroker(Db.factory(config));
-const userId = await broker.insert('users', { name: 'John', is_active: true });
+const userId = await broker.insert('users', {
+	name: 'John',
+	is_active: true,
+});
 // the new user ID is also available at broker.ids
 expect(broker.ids.users[0]).toBe(userId);
+// ... integration test using userId ...
+// then clean up all data
+await broker.cleanup();
+```
+
+Example with composite key:
+
+```js
+const { DataBroker, Db } = require('sharp-db');
+const broker = new DataBroker(Db.factory(config));
+const userId = await broker.insert('posts_images', {
+	post_id: 1,
+	image_id: 2,
+	sort: 1,
+}, { compositeKey: ['post_id', 'image_id'] });
+// the new user ID is also available at broker.ids
+expect(broker.ids.posts_images[0]).toEqual({
+	post_id: 1,
+	image_id: 2,
+});
 // ... integration test using userId ...
 // then clean up all data
 await broker.cleanup();
