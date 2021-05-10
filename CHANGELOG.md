@@ -1,5 +1,9 @@
 ## Change Log
 
+### v1.5.1 on 2021-05-10
+
+- Update Error.name to 'MySQLError'
+
 ### v1.5.0 on 2021-05-10
 
 - Add support for composite keys to DataBroker

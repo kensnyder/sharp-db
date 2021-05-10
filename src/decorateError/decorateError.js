@@ -26,13 +26,15 @@ function decorateError(error, options = {}) {
 	// take stack but remove first line
 	const stackWithoutError = stack.split('\n').slice(1).join('\n');
 	// build a message with code, errno, sqlState, sqlMessage and SQL snippet
-	const newMessage = `[${code}] ${errno} (${sqlState}): ${sqlMessage}\n${sqlSnippet}`.trim();
+	const newMessage =
+		`[${code}] ${errno} (${sqlState}): ${sqlMessage}\n${sqlSnippet}`.trim();
 	// build a stack with the error text and remaining stack
 	const newStack = `${newMessage}\n${stackWithoutError}`;
 	// add these new values as properties
 	error.stack = newStack;
 	error.message = newMessage;
 	error.bound = options.bound || {};
+	error.name = 'MySQLError';
 }
 
 module.exports = decorateError;
