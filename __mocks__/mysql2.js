@@ -23,6 +23,7 @@ class Connection {
 		}, 0);
 	}
 	destroy() {}
+	execute() {}
 	query(options, resultHandler) {
 		setTimeout(() => {
 			if (nextResponses.length === 0) {
@@ -62,14 +63,7 @@ const mysql2 = {
 		return {
 			getConnection(callback) {
 				setTimeout(() => {
-					callback(null, {
-						query(sql, callback) {
-							setTimeout(() => {
-								callback(null, {});
-							}, 0);
-						},
-						execute() {},
-					});
+					callback(null, new Connection());
 				}, 0);
 			},
 			releaseConnection(conn) {},
