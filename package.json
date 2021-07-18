@@ -33,6 +33,7 @@
     "lodash": "^4.17.21",
     "mysql2": "^2.2.5",
     "quickly-count-substrings": "^1.0.0",
+    "sanitize-filename": "^1.6.3",
     "ssh2": "^0.8.9"
   },
   "devDependencies": {

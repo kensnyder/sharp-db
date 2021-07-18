@@ -90,6 +90,12 @@ class ConnectionPool {
 	 * @private
 	 */
 	_startIdleTimer() {
+		clearTimeout(this._timer);
+		/**
+		 * A handle to the timeout function
+		 * @type {Number}
+		 * @private
+		 */
 		this._timer = setTimeout(this._onIdle, this._timeout);
 	}
 
@@ -233,6 +239,8 @@ class ConnectionPool {
 			});
 		});
 	}
+
+	destroy() {}
 }
 
 module.exports = ConnectionPool;

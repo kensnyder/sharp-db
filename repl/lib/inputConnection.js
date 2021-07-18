@@ -1,6 +1,7 @@
 const fs = require('fs');
 const os = require('os');
 const prompts = require('prompts');
+const sanitizeFilename = require('sanitize-filename');
 
 const homedir = os.homedir();
 const configDir = `${homedir}/.sharp-db`;
@@ -135,7 +136,7 @@ async function inputConnection() {
 			fs.mkdirSync(configDir);
 		}
 		const { name } = await prompts({
-			type: 'confirm',
+			type: 'text',
 			name: 'name',
 			message: 'Connection name',
 			initial: config.name,
@@ -146,6 +147,7 @@ async function inputConnection() {
 		}
 		config.name = name;
 		const configJSON = JSON.stringify(config, null, 4);
+		const filename = sanitizeFilename(name);
 		const path = `${configDir}/${filename}.json`;
 		fs.writeFileSync(path, configJSON, 'utf8');
 	}

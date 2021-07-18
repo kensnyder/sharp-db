@@ -13,25 +13,27 @@ async function main() {
 		config = await inputConnection();
 	}
 	terminal({
-		header: green('TYPE exit TO EXIT.'),
+		// TODO: get header working
+		header: green('TYPE "exit" TO EXIT.'),
 		prompt: `${yellow(config.name)}> `,
+		exitOn: /^(exit|quit|bye)$/,
+		executeOn: /;$/,
+		clearOn: /^clear$/,
 		onLine: runQuery,
-		onClose: () => console.log(yellow('\nGoodbye')),
+		onClose: () => {
+			console.log(green('\nBye'));
+			process.exit(0);
+		},
 	});
 
 	async function runQuery(sql) {
-		if (sql.slice(-1) === ';') {
-			sql = sql.slice(0, -1);
-		}
-		if (sql.match(/^(exit|quit|bye)$/)) {
-			process.exit(0);
-		}
+		sql = sql.slice(0, -1);
 		const db = new Db(config.mysql, config.ssh);
 		try {
 			const { results } = await db.query(sql);
 			console.log(prettify(results));
 		} catch (e) {
-			console.log(red(e.message));
+			console.log(red(e.stack || e.message));
 		}
 		db.end();
 	}

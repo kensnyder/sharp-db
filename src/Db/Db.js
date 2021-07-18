@@ -3,6 +3,7 @@ const mysql = require('mysql2');
 const Ssh = require('../Ssh/Ssh.js');
 const chunk = require('lodash/chunk');
 const { isPlainObject } = require('is-plain-object');
+const ConnectionManager = require('../ConnectionManager/ConnectionManager.js');
 const decorateError = require('../decorateError/decorateError.js');
 
 /**
@@ -22,7 +23,7 @@ class Db {
 		 * The config used for this instance
 		 * @type {Object}
 		 */
-		this.config = {
+		this._config = {
 			...config,
 			host: config.host || env.DB_HOST || env.RDS_HOSTNAME || '127.0.0.1',
 			user: config.user || env.DB_USER || env.RDS_USERNAME || 'root',
@@ -60,35 +61,32 @@ class Db {
 
 	/**
 	 * Make a new connection to MySQL
+	 * @returns {Promise<Object>}
+	 * @private
 	 */
-	async connect() {
-		if (this.ssh) {
+	async _acquire() {
+		if (this.ssh && !this._isTunneled) {
 			await this.ssh.tunnelTo(this);
+			this._isTunneled = true;
 		}
-		/**
-		 * The mysql2 library connection object
-		 * @type {Object}
-		 */
-		this.connection = mysql.createConnection(this.config);
-		return new Promise((resolve, reject) => {
-			this.connection.connect(error => {
-				if (error) {
-					decorateError(error);
-					reject(error);
-				} else {
-					resolve();
-				}
-			});
-		});
+		if (!this._connectionManager) {
+			this._connectionManager = new ConnectionManager(this._config);
+		}
+		return this._connectionManager.acquire();
 	}
 
 	/**
-	 * Make a new connection to MySQL if not already connected
+	 * Release the given connection
+	 * @param {Object} handle  An object acquired from this._acquire()
+	 * @returns {Boolean}  True if release was successful
+	 * @throws {Error}  If connection is not recognized
+	 * @private
 	 */
-	async connectOnce() {
-		if (!this.connection) {
-			await this.connect();
+	_release(handle) {
+		if (!this._connectionManager) {
+			throw new Error('Unable to release unknown connection');
 		}
+		return this._connectionManager.release(handle);
 	}
 
 	/**
@@ -96,27 +94,17 @@ class Db {
 	 * @return {Promise}  Resolves when connection has been closed
 	 */
 	end() {
-		return new Promise((resolve, reject) => {
-			if (this.connection) {
+		return new Promise(resolve => {
+			if (this.ssh) {
+				this.ssh.end();
+			}
+			if (this._connectionManager) {
 				const idx = Db.instances.indexOf(this);
 				if (idx > -1) {
 					Db.instances.splice(idx, 1);
 				}
-				this.connection.end(error => {
-					if (this.ssh) {
-						this.ssh.end();
-					}
-					if (error) {
-						decorateError(error);
-						reject(error);
-					} else {
-						resolve();
-					}
-				});
+				return this._connectionManager.end();
 			} else {
-				if (this.ssh) {
-					this.ssh.end();
-				}
 				resolve();
 			}
 		});
@@ -130,12 +118,12 @@ class Db {
 		if (this.ssh) {
 			this.ssh.end();
 		}
-		if (this.connection && this.connection.destroy) {
+		if (this._connectionManager) {
 			const idx = Db.instances.indexOf(this);
 			if (idx > -1) {
 				Db.instances.splice(idx, 1);
 			}
-			this.connection.destroy();
+			this._connectionManager.destroy();
 		}
 		return this;
 	}
@@ -167,10 +155,11 @@ class Db {
 	 * @property {Object[]} fields  Info about the selected fields
 	 */
 	async query(sql, ...bindVars) {
-		await this.connectOnce();
+		const conn = await this._acquire();
 		const options = this.bindArgs(sql, bindVars);
 		return new Promise((resolve, reject) => {
-			const query = this.connection.query(options, (error, results, fields) => {
+			const query = conn.query(options, (error, results, fields) => {
+				this._release(conn);
 				if (error) {
 					decorateError(error, options);
 					reject(error);
@@ -191,7 +180,6 @@ class Db {
 	 * @property {Object[]} fields  Info about the selected fields
 	 */
 	async multiQuery(sql, ...bindVars) {
-		await this.connectOnce();
 		const options = this.bindArgs(sql, bindVars);
 		options.multipleStatements = true;
 		return this.query(options);
@@ -207,10 +195,11 @@ class Db {
 	 * @property {Object[]} fields  Info about the selected fields
 	 */
 	async select(sql, ...bindVars) {
-		await this.connectOnce();
+		const conn = await this._acquire();
 		const options = this.bindArgs(sql, bindVars);
 		return new Promise((resolve, reject) => {
-			const query = this.connection.query(options, (error, results, fields) => {
+			const query = conn.query(options, (error, results, fields) => {
+				this._release(conn);
 				if (error) {
 					decorateError(error, options);
 					reject(error);
@@ -231,10 +220,11 @@ class Db {
 	 * @property {Object[]} fields  Info about the selected fields
 	 */
 	async selectHash(sql, ...bindVars) {
-		await this.connectOnce();
+		const conn = await this._acquire();
 		const options = this.bindArgs(sql, bindVars);
 		return new Promise((resolve, reject) => {
-			const query = this.connection.query(options, (error, results, fields) => {
+			const query = conn.query(options, (error, results, fields) => {
+				this._release(conn);
 				if (error) {
 					decorateError(error, options);
 					reject(error);
@@ -265,10 +255,11 @@ class Db {
 	 * @property {Object[]} fields  Info about the selected fields
 	 */
 	async selectList(sql, ...bindVars) {
-		await this.connectOnce();
+		const conn = await this._acquire();
 		const options = this.bindArgs(sql, bindVars);
 		return new Promise((resolve, reject) => {
-			const query = this.connection.query(options, (error, results, fields) => {
+			const query = conn.query(options, (error, results, fields) => {
+				this._release(conn);
 				if (error) {
 					decorateError(error, options);
 					reject(error);
@@ -296,10 +287,11 @@ class Db {
 	 * @property {Object[]} fields  Info about the selected fields
 	 */
 	async selectGrouped(groupField, sql, ...bindVars) {
-		await this.connectOnce();
+		const conn = await this._acquire();
 		const options = this.bindArgs(sql, bindVars);
 		return new Promise((resolve, reject) => {
-			const query = this.connection.query(options, (error, results, fields) => {
+			const query = conn.query(options, (error, results, fields) => {
+				this._release(conn);
 				if (error) {
 					decorateError(error, options);
 					reject(error);
@@ -332,10 +324,11 @@ class Db {
 	 * @property {Object[]} fields  Info about the selected fields
 	 */
 	async selectIndexed(indexField, sql, ...bindVars) {
-		await this.connectOnce();
+		const conn = await this._acquire();
 		const options = this.bindArgs(sql, bindVars);
 		return new Promise((resolve, reject) => {
-			const query = this.connection.query(options, (error, results, fields) => {
+			const query = conn.query(options, (error, results, fields) => {
+				this._release(conn);
 				if (error) {
 					decorateError(error, options);
 					reject(error);
@@ -364,10 +357,11 @@ class Db {
 	 * @property {Object[]} fields  Info about the selected fields
 	 */
 	async selectFirst(sql, ...bindVars) {
-		await this.connectOnce();
+		const conn = await this._acquire();
 		const options = this.bindArgs(sql, bindVars);
 		return new Promise((resolve, reject) => {
-			const query = this.connection.query(options, (error, results, fields) => {
+			const query = conn.query(options, (error, results, fields) => {
+				this._release(conn);
 				if (error) {
 					decorateError(error, options);
 					reject(error);
@@ -392,10 +386,11 @@ class Db {
 	 * @property {Object[]} fields  Info about the selected fields
 	 */
 	async selectValue(sql, ...bindVars) {
-		await this.connectOnce();
+		const conn = await this._acquire();
 		const options = this.bindArgs(sql, bindVars);
 		return new Promise((resolve, reject) => {
-			const query = this.connection.query(options, (error, results, fields) => {
+			const query = conn.query(options, (error, results, fields) => {
+				this._release(conn);
 				if (error) {
 					decorateError(error, options);
 					reject(error);
@@ -448,10 +443,11 @@ class Db {
 	 * @property {Number} insertId  The id of the last inserted record
 	 */
 	async insert(sql, ...bindVars) {
-		await this.connectOnce();
+		const conn = await this._acquire();
 		const options = this.bindArgs(sql, bindVars);
 		return new Promise((resolve, reject) => {
-			const query = this.connection.query(options, (error, results) => {
+			const query = conn.query(options, (error, results) => {
+				this._release(conn);
 				if (error) {
 					decorateError(error, options);
 					reject(error);
@@ -477,10 +473,11 @@ class Db {
 	 * @property {Number} changedRows  The number of rows affected by the statement
 	 */
 	async update(sql, ...bindVars) {
-		await this.connectOnce();
+		const conn = await this._acquire();
 		const options = this.bindArgs(sql, bindVars);
 		return new Promise((resolve, reject) => {
-			const query = this.connection.query(options, (error, results) => {
+			const query = conn.query(options, (error, results) => {
+				this._release(conn);
 				if (error) {
 					decorateError(error, options);
 					reject(error);
@@ -526,12 +523,12 @@ class Db {
 		if (typeof criteria !== 'object') {
 			throw new Error('Db.selectFrom criteria must be an array');
 		}
-		this.connectOnce();
 		const escFields = fields.map(field => this.quote(field));
 		const escFieldsString = fields.length ? escFields.join(', ') : '*';
 		const escTable = this.quote(table);
 		const escWhere = this.buildWheres(criteria);
-		const sql = `SELECT ${escFieldsString} FROM ${escTable} WHERE ${escWhere} ${extra}`.trim();
+		const sql =
+			`SELECT ${escFieldsString} FROM ${escTable} WHERE ${escWhere} ${extra}`.trim();
 		return this.select(sql);
 	}
 
@@ -669,9 +666,10 @@ class Db {
 		// combine
 		const sql = `INSERT INTO ${table} SET ${setSql} ON DUPLICATE KEY UPDATE ${updateSql}`;
 		// run
-		await this.connectOnce();
+		const conn = await this._acquire();
 		return new Promise((resolve, reject) => {
-			const query = this.connection.query(sql, (error, results) => {
+			const query = conn.query(sql, (error, results) => {
+				this._release(conn);
 				if (error) {
 					decorateError(error, { sql });
 					reject(error);
@@ -757,7 +755,6 @@ class Db {
 	 * @see Db#buildWhere
 	 */
 	async deleteFrom(table, where, limit = null) {
-		await this.connectOnce();
 		const escTable = this.quote(table);
 		const escWhere = this.buildWheres(where);
 		let sql = `DELETE FROM ${escTable} WHERE ${escWhere}`;
@@ -797,15 +794,13 @@ class Db {
 			lockTables = false,
 		} = {}
 	) {
-		await this.connectOnce();
 		// get results
 		const addl = limit > 0 ? `LIMIT ${limit}` : '';
-		const { results: rows, fields, query } = await this.selectFrom(
-			table,
-			[],
-			where,
-			addl
-		);
+		const {
+			results: rows,
+			fields,
+			query,
+		} = await this.selectFrom(table, [], where, addl);
 		if (rows.length === 0) {
 			return {
 				results: '',

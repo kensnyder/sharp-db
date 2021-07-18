@@ -3,15 +3,15 @@ const readline = require('readline');
 function terminal({
 	header = null,
 	prompt = '>',
+	exitOn = null,
+	executeOn = null,
+	clearOn = null,
 	onLine = () => {},
 	onClose = () => {},
 }) {
-	// clear terminal
-	process.stdout.write('\x1b[0f');
-	// process.stdin.setRawMode(true);
+	console.clear();
 	if (header) {
-		console.log('');
-		process.stdout.write(header /* + '\033[1K\n'*/);
+		console.log(header);
 	}
 
 	const rl = readline.createInterface({
@@ -25,11 +25,21 @@ function terminal({
 
 	rl.prompt();
 	rl.on('line', line => {
-		if (line.slice(-1) === '\\') {
-			buffer += line.slice(0, -1);
-			process.stdout.write('> ');
-		} else {
-			buffer += line;
+		if (buffer.length) {
+			buffer += '\n';
+		}
+		buffer += line.trim();
+		if (exitOn instanceof RegExp && exitOn.test(buffer)) {
+			rl.close();
+			return;
+		}
+		if (clearOn instanceof RegExp && clearOn.test(buffer)) {
+			buffer = '';
+			console.clear();
+			rl.prompt();
+			return;
+		}
+		if (executeOn instanceof RegExp && executeOn.test(buffer)) {
 			const result = onLine(buffer);
 			if (result instanceof Promise) {
 				result.finally(() => {
@@ -40,6 +50,8 @@ function terminal({
 				buffer = '';
 				rl.prompt();
 			}
+		} else {
+			process.stdout.write('> ');
 		}
 	});
 
