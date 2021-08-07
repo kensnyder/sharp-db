@@ -1,12 +1,17 @@
 const readline = require('readline');
+const clipboardy = require('clipboardy');
 
 function terminal({
 	header = null,
 	prompt = '>',
 	exitOn = null,
-	executeOn = null,
 	clearOn = null,
-	onLine = () => {},
+	copyOn = null,
+	getCopyBuffer = () => {},
+	onCopySuccess = () => {},
+	onCopyError = () => {},
+	executeOn = null,
+	handler = () => {},
 	onClose = () => {},
 }) {
 	console.clear();
@@ -21,41 +26,63 @@ function terminal({
 		removeHistoryDuplicates: true,
 	});
 
+	const clearBuffer = () => {
+		buffer = '';
+		rl.prompt();
+	};
+
 	let buffer = '';
 
 	rl.prompt();
 	rl.on('line', line => {
 		if (buffer.length) {
+			// add newline if this isn't the first line
 			buffer += '\n';
 		}
-		buffer += line.trim();
-		if (exitOn instanceof RegExp && exitOn.test(buffer)) {
+		buffer += line;
+		// check for exit command
+		if (exitOn.test(buffer)) {
 			rl.close();
+			onClose();
 			return;
 		}
-		if (clearOn instanceof RegExp && clearOn.test(buffer)) {
-			buffer = '';
-			console.clear();
-			rl.prompt();
+		// check for clear command
+		if (clearOn.test(buffer)) {
+			clearScreen();
 			return;
 		}
+		// check for copy command
+		if (copyOn.test(buffer)) {
+			clipboardy
+				.write(getCopyBuffer())
+				.then(onCopySuccess, onCopyError)
+				.finally(clearBuffer);
+			return;
+		}
+		// check if we should send the buffer to the handler
 		if (executeOn instanceof RegExp && executeOn.test(buffer)) {
-			const result = onLine(buffer);
+			const result = handler(buffer);
 			if (result instanceof Promise) {
-				result.finally(() => {
-					buffer = '';
-					rl.prompt();
-				});
+				result.then(clearBuffer, clearBuffer);
 			} else {
-				buffer = '';
-				rl.prompt();
+				clearBuffer();
 			}
 		} else {
+			// otherwise, continue to accept new input
 			process.stdout.write('> ');
 		}
 	});
 
 	rl.on('close', onClose);
+
+	return {
+		clearBuffer,
+		clearScreen: () => {
+			console.clear();
+			clearBuffer();
+		},
+		exit: rl.close,
+	};
 }
 
 module.exports = terminal;

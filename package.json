@@ -7,6 +7,7 @@
     "test": "npx jest",
     "test-watch": "npx jest --watch",
     "coverage": "npx jest --collectCoverage",
+    "repl": "node ./repl/index.js",
     "view-coverage": "open ./coverage/lcov-report/index.html",
     "docs": "npx documentation build src/** -f html -o docs",
     "open-docs": "open './docs/index.html'"
@@ -29,6 +30,7 @@
   },
   "homepage": "https://github.com/kensnyder/sharp-db#readme",
   "dependencies": {
+    "clipboardy": "^2.3.0",
     "is-plain-object": "^5.0.0",
     "lodash": "^4.17.21",
     "mysql2": "^2.2.5",
