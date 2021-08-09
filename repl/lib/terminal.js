@@ -31,6 +31,11 @@ function terminal({
 		rl.prompt();
 	};
 
+	const clearScreen = () => {
+		console.clear();
+		clearBuffer();
+	};
+
 	let buffer = '';
 
 	rl.prompt();
@@ -52,7 +57,7 @@ function terminal({
 			return;
 		}
 		// check for copy command
-		if (copyOn.test(buffer)) {
+		if (copyOn.test(buffer) && getCopyBuffer) {
 			clipboardy
 				.write(getCopyBuffer())
 				.then(onCopySuccess, onCopyError)
@@ -77,10 +82,7 @@ function terminal({
 
 	return {
 		clearBuffer,
-		clearScreen: () => {
-			console.clear();
-			clearBuffer();
-		},
+		clearScreen,
 		exit: rl.close,
 	};
 }

@@ -5,12 +5,18 @@ const chooseConnection = require('./lib/chooseConnection.js');
 const inputConnection = require('./lib/inputConnection.js');
 const Db = require('../src/Db/Db.js');
 
-main();
+main().catch(error => console.log(red(error.stack || error.message)));
 
 async function main() {
-	let config = await chooseConnection();
-	if (!config) {
-		config = await inputConnection();
+	let config;
+	try {
+		config = await chooseConnection();
+		if (!config) {
+			config = await inputConnection();
+		}
+	} catch (e) {
+		console.log('Canceled');
+		process.exit(1);
 	}
 
 	const cli = terminal({
@@ -32,7 +38,7 @@ async function main() {
 				red('Error copying last result to the clipboard: ' + error.message)
 			);
 		},
-		executeOn: /.+;?$/,
+		executeOn: /[\s\S]+;$/,
 		handler: runQuery,
 		onClose: () => {
 			console.log(green('\nBye'));
