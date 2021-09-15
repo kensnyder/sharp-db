@@ -310,10 +310,11 @@ class Select {
 	 */
 	async fetch(options = {}) {
 		options.sql = this.toString();
-		const { query: initialSql, results, fields } = await this.db.select(
-			options,
-			this._bound
-		);
+		const {
+			query: initialSql,
+			results,
+			fields,
+		} = await this.db.select(options, this._bound);
 		const queries1 = await this._spliceChildData(results);
 		const queries2 = await this._spliceSiblingData(results);
 		const queries = [initialSql, ...queries1, ...queries2];
@@ -539,7 +540,7 @@ class Select {
 				grouped[key].push(result);
 			});
 			records.forEach(record => {
-				record[property] = grouped[record[onColumn]];
+				record[property] = grouped[record[onColumn]] || [];
 			});
 			sqlQueries.push(...queries);
 		}

@@ -1,5 +1,10 @@
 ## Change Log
 
+### v1.5.2 on 2021-09-15
+
+- Update withChildData to set empty fields to `[]` instead of `undefined`
+- Update dependencies
+
 ### v1.5.1 on 2021-05-10
 
 - Update Error.name to 'MySQLError'

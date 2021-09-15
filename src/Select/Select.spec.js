@@ -4,94 +4,94 @@ const Select = require('../Select/Select.js');
 
 const normalizeWhitespace = s => s.replace(/\s+/g, ' ').trim();
 
-describe('Select', function() {
-	describe('class', function() {
-		it('should be instantiable', function() {
+describe('Select', function () {
+	describe('class', function () {
+		it('should be instantiable', function () {
 			const query = new Select();
 			expect(query).toBeInstanceOf(Select);
 		});
-		it('should allow init', function() {
+		it('should allow init', function () {
 			const query = Select.init();
 			expect(query).toBeInstanceOf(Select);
 		});
 	});
-	describe('where() with arguments', function() {
-		it('should handle expressions', function() {
+	describe('where() with arguments', function () {
+		it('should handle expressions', function () {
 			const query = new Select();
 			query.where('mycol = LOWER(mycol2)');
 			expect(query._wheres[0]).toBe('mycol = LOWER(mycol2)');
 		});
-		it('should handle equals', function() {
+		it('should handle equals', function () {
 			const query = new Select();
 			query.where('mycol', 'myval');
 			expect(query._wheres[0]).toBe("`mycol` = 'myval'");
 		});
-		it('should handle automatic IN', function() {
+		it('should handle automatic IN', function () {
 			const query = new Select();
 			query.where('mycol', [1, 2]);
 			expect(query._wheres[0]).toBe('`mycol` IN(1,2)');
 		});
-		it('should handle explicit IN', function() {
+		it('should handle explicit IN', function () {
 			const query = new Select();
 			query.where('mycol', 'IN', [1, 2]);
 			expect(query._wheres[0]).toBe('`mycol` IN(1,2)');
 		});
-		it('should handle explicit IN (not an array)', function() {
+		it('should handle explicit IN (not an array)', function () {
 			const query = new Select();
 			query.where('mycol', 'IN', 123);
 			expect(query._wheres[0]).toBe('`mycol` IN(123)');
 		});
-		it('should handle automatic NOT IN', function() {
+		it('should handle automatic NOT IN', function () {
 			const query = new Select();
 			query.where('mycol', '!=', [1, 2]);
 			expect(query._wheres[0]).toBe('`mycol` NOT IN(1,2)');
 		});
-		it('should handle explicit NOT IN', function() {
+		it('should handle explicit NOT IN', function () {
 			const query = new Select();
 			query.where('mycol', 'NOT IN', [1, 2]);
 			expect(query._wheres[0]).toBe('`mycol` NOT IN(1,2)');
 		});
-		it('should handle BETWEEN', function() {
+		it('should handle BETWEEN', function () {
 			const query = new Select();
 			query.where('mycol', 'BETWEEN', [1, 2]);
 			expect(query._wheres[0]).toBe('`mycol` BETWEEN 1 AND 2');
 		});
-		it('should handle operators', function() {
+		it('should handle operators', function () {
 			const query = new Select();
 			query.where('mycol', '>', 3);
 			expect(query._wheres[0]).toBe('`mycol` > 3');
 		});
-		it('should handle NULL', function() {
+		it('should handle NULL', function () {
 			const query = new Select();
 			query.where('mycol', null);
 			expect(query._wheres[0]).toBe('`mycol` IS NULL');
 		});
-		it('should handle NOT NULL', function() {
+		it('should handle NOT NULL', function () {
 			const query = new Select();
 			query.where('mycol', '!', null);
 			expect(query._wheres[0]).toBe('`mycol` IS NOT NULL');
 		});
-		it('should handle LIKE', function() {
+		it('should handle LIKE', function () {
 			const query = new Select();
 			query.where('mycol', 'LIKE', 'foo');
 			expect(query._wheres[0]).toBe("`mycol` LIKE 'foo'");
 		});
-		it('should handle LIKE %?', function() {
+		it('should handle LIKE %?', function () {
 			const query = new Select();
 			query.where('mycol', 'LIKE %?', 'foo');
 			expect(query._wheres[0]).toBe("`mycol` LIKE '%foo'");
 		});
-		it('should handle LIKE ?%', function() {
+		it('should handle LIKE ?%', function () {
 			const query = new Select();
 			query.where('mycol', 'LIKE ?%', 'foo');
 			expect(query._wheres[0]).toBe("`mycol` LIKE 'foo%'");
 		});
-		it('should handle LIKE %?%', function() {
+		it('should handle LIKE %?%', function () {
 			const query = new Select();
 			query.where('mycol', 'LIKE %?%', 'foo');
 			expect(query._wheres[0]).toBe("`mycol` LIKE '%foo%'");
 		});
-		it('should handle multiple question marks (2 args)', function() {
+		it('should handle multiple question marks (2 args)', function () {
 			const query = new Select();
 			query.table('users');
 			query.where('SUBSTR(prefs, ?, ?) = role', [1, 4]);
@@ -100,64 +100,64 @@ describe('Select', function() {
 			);
 		});
 	});
-	describe('where() with Arrays', function() {
-		it('should handle numeric arrays', function() {
+	describe('where() with Arrays', function () {
+		it('should handle numeric arrays', function () {
 			const query = new Select();
 			query.where(['mycol = LOWER(mycol2)']);
 			expect(query._wheres[0]).toBe('mycol = LOWER(mycol2)');
 		});
 	});
-	describe('where() with Objects', function() {
-		it('should handle automatic equals', function() {
+	describe('where() with Objects', function () {
+		it('should handle automatic equals', function () {
 			const query = new Select();
 			query.where({ mycol: 'myval' });
 			expect(query._wheres[0]).toBe("`mycol` = 'myval'");
 		});
-		it('should handle automatic IN', function() {
+		it('should handle automatic IN', function () {
 			const query = new Select();
 			query.where({ mycol: [1, 2] });
 			expect(query._wheres[0]).toBe('`mycol` IN(1,2)');
 		});
-		it('should handle operators', function() {
+		it('should handle operators', function () {
 			const query = new Select();
 			query.where({ 'mycol >': 3 });
 			expect(query._wheres[0]).toBe('mycol > 3');
 		});
 	});
-	describe('having()', function() {
-		it('should handle strings', function() {
+	describe('having()', function () {
+		it('should handle strings', function () {
 			const query = new Select();
 			query.having('SUM(size) < 1024');
 			expect(query._havings[0]).toBe('SUM(size) < 1024');
 		});
-		it('should handle 2 args with implicit equals', function() {
+		it('should handle 2 args with implicit equals', function () {
 			const query = new Select();
 			query.having('COUNT(*)', 0);
 			expect(query._havings[0]).toBe('COUNT(*) = 0');
 		});
-		it('should handle 2 args with operator', function() {
+		it('should handle 2 args with operator', function () {
 			const query = new Select();
 			query.having('SUM(size) <', 1024);
 			expect(query._havings[0]).toBe('SUM(size) < 1024');
 		});
-		it('should handle 3 args', function() {
+		it('should handle 3 args', function () {
 			const query = new Select();
 			query.having('COUNT(*)', '>', 1);
 			expect(query._havings[0]).toBe('COUNT(*) > 1');
 		});
-		it('should handle an object', function() {
+		it('should handle an object', function () {
 			const query = new Select();
 			query.having({ 'COUNT(*)': 1 });
 			expect(query._havings[0]).toBe('COUNT(*) = 1');
 		});
 	});
-	describe('orHaving()', function() {
-		it('should handle strings', function() {
+	describe('orHaving()', function () {
+		it('should handle strings', function () {
 			const query = new Select();
 			query.orHaving([['SUM(size) > 1024'], ['SUM(size) < 4096']]);
 			expect(query._havings[0]).toBe('(SUM(size) > 1024 OR SUM(size) < 4096)');
 		});
-		it('should handle 2 args with implicit equals', function() {
+		it('should handle 2 args with implicit equals', function () {
 			const query = new Select();
 			query.orHaving([
 				['COUNT(*)', 0],
@@ -166,8 +166,8 @@ describe('Select', function() {
 			expect(query._havings[0]).toBe('(COUNT(*) = 0 OR SUM(size) = 0)');
 		});
 	});
-	describe('orWhere()', function() {
-		it('should handle expressions', function() {
+	describe('orWhere()', function () {
+		it('should handle expressions', function () {
 			const query = new Select();
 			query.orWhere([
 				['a', '>', 1],
@@ -176,18 +176,18 @@ describe('Select', function() {
 			expect(query._wheres[0]).toBe('(`a` > 1 OR `b` = 2)');
 		});
 	});
-	describe('sortField()', function() {
-		it('should handle simple columns', function() {
+	describe('sortField()', function () {
+		it('should handle simple columns', function () {
 			const query = new Select();
 			query.sortField('post.created_at');
 			expect(query._orderBys[0]).toBe('post.created_at ASC');
 		});
-		it('should handle minus signs', function() {
+		it('should handle minus signs', function () {
 			const query = new Select();
 			query.sortField('-created_at');
 			expect(query._orderBys[0]).toBe('created_at DESC');
 		});
-		it('should handle mapping', function() {
+		it('should handle mapping', function () {
 			const query = new Select();
 			query.sortField('-created_at', {
 				created_at: 'post.created_timestamp',
@@ -195,30 +195,30 @@ describe('Select', function() {
 			expect(query._orderBys[0]).toBe('post.created_timestamp DESC');
 		});
 	});
-	describe('whereBetween()', function() {
-		it('should handle arrays', function() {
+	describe('whereBetween()', function () {
+		it('should handle arrays', function () {
 			const query = new Select();
 			query.whereBetween('attempts', [1, 3]);
 			expect(query._wheres[0]).toBe('`attempts` BETWEEN 1 AND 3');
 		});
-		it('should handle arrays (left end open)', function() {
+		it('should handle arrays (left end open)', function () {
 			const query = new Select();
 			query.whereBetween('attempts', [null, 3]);
 			expect(query._wheres[0]).toBe('`attempts` <= 3');
 		});
-		it('should handle arrays (right end open)', function() {
+		it('should handle arrays (right end open)', function () {
 			const query = new Select();
 			query.whereBetween('attempts', [8]);
 			expect(query._wheres[0]).toBe('`attempts` >= 8');
 		});
-		it('should throw error when both are nullish', function() {
+		it('should throw error when both are nullish', function () {
 			const bothNull = () => {
 				const query = new Select();
 				query.whereBetween('attempts', [null, null]);
 			};
 			expect(bothNull).toThrow();
 		});
-		it('should throw error when array is empty', function() {
+		it('should throw error when array is empty', function () {
 			const emptyArray = () => {
 				const query = new Select();
 				query.whereBetween('attempts', []);
@@ -519,6 +519,7 @@ describe('Select', function() {
 				results: [
 					{ id: 11, headline: 'Elvis is alive' },
 					{ id: 12, headline: 'He proclaimed foobar' },
+					{ id: 13, headline: 'Conspiracy 101' },
 				],
 			});
 			mysqlMock.pushResponse({
@@ -542,6 +543,11 @@ describe('Select', function() {
 						{ id: 2, post_id: 12, path: '/report.pdf' },
 						{ id: 3, post_id: 12, path: '/presentation.ppt' },
 					],
+				},
+				{
+					id: 13,
+					headline: 'Conspiracy 101',
+					files: [],
 				},
 			];
 			const query = new Select();
@@ -667,7 +673,7 @@ describe('Select', function() {
 			});
 			const query = Select.parse('SELECT id, name FROM users');
 			const { results } = await query.fetchHash();
-			expect(results).toEqual({ '1': 'John', '2': 'Jane' });
+			expect(results).toEqual({ 1: 'John', 2: 'Jane' });
 		});
 	});
 	describe('fetchList()', () => {
@@ -706,8 +712,8 @@ describe('Select', function() {
 			const query = Select.parse('SELECT * FROM users');
 			const { results } = await query.fetchIndexed('id');
 			expect(results).toEqual({
-				'1': { id: 1, name: 'John' },
-				'2': { id: 2, name: 'Jane' },
+				1: { id: 1, name: 'John' },
+				2: { id: 2, name: 'Jane' },
 			});
 		});
 	});
@@ -723,11 +729,11 @@ describe('Select', function() {
 			const query = Select.parse('SELECT * FROM users');
 			const { results } = await query.fetchGrouped('department_id');
 			expect(results).toEqual({
-				'1': [
+				1: [
 					{ id: 1, name: 'John', department_id: 1 },
 					{ id: 2, name: 'Jane', department_id: 1 },
 				],
-				'2': [{ id: 3, name: 'Jean', department_id: 2 }],
+				2: [{ id: 3, name: 'Jean', department_id: 2 }],
 			});
 		});
 	});
