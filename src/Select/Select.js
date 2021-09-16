@@ -72,10 +72,10 @@ class Select {
 			lines.push(`LIMIT ${this._limit}`);
 			lines.push(`OFFSET ${offset}`);
 		} else {
-			if (this._limit > 0) {
+			if (this._limit) {
 				lines.push(`LIMIT ${this._limit}`);
 			}
-			if (this._offset > 0) {
+			if (this._offset) {
 				lines.push(`OFFSET ${this._offset}`);
 			}
 		}
@@ -105,10 +105,10 @@ class Select {
 			lines.push(`LIMIT ${this._limit}`);
 			lines.push(`OFFSET ${offset}`);
 		} else {
-			if (this._limit > 0) {
+			if (this._limit) {
 				lines.push(`LIMIT ${this._limit}`);
 			}
-			if (this._offset > 0) {
+			if (this._offset) {
 				lines.push(`OFFSET ${this._offset}`);
 			}
 		}
@@ -122,7 +122,8 @@ class Select {
 	 */
 	toBoundSql() {
 		const sql = this.normalized();
-		const options = this.db.bindArgs(sql, [this._bound]);
+		const args = Array.isArray(this._bound) ? this._bound : [this._bound];
+		const options = this.db.bindArgs(sql, args);
 		return options.sql;
 	}
 
@@ -268,14 +269,25 @@ class Select {
 
 	/**
 	 * Bind values by name to the query
-	 * @param {Object|String} placeholder  The name of the placeholder or an object with placeholder: value pairs
+	 * @param {Object|String|Array} placeholder  The name of the placeholder or an object with placeholder: value pairs
 	 * @param {*} [value=null]  The value to bind when placeholder is a string
 	 * @example
 	 *     query.bind('postId', 123); // replace :postId with '123'
 	 * @return {Select}
 	 */
 	bind(placeholder, value = null) {
+		if (Array.isArray(placeholder)) {
+			if (Array.isArray(this._bound)) {
+				this._bound.push(...placeholder);
+			} else {
+				this._bound = placeholder;
+			}
+			return this;
+		}
 		if (typeof placeholder === 'object' && value === null) {
+			if (Array.isArray(this._bound)) {
+				this._bound = {};
+			}
 			forOwn(placeholder, (val, field) => {
 				this._bound[field] = val;
 			});
@@ -979,32 +991,100 @@ class Select {
 	}
 
 	/**
+	 * Check to see if the given string is ? or a bound variable like :var
+	 * @param {String} string  The input string
+	 * @return {Boolean}
+	 * @private
+	 */
+	_isPlaceholder(string) {
+		return string === '?' || /^:\w+$/.test(string);
+	}
+
+	/**
+	 * Check to see if the given string is 0 or all digits not starting with 0
+	 * @param {String} string  The input string
+	 * @return {Boolean}
+	 * @private
+	 */
+	_isEntirelyDigits(string) {
+		return /^(0|[1-9]\d*)$/.test(string);
+	}
+
+	/**
+	 * Check to see if the given string is all digits
+	 * @param {String} string  The input string
+	 * @return {Boolean}
+	 * @private
+	 */
+	_isEntirelyDigitsNoZeros(string) {
+		return /^[1-9]\d*$/.test(string);
+	}
+
+	/**
 	 * Limit results to the given number
-	 * @param {Number} num  The number to limit by
+	 * @param {Number|String} max  The number to limit by (placeholder string or integer greater than 0)
 	 * @return {Select}
 	 */
-	limit(num) {
-		this._limit = Number(num) || 0;
+	limit(max) {
+		if (typeof max === 'string') {
+			max = max.trim();
+			if (this._isPlaceholder(max)) {
+				// is a placeholder like ? or :var
+				this._limit = max;
+			} else if (this._isEntirelyDigitsNoZeros(max)) {
+				// is entirely digits (no leading zeros)
+				this._limit = parseInt(max, 10);
+			}
+		} else if (typeof max === 'number' && Number.isInteger(max) && max >= 1) {
+			this._limit = max;
+		}
 		return this;
 	}
 
 	/**
 	 * Fetch results from the given offset
-	 * @param {Number} num  The offset
+	 * @param {Number|String} number  The offset (placeholder string or integer greater than or equal to 0)
 	 * @return {Select}
 	 */
-	offset(num) {
-		this._offset = Number(num) || 0;
+	offset(number) {
+		if (typeof number === 'string') {
+			number = number.trim();
+			if (this._isPlaceholder(number)) {
+				// is a placeholder like ? or :var
+				this._offset = number;
+			} else if (this._isEntirelyDigits(number)) {
+				// is entirely digits (or zero)
+				this._offset = parseInt(number, 10);
+			}
+		} else if (
+			typeof number === 'number' &&
+			Number.isInteger(number) &&
+			number >= 0
+		) {
+			this._offset = number;
+		}
 		return this;
 	}
 
 	/**
-	 * Set the offset based on the limit with the given number of pages
-	 * @param {Number} num  The page number
+	 * Set the offset based on the limit with the given page number
+	 * @param {Number|String} number  The page number (integer greater than 0)
 	 * @return {Select}
 	 */
-	page(num) {
-		this._page = Number(num) || 0;
+	page(number) {
+		if (typeof number === 'string') {
+			number = number.trim();
+			if (this._isEntirelyDigitsNoZeros(number)) {
+				// is entirely digits (no leading zeros)
+				this._page = parseInt(number, 10);
+			}
+		} else if (
+			typeof number === 'number' &&
+			Number.isInteger(number) &&
+			number >= 1
+		) {
+			this._page = number;
+		}
 		return this;
 	}
 

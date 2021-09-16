@@ -805,20 +805,9 @@ SELECT id, CONCAT('WHERE ', expr) FROM users WHERE name = :name;
 SELECT id, CONCAT(:binding, expr) FROM users WHERE name = :name;
 ```
 
-#### Keywords in Bindings
-
-Binding names cannot be SQL clause keywords (even if lower cased).
-
-```sql
--- WILL NOT WORK
-SELECT CONCAT(:where, fname) FROM users WHERE id = :id;
--- WILL WORK
-SELECT CONCAT(:title, fname) FROM users WHERE id = :id;
-```
-
 #### Nested OR and AND Clauses
 
-Nested logic doesn't work.
+Nested logic can't be parsed properly.
 
 ```sql
 -- WILL NOT WORK

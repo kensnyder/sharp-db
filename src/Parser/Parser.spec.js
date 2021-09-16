@@ -181,10 +181,6 @@ describe('Parser', () => {
 			expect(query._wheres).toEqual(['a = 1', '(b = 2 OR c = 3)']);
 		});
 	});
-	it('should parse WHERE 1', () => {
-		const query = Select.parse('SELECT * FROM mytable WHERE 1');
-		expect(query._wheres).toEqual(['1']);
-	});
 	it('should parse GROUP BY and HAVING', () => {
 		const query = Select.parse(
 			'SELECT name, COUNT(*) FROM mytable GROUP BY name HAVING COUNT(*) > 1'
@@ -196,17 +192,47 @@ describe('Parser', () => {
 		const query = Select.parse('SELECT * FROM users ORDER BY id DESC');
 		expect(query._orderBys).toEqual(['id DESC']);
 	});
-	it('should parse LIMIT', () => {
-		const query = Select.parse('SELECT * FROM mytable LIMIT 1');
-		expect(query._limit).toBe(1);
-	});
-	it('should parse OFFSET', () => {
-		const query = Select.parse('SELECT * FROM mytable LIMIT 5 OFFSET 10');
-		expect(query._offset).toBe(10);
-	});
-	it('should parse OFFSET, LIMIT', () => {
-		const query = Select.parse('SELECT * FROM mytable LIMIT 10, 5');
-		expect(query._limit).toBe(5);
-		expect(query._offset).toBe(10);
+	describe('pagination', () => {
+		it('should parse LIMIT with number', () => {
+			const query = Select.parse('SELECT * FROM mytable LIMIT 1');
+			expect(query._limit).toBe(1);
+		});
+		it('should parse LIMIT with placeholder', () => {
+			const query = Select.parse('SELECT * FROM mytable LIMIT ?');
+			expect(query._limit).toBe('?');
+		});
+		it('should parse LIMIT with named placeholder', () => {
+			const query = Select.parse('SELECT * FROM mytable LIMIT :limit');
+			expect(query._limit).toBe(':limit');
+		});
+		it('should parse OFFSET with number', () => {
+			const query = Select.parse('SELECT * FROM mytable LIMIT 5 OFFSET 10');
+			expect(query._offset).toBe(10);
+		});
+		it('should parse OFFSET with placeholder', () => {
+			const query = Select.parse('SELECT * FROM mytable LIMIT 5 OFFSET ?');
+			expect(query._offset).toBe('?');
+		});
+		it('should parse OFFSET with named placeholder', () => {
+			const query = Select.parse(
+				'SELECT * FROM mytable LIMIT 5 OFFSET :offset'
+			);
+			expect(query._offset).toBe(':offset');
+		});
+		it('should parse OFFSET, LIMIT with numbers', () => {
+			const query = Select.parse('SELECT * FROM mytable LIMIT 10, 5');
+			expect(query._limit).toBe(5);
+			expect(query._offset).toBe(10);
+		});
+		it('should parse OFFSET, LIMIT with placeholders', () => {
+			const query = Select.parse('SELECT * FROM mytable LIMIT ?, ?');
+			expect(query._limit).toBe('?');
+			expect(query._offset).toBe('?');
+		});
+		it('should parse OFFSET, LIMIT with named placeholders', () => {
+			const query = Select.parse('SELECT * FROM mytable LIMIT :offset, :limit');
+			expect(query._limit).toBe(':limit');
+			expect(query._offset).toBe(':offset');
+		});
 	});
 });

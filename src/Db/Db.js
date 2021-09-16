@@ -531,7 +531,8 @@ class Db {
 		const escFieldsString = fields.length ? escFields.join(', ') : '*';
 		const escTable = this.quote(table);
 		const escWhere = this.buildWheres(criteria);
-		const sql = `SELECT ${escFieldsString} FROM ${escTable} WHERE ${escWhere} ${extra}`.trim();
+		const sql =
+			`SELECT ${escFieldsString} FROM ${escTable} WHERE ${escWhere} ${extra}`.trim();
 		return this.select(sql);
 	}
 
@@ -800,12 +801,11 @@ class Db {
 		await this.connectOnce();
 		// get results
 		const addl = limit > 0 ? `LIMIT ${limit}` : '';
-		const { results: rows, fields, query } = await this.selectFrom(
-			table,
-			[],
-			where,
-			addl
-		);
+		const {
+			results: rows,
+			fields,
+			query,
+		} = await this.selectFrom(table, [], where, addl);
 		if (rows.length === 0) {
 			return {
 				results: '',
@@ -942,16 +942,16 @@ class Db {
 	}
 
 	/**
-	 * Bind an array of arguments to a query
+	 * Bind an arguments to a query
 	 * @param {String|Object} sql  The base SQL query
-	 * @param {Array} args  An array of values to bind
+	 * @param {*} args  A value, an object with key/value paris, or an array of values to bind
 	 * @return {Object}
 	 * @property {String} sql  The final SQL with bound values replaced
 	 * @example
 	 * db.select('SELECT * FROM users WHERE id = ?', 100);
-	 * db.bindArgs(array('SELECT * FROM users WHERE id = ?', 100)); // SELECT * FROM users WHERE id = '100'
-	 * db.select('SELECT * FROM users WHERE id = :id', array('id'=>100));
-	 * db.bindArgs(array('SELECT * FROM users WHERE id = :id', array('id'=>100))); // SELECT * FROM users WHERE id = '100'
+	 * db.bindArgs('SELECT * FROM users WHERE id = ?', 100); // SELECT * FROM users WHERE id = '100'
+	 * db.select('SELECT * FROM users WHERE id = :id', { id: 100 });
+	 * db.bindArgs('SELECT * FROM users WHERE id = :id', { id: 100 }); // SELECT * FROM users WHERE id = '100'
 	 */
 	bindArgs(sql, args) {
 		const options = typeof sql == 'object' ? sql : { sql };

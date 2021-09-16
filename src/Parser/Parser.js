@@ -74,7 +74,8 @@ class Parser {
 	 * @return {String[]}
 	 */
 	_split(sql) {
-		const splitter = /\b(SELECT|FROM|(?:INNER |LEFT OUTER |RIGHT OUTER |LEFT |RIGHT |CROSS |FULL |FULL OUTER )JOIN|WHERE|GROUP BY|HAVING|ORDER BY|LIMIT|OFFSET)\b/i;
+		const splitter =
+			/(?:^|\s)(SELECT|FROM|(?:INNER|LEFT\s+OUTER|RIGHT\s+OUTER|LEFT|RIGHT|CROSS|FULL|FULL\s+OUTER)\s+JOIN|WHERE|GROUP BY|HAVING|ORDER BY|LIMIT|OFFSET)\b/i;
 		return sql.split(splitter);
 	}
 
@@ -286,7 +287,7 @@ class Parser {
 	 * @private
 	 */
 	_handleLimit(clause) {
-		const offsetLimit = clause.match(/^(\d+)\s*,\s*(\d+)$/);
+		const offsetLimit = clause.match(/^(\d+|\?|:\w+)\s*,\s*(\d+|\?|:\w+)$/);
 		if (offsetLimit) {
 			this.query.offset(offsetLimit[1]);
 			this.query.limit(offsetLimit[2]);

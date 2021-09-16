@@ -276,6 +276,24 @@ describe('Select', function () {
 				'SELECT * FROM a LIMIT 2 OFFSET 4'
 			);
 		});
+		it('should allow ? placeholders', () => {
+			const query = Select.parse('SELECT * FROM a');
+			query.limit('?');
+			query.offset('?');
+			expect(query.normalized()).toBe('SELECT * FROM a LIMIT ? OFFSET ?');
+			query.bind([2, 4]);
+			expect(query.toBoundSql()).toBe('SELECT * FROM a LIMIT 2 OFFSET 4');
+		});
+		it('should allow :named placeholders', () => {
+			const query = Select.parse('SELECT * FROM a');
+			query.limit(':limit');
+			query.offset(':offset');
+			expect(query.normalized()).toBe(
+				'SELECT * FROM a LIMIT :limit OFFSET :offset'
+			);
+			query.bind({ limit: 2, offset: 4 });
+			expect(query.toBoundSql()).toBe('SELECT * FROM a LIMIT 2 OFFSET 4');
+		});
 	});
 	describe('reset()', () => {
 		it('should reset all', () => {
