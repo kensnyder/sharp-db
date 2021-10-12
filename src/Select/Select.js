@@ -122,8 +122,7 @@ class Select {
 	 */
 	toBoundSql() {
 		const sql = this.normalized();
-		const args = Array.isArray(this._bound) ? this._bound : [this._bound];
-		const options = this.db.bindArgs(sql, args);
+		const options = this.db.bindArgs(sql, [this._bound]);
 		return options.sql;
 	}
 
@@ -272,22 +271,12 @@ class Select {
 	 * @param {Object|String|Array} placeholder  The name of the placeholder or an object with placeholder: value pairs
 	 * @param {*} [value=null]  The value to bind when placeholder is a string
 	 * @example
-	 *     query.bind('postId', 123); // replace :postId with '123'
+	 *     query.bind('postId', 123); // replace :postId with 123
+	 *     query.bind({ postId: 123 }); // replace :postId with 123
 	 * @return {Select}
 	 */
 	bind(placeholder, value = null) {
-		if (Array.isArray(placeholder)) {
-			if (Array.isArray(this._bound)) {
-				this._bound.push(...placeholder);
-			} else {
-				this._bound = placeholder;
-			}
-			return this;
-		}
-		if (typeof placeholder === 'object' && value === null) {
-			if (Array.isArray(this._bound)) {
-				this._bound = {};
-			}
+		if (typeof placeholder === 'object' && arguments.length === 1) {
 			forOwn(placeholder, (val, field) => {
 				this._bound[field] = val;
 			});
@@ -303,10 +292,6 @@ class Select {
 	 * @return {Select}
 	 */
 	unbind(placeholder = null) {
-		if (Array.isArray(placeholder)) {
-			placeholder.forEach(p => this.unbind(p));
-			return this;
-		}
 		if (placeholder) {
 			this._bound[placeholder] = undefined;
 		} else {
@@ -748,24 +733,24 @@ class Select {
 	 *     this._conditions(this._wheres, ['deleted_at', null]);
 	 *     this._conditions(this._wheres, ['deleted_at', '=', null]);
 	 * @example  More examples
-	 *     this._conditions(this._wheres, ['fname', 'LIKE', 'joe']); // fname LIKE 'joe'
-	 *     this._conditions(this._wheres, ['fname', 'LIKE ?', 'joe']); // fname LIKE 'joe'
-	 *     this._conditions(this._wheres, ['fname LIKE %?%', 'joe']); // fname LIKE '%joe%'
-	 *     this._conditions(this._wheres, ['fname LIKE ?%', 'joe']); // fname LIKE 'joe%'
-	 *     this._conditions(this._wheres, ['fname', 'LIKE ?%', 'joe']); // fname LIKE 'joe%'
-	 *     this._conditions(this._wheres, ['price >', 10]); // price > '10'
-	 *     this._conditions(this._wheres, ['price', '>', 10]); // price > '10'
-	 *     this._conditions(this._wheres, ['price =', 10]); // price = '10'
-	 *     this._conditions(this._wheres, ['price !=', 10]); // price != '10'
-	 *     this._conditions(this._wheres, ['price', 10]); // price = '10'
-	 *     this._conditions(this._wheres, ['price', '=', 10]); // price = '10'
-	 *     this._conditions(this._wheres, ['price', '!=', 10]); // price != '10'
-	 *     this._conditions(this._wheres, ['price', 'BETWEEN', [10,20]]); // price BETWEEN '10' AND '20'
-	 *     this._conditions(this._wheres, ['price', 'NOT BETWEEN', [10,20]]); // price NOT BETWEEN '10' AND '20'
-	 *     this._conditions(this._wheres, ['price', [10,20]]); // price IN('10','20')
-	 *     this._conditions(this._wheres, ['price', '=', [10,20]]); // price IN('10','20')
-	 *     this._conditions(this._wheres, ['price', 'IN', [10,20]]); // price IN('10','20')
-	 *     this._conditions(this._wheres, ['price', 'NOT IN', [10,20]]); // price NOT IN('10','20')
+	 *     this._conditions(this._wheres, ['fname', 'LIKE', 'joe']); // `fname` LIKE 'joe'
+	 *     this._conditions(this._wheres, ['fname', 'LIKE ?', 'joe']); // `fname` LIKE 'joe'
+	 *     this._conditions(this._wheres, ['fname LIKE %?%', 'joe']); // `fname` LIKE '%joe%'
+	 *     this._conditions(this._wheres, ['fname LIKE ?%', 'joe']); // `fname` LIKE 'joe%'
+	 *     this._conditions(this._wheres, ['fname', 'LIKE ?%', 'joe']); // `fname` LIKE 'joe%'
+	 *     this._conditions(this._wheres, ['price >', 10]); // `price` > 10
+	 *     this._conditions(this._wheres, ['price', '>', 10]); // `price` > 10
+	 *     this._conditions(this._wheres, ['price =', 10]); // `price` = 10
+	 *     this._conditions(this._wheres, ['price !=', 10]); // `price` != 10
+	 *     this._conditions(this._wheres, ['price', 10]); // `price` = 10
+	 *     this._conditions(this._wheres, ['price', '=', 10]); // `price` = 10
+	 *     this._conditions(this._wheres, ['price', '!=', 10]); // `price` != 10
+	 *     this._conditions(this._wheres, ['price', 'BETWEEN', [10,20]]); // `price` BETWEEN 10 AND 20
+	 *     this._conditions(this._wheres, ['price', 'NOT BETWEEN', [10,20]]); // `price` NOT BETWEEN 10 AND 20
+	 *     this._conditions(this._wheres, ['price', [10,20]]); // `price` IN(10,20)
+	 *     this._conditions(this._wheres, ['price', '=', [10,20]]); // `price` IN(10,20)
+	 *     this._conditions(this._wheres, ['price', 'IN', [10,20]]); // `price` IN(10,20)
+	 *     this._conditions(this._wheres, ['price', 'NOT IN', [10,20]]); // `price` NOT IN(10,20)
 	 * @return {Select}
 	 */
 	_conditions(collection, criteria) {
@@ -824,7 +809,7 @@ class Select {
 		}
 		operator = operator.toLocaleUpperCase();
 		const likeMatch = operator.match(
-			/^(LIKE|NOT LIKE)(?: (\?|\?%|%\?|%\?%))?$/
+			/^(LIKE|NOT LIKE)(?: (\?|\?%|%\?|%\?%))?$/i
 		);
 		if (operator === 'NOT BETWEEN' || operator === 'BETWEEN') {
 			// expect a two-item array
@@ -832,19 +817,20 @@ class Select {
 			const to = mysql.escape(value[1]);
 			collection.push(`${column} ${operator} ${from} AND ${to}`);
 		} else if (likeMatch) {
-			const quoteless = this.escapeQuoteless(value);
-			let quoted;
-			if (likeMatch[2] === '?' || !likeMatch[2]) {
-				quoted = `'${quoteless}'`;
-			} else if (likeMatch[2] === '?%') {
-				quoted = `'${quoteless}%'`;
-			} else if (likeMatch[2] === '%?') {
-				quoted = `'%${quoteless}'`;
+			const like = likeMatch[1].toUpperCase(); // Either LIKE or NOT LIKE
+			const infix = likeMatch[2]; // ONE OF ?% or %?% or %? or ?
+			if (Array.isArray(value)) {
+				const ors = [];
+				for (const v of value) {
+					const quoted = this.escapeLike(infix, v);
+					ors.push(`${column} ${like} ${quoted}`);
+				}
+				const joined = ors.join(' OR ');
+				collection.push(`(${joined})`);
 			} else {
-				// likeMatch[2] === '%?%'
-				quoted = `'%${quoteless}%'`;
+				const quoted = this.escapeLike(infix, value);
+				collection.push(`${column} ${like} ${quoted}`);
 			}
-			collection.push(`${column} ${likeMatch[1]} ${quoted}`);
 		} else if (value === null) {
 			collection.push(
 				operator === '=' ? `${column} IS NULL` : `${column} IS NOT NULL`
@@ -1094,7 +1080,7 @@ class Select {
 	 * @return {string}
 	 */
 	escape(value) {
-		return mysql.escape(value);
+		return this.db.escape(value);
 	}
 
 	/**
@@ -1103,11 +1089,17 @@ class Select {
 	 * @return {string}
 	 */
 	escapeQuoteless(value) {
-		const escaped = mysql.escape(value);
-		if (escaped.slice(0, 1) === "'" && escaped.slice(-1) === "'") {
-			return escaped.slice(1, -1);
-		}
-		return String(value);
+		return this.db.escapeQuoteless(value);
+	}
+
+	/**
+	 * Get the proper escaping for a LIKE or NOT LIKE clause
+	 * @param {String} infix  One of ?% or %?% or %? or ?
+	 * @param {String} value  The value to search for
+	 * @return {String}
+	 */
+	escapeLike(infix, value) {
+		return this.db.escapeLike(infix, value);
 	}
 }
 

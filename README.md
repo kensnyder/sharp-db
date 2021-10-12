@@ -1,8 +1,8 @@
 # sharp-db
 
-[![Build Status](https://travis-ci.com/kensnyder/sharp-db.svg?branch=master&v=1.5.2)](https://travis-ci.org/kensnyder/sharp-db)
-[![Code Coverage](https://codecov.io/gh/kensnyder/sharp-db/branch/master/graph/badge.svg?v=1.5.2)](https://codecov.io/gh/kensnyder/sharp-db)
-[![ISC License](https://img.shields.io/github/license/kensnyder/sharp-db.svg?v=1.5.2)](https://opensource.org/licenses/ISC)
+[![Build Status](https://travis-ci.com/kensnyder/sharp-db.svg?branch=master&v=1.5.3)](https://travis-ci.org/kensnyder/sharp-db)
+[![Code Coverage](https://codecov.io/gh/kensnyder/sharp-db/branch/master/graph/badge.svg?v=1.5.3)](https://codecov.io/gh/kensnyder/sharp-db)
+[![ISC License](https://img.shields.io/github/license/kensnyder/sharp-db.svg?v=1.5.3)](https://opensource.org/licenses/ISC)
 
 Classes for running SQL and building select queries in MySQL
 

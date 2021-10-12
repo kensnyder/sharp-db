@@ -1015,6 +1015,31 @@ class Db {
 	}
 
 	/**
+	 * Get the proper escaping for a LIKE or NOT LIKE clause
+	 * @param {String} infix  One of ?% or %?% or %? or ?
+	 * @param {String} value  The value to search for
+	 * @return {String}
+	 */
+	escapeLike(infix, value) {
+		// use ?% for LIKE 'value%'
+		// use %?% for LIKE '%value%'
+		// use %? for LIKE '%value'
+		// use ? for LIKE 'value'
+		const quoteless = this.escapeQuoteless(value);
+		switch (infix) {
+			case '?':
+			default:
+				return `'${quoteless}'`;
+			case '?%':
+				return `'${quoteless}%'`;
+			case '%?':
+				return `'%${quoteless}'`;
+			case '%?%':
+				return `'%${quoteless}%'`;
+		}
+	}
+
+	/**
 	 * Escape an identifier such as a table or column
 	 * @param identifier
 	 * @return {*}

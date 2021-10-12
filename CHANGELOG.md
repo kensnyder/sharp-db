@@ -1,5 +1,11 @@
 ## Change Log
 
+### v1.5.3 on 2021-10-12
+
+- Allow limit and offset to use placeholders
+- Support LIKE with array. e.g. `query.where('foo', 'LIKE %?%', ['bar','baz'])`
+- Update dependencies
+
 ### v1.5.2 on 2021-09-15
 
 - Update withChildData to set empty fields to `[]` instead of `undefined`

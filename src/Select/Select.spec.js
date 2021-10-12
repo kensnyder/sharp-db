@@ -71,25 +71,77 @@ describe('Select', function () {
 			query.where('mycol', '!', null);
 			expect(query._wheres[0]).toBe('`mycol` IS NOT NULL');
 		});
-		it('should handle LIKE', function () {
+		it('should handle LIKE with single item', function () {
 			const query = new Select();
 			query.where('mycol', 'LIKE', 'foo');
 			expect(query._wheres[0]).toBe("`mycol` LIKE 'foo'");
 		});
-		it('should handle LIKE %?', function () {
+		it('should handle LIKE with array', function () {
+			const query = new Select();
+			query.where('mycol', 'LIKE', ['foo', 'bar']);
+			expect(query._wheres[0]).toBe(
+				"(`mycol` LIKE 'foo' OR `mycol` LIKE 'bar')"
+			);
+		});
+		it('should handle LIKE ? with single item', function () {
+			const query = new Select();
+			query.where('mycol', 'LIKE ?', 'foo');
+			expect(query._wheres[0]).toBe("`mycol` LIKE 'foo'");
+		});
+		it('should handle LIKE ? with array', function () {
+			const query = new Select();
+			query.where('mycol', 'LIKE ?', ['foo', 'bar']);
+			expect(query._wheres[0]).toBe(
+				"(`mycol` LIKE 'foo' OR `mycol` LIKE 'bar')"
+			);
+		});
+		it('should handle LIKE %? with single item', function () {
 			const query = new Select();
 			query.where('mycol', 'LIKE %?', 'foo');
 			expect(query._wheres[0]).toBe("`mycol` LIKE '%foo'");
 		});
-		it('should handle LIKE ?%', function () {
+		it('should handle LIKE %? with array', function () {
+			const query = new Select();
+			query.where('mycol', 'LIKE %?', ['foo', 'bar']);
+			expect(query._wheres[0]).toBe(
+				"(`mycol` LIKE '%foo' OR `mycol` LIKE '%bar')"
+			);
+		});
+		it('should handle LIKE ?% with single item', function () {
 			const query = new Select();
 			query.where('mycol', 'LIKE ?%', 'foo');
 			expect(query._wheres[0]).toBe("`mycol` LIKE 'foo%'");
 		});
-		it('should handle LIKE %?%', function () {
+		it('should handle LIKE ?% with array', function () {
+			const query = new Select();
+			query.where('mycol', 'LIKE ?%', ['foo', 'bar']);
+			expect(query._wheres[0]).toBe(
+				"(`mycol` LIKE 'foo%' OR `mycol` LIKE 'bar%')"
+			);
+		});
+		it('should handle LIKE %?% with single item', function () {
 			const query = new Select();
 			query.where('mycol', 'LIKE %?%', 'foo');
 			expect(query._wheres[0]).toBe("`mycol` LIKE '%foo%'");
+		});
+		it('should handle LIKE %?% with array', function () {
+			const query = new Select();
+			query.where('mycol', 'LIKE %?%', ['foo', 'bar']);
+			expect(query._wheres[0]).toBe(
+				"(`mycol` LIKE '%foo%' OR `mycol` LIKE '%bar%')"
+			);
+		});
+		it('should handle NOT LIKE %?% with single item', function () {
+			const query = new Select();
+			query.where('mycol', 'not like %?%', 'foo');
+			expect(query._wheres[0]).toBe("`mycol` NOT LIKE '%foo%'");
+		});
+		it('should handle NOT LIKE %?% with array', function () {
+			const query = new Select();
+			query.where('mycol', 'not like %?%', ['foo', 'bar']);
+			expect(query._wheres[0]).toBe(
+				"(`mycol` NOT LIKE '%foo%' OR `mycol` NOT LIKE '%bar%')"
+			);
 		});
 		it('should handle multiple question marks (2 args)', function () {
 			const query = new Select();
@@ -276,14 +328,6 @@ describe('Select', function () {
 				'SELECT * FROM a LIMIT 2 OFFSET 4'
 			);
 		});
-		it('should allow ? placeholders', () => {
-			const query = Select.parse('SELECT * FROM a');
-			query.limit('?');
-			query.offset('?');
-			expect(query.normalized()).toBe('SELECT * FROM a LIMIT ? OFFSET ?');
-			query.bind([2, 4]);
-			expect(query.toBoundSql()).toBe('SELECT * FROM a LIMIT 2 OFFSET 4');
-		});
 		it('should allow :named placeholders', () => {
 			const query = Select.parse('SELECT * FROM a');
 			query.limit(':limit');
@@ -345,6 +389,12 @@ describe('Select', function () {
 				'SELECT * FROM a LIMIT 10 OFFSET 20'
 			);
 		});
+		it('should handle string numbers', () => {
+			const query = Select.parse('SELECT * FROM a');
+			query.page('3');
+			query.limit(10);
+			expect(query.normalized()).toBe('SELECT * FROM a LIMIT 10 OFFSET 20');
+		});
 		it('should ignore 0', () => {
 			const query = Select.parse('SELECT * FROM a');
 			query.page(0);
@@ -359,6 +409,55 @@ describe('Select', function () {
 			const query = Select.parse('SELECT * FROM a');
 			query.page('foo');
 			expect(query.normalized()).toBe('SELECT * FROM a');
+		});
+		it('should ignore strings starting with 0', () => {
+			const query = Select.parse('SELECT * FROM a');
+			query.page('0123');
+			expect(query.normalized()).toBe('SELECT * FROM a');
+		});
+	});
+	describe('limit()', () => {
+		it('should ignore non numbers', () => {
+			const query = Select.parse('SELECT * FROM a');
+			query.limit('foo');
+			expect(query.normalized()).toBe('SELECT * FROM a');
+		});
+		it('should ignore floats', () => {
+			const query = Select.parse('SELECT * FROM a');
+			query.limit(3.75);
+			expect(query.normalized()).toBe('SELECT * FROM a');
+		});
+		it('should ignore negative numbers', () => {
+			const query = Select.parse('SELECT * FROM a');
+			query.limit(-1);
+			expect(query.normalized()).toBe('SELECT * FROM a');
+		});
+		it('should allow stringified numbers', () => {
+			const query = Select.parse('SELECT * FROM a');
+			query.limit('123');
+			expect(query.normalized()).toBe('SELECT * FROM a LIMIT 123');
+		});
+	});
+	describe('offset()', () => {
+		it('should ignore non numbers', () => {
+			const query = Select.parse('SELECT * FROM a');
+			query.offset('foo');
+			expect(query.normalized()).toBe('SELECT * FROM a');
+		});
+		it('should ignore negative numbers', () => {
+			const query = Select.parse('SELECT * FROM a');
+			query.offset(-2);
+			expect(query.normalized()).toBe('SELECT * FROM a');
+		});
+		it('should ignore floats', () => {
+			const query = Select.parse('SELECT * FROM a');
+			query.offset(2.5);
+			expect(query.normalized()).toBe('SELECT * FROM a');
+		});
+		it('should allow stringified numbers', () => {
+			const query = Select.parse('SELECT * FROM a');
+			query.offset('123');
+			expect(query.normalized()).toBe('SELECT * FROM a OFFSET 123');
 		});
 	});
 	describe('join()', () => {
@@ -432,6 +531,16 @@ describe('Select', function () {
 			query.bind('id', 2);
 			expect(query.toBoundSql()).toBe('SELECT * FROM a WHERE id = 2');
 		});
+		it('should allow name-value pairs twice', () => {
+			const query = Select.parse(
+				'SELECT * FROM a WHERE id = :id AND type = :type'
+			);
+			query.bind('id', 2);
+			query.bind('type', 3);
+			expect(query.toBoundSql()).toBe(
+				'SELECT * FROM a WHERE id = 2 AND type = 3'
+			);
+		});
 		it('should allow objects', () => {
 			const query = Select.parse('SELECT * FROM a WHERE id = :id');
 			query.bind({ id: 4 });
@@ -441,12 +550,6 @@ describe('Select', function () {
 			const query = Select.parse('SELECT * FROM a WHERE id = :id');
 			query.bind({ id: 4 });
 			query.unbind('id');
-			expect(query.toBoundSql()).toBe('SELECT * FROM a WHERE id = :id');
-		});
-		it('should allow unbinding array', () => {
-			const query = Select.parse('SELECT * FROM a WHERE id = :id');
-			query.bind({ id: 4 });
-			query.unbind(['id']);
 			expect(query.toBoundSql()).toBe('SELECT * FROM a WHERE id = :id');
 		});
 		it('should allow unbinding all', () => {
