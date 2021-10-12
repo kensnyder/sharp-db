@@ -7,9 +7,7 @@
     "test": "npx jest",
     "test-watch": "npx jest --watch",
     "coverage": "npx jest --collectCoverage",
-    "view-coverage": "open ./coverage/lcov-report/index.html",
-    "docs": "npx documentation build src/** -f html -o docs",
-    "open-docs": "open './docs/index.html'"
+    "view-coverage": "open ./coverage/lcov-report/index.html"
   },
   "repository": {
     "type": "git",
@@ -38,7 +36,6 @@
   "devDependencies": {
     "ansi-colors": "^4.1.1",
     "codecov": "^3.8.3",
-    "documentation": "^13.2.5",
     "jest": "^27.2.5",
     "moment": "^2.29.1",
     "prettier": "^2.4.1",
