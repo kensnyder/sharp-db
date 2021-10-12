@@ -1,5 +1,9 @@
 ## Change Log
 
+### v1.6.0 on 2021-10-12
+
+- Upgrade ssh2 to version 1.x; [see ssh2's changelog](https://github.com/mscdex/ssh2/issues/935)
+
 ### v1.5.3 on 2021-10-12
 
 - Allow limit and offset to use placeholders

@@ -1,6 +1,6 @@
 {
   "name": "sharp-db",
-  "version": "1.5.3",
+  "version": "1.6.0",
   "description": "Classes for running SQL and building select queries in MySQL",
   "main": "index.js",
   "scripts": {
@@ -33,7 +33,7 @@
     "lodash": "^4.17.21",
     "mysql2": "^2.3.0",
     "quickly-count-substrings": "^1.0.0",
-    "ssh2": "^0.8.9"
+    "ssh2": "^1.5.0"
   },
   "devDependencies": {
     "ansi-colors": "^4.1.1",
