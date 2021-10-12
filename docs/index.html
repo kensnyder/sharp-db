@@ -1,0 +1,864 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Home - Documentation</title>
+
+    <script src="scripts/prettify/prettify.js"></script>
+    <script src="scripts/prettify/lang-css.js"></script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="https://code.ionicframework.com/ionicons/2.0.1/css/ionicons.min.css">
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+<body>
+
+<input type="checkbox" id="nav-trigger" class="nav-trigger" />
+<label for="nav-trigger" class="navicon-button x">
+  <div class="navicon"></div>
+</label>
+
+<label for="nav-trigger" class="overlay"></label>
+
+<nav>
+    <li class="nav-link nav-home-link"><a href="index.html">Home</a></li><li class="nav-heading">Classes</li><li class="nav-heading"><span class="nav-item-type type-class">C</span><span class="nav-item-name"><a href="DataBroker.html">DataBroker</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="DataBroker.html#cleanup">cleanup</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="DataBroker.html#created_and_modified">created_and_modified</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="DataBroker.html#createdAndModified">createdAndModified</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="DataBroker.html#delete">delete</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="DataBroker.html#insert">insert</a></span></li><li class="nav-heading"><span class="nav-item-type type-class">C</span><span class="nav-item-name"><a href="Db.html">Db</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Db.html#.destroyAll">destroyAll</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Db.html#.endAll">endAll</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Db.html#.factory">factory</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Db.html#bindArgs">bindArgs</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Db.html#buildWhere">buildWhere</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Db.html#buildWheres">buildWheres</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Db.html#connect">connect</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Db.html#connectOnce">connectOnce</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Db.html#delete">delete</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Db.html#deleteFrom">deleteFrom</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Db.html#destroy">destroy</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Db.html#end">end</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Db.html#escape">escape</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Db.html#escapeLike">escapeLike</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Db.html#escapeQuoteless">escapeQuoteless</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Db.html#exportAsSql">exportAsSql</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Db.html#insert">insert</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Db.html#insertExtended">insertExtended</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Db.html#insertInto">insertInto</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Db.html#insertIntoOnDuplicateKeyUpdate">insertIntoOnDuplicateKeyUpdate</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Db.html#multiQuery">multiQuery</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Db.html#query">query</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Db.html#quote">quote</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Db.html#select">select</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Db.html#selectByKey">selectByKey</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Db.html#selectExists">selectExists</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Db.html#selectFirst">selectFirst</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Db.html#selectFrom">selectFrom</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Db.html#selectGrouped">selectGrouped</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Db.html#selectHash">selectHash</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Db.html#selectId">selectId</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Db.html#selectIndexed">selectIndexed</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Db.html#selectList">selectList</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Db.html#selectOrCreate">selectOrCreate</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Db.html#selectUuid">selectUuid</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Db.html#selectValue">selectValue</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Db.html#tpl">tpl</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Db.html#update">update</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Db.html#updateTable">updateTable</a></span></li><li class="nav-heading"><span class="nav-item-type type-class">C</span><span class="nav-item-name"><a href="Parser.html">Parser</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Parser.html#_extractSubqueries">_extractSubqueries</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Parser.html#_handleConditions">_handleConditions</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Parser.html#_handleCrossJoin">_handleCrossJoin</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Parser.html#_handleFrom">_handleFrom</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Parser.html#_handleFullJoin">_handleFullJoin</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Parser.html#_handleFullOuterJoin">_handleFullOuterJoin</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Parser.html#_handleGroupBy">_handleGroupBy</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Parser.html#_handleHaving">_handleHaving</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Parser.html#_handleInnerJoin">_handleInnerJoin</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Parser.html#_handleLeftJoin">_handleLeftJoin</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Parser.html#_handleLeftOuterJoin">_handleLeftOuterJoin</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Parser.html#_handleLimit">_handleLimit</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Parser.html#_handleOffset">_handleOffset</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Parser.html#_handleOrderBy">_handleOrderBy</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Parser.html#_handleRightJoin">_handleRightJoin</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Parser.html#_handleRightOuterJoin">_handleRightOuterJoin</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Parser.html#_handleSelect">_handleSelect</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Parser.html#_handleWhere">_handleWhere</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Parser.html#_injectSubqueries">_injectSubqueries</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Parser.html#_split">_split</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Parser.html#_stripComments">_stripComments</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Parser.html#parse">parse</a></span></li><li class="nav-heading"><span class="nav-item-type type-class">C</span><span class="nav-item-name"><a href="Select.html">Select</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#._extractBindingName">_extractBindingName</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#.init">init</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#.parse">parse</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#_conditions">_conditions</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#_isEntirelyDigits">_isEntirelyDigits</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#_isEntirelyDigitsNoZeros">_isEntirelyDigitsNoZeros</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#_isPlaceholder">_isPlaceholder</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#_spliceChildData">_spliceChildData</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#_spliceSiblingData">_spliceSiblingData</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#bind">bind</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#column">column</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#columns">columns</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#crossJoin">crossJoin</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#escape">escape</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#escapeLike">escapeLike</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#escapeQuoteless">escapeQuoteless</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#fetch">fetch</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#fetchFirst">fetchFirst</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#fetchGrouped">fetchGrouped</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#fetchHash">fetchHash</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#fetchIndexed">fetchIndexed</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#fetchList">fetchList</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#fetchValue">fetchValue</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#foundRows">foundRows</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#from">from</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#fullJoin">fullJoin</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#fullOuterJoin">fullOuterJoin</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#getClone">getClone</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#getFoundRowsQuery">getFoundRowsQuery</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#getFoundRowsSql">getFoundRowsSql</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#groupBy">groupBy</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#having">having</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#innerJoin">innerJoin</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#join">join</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#leftJoin">leftJoin</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#leftOuterJoin">leftOuterJoin</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#limit">limit</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#normalized">normalized</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#offset">offset</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#option">option</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#orderBy">orderBy</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#orHaving">orHaving</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#orWhere">orWhere</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#page">page</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#parse">parse</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#reset">reset</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#rightJoin">rightJoin</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#rightOuterJoin">rightOuterJoin</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#sortField">sortField</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#table">table</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#tables">tables</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#toBoundSql">toBoundSql</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#toString">toString</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#unbind">unbind</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#unjoin">unjoin</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#where">where</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#whereBetween">whereBetween</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#withChildData">withChildData</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#withSiblingData">withSiblingData</a></span></li><li class="nav-heading"><span class="nav-item-type type-class">C</span><span class="nav-item-name"><a href="Ssh.html">Ssh</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Ssh.html#end">end</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Ssh.html#tunnelTo">tunnelTo</a></span></li>
+</nav>
+
+<div id="main">
+    
+
+    
+
+
+
+    
+
+
+
+
+
+
+
+
+
+    
+
+
+    <section class="readme">
+        <article><h1>sharp-db</h1>
+<p><a href="https://travis-ci.org/kensnyder/sharp-db"><img src="https://travis-ci.com/kensnyder/sharp-db.svg?branch=master&amp;v=1.5.3" alt="Build Status"></a>
+<a href="https://codecov.io/gh/kensnyder/sharp-db"><img src="https://codecov.io/gh/kensnyder/sharp-db/branch/master/graph/badge.svg?v=1.5.3" alt="Code Coverage"></a>
+<a href="https://opensource.org/licenses/ISC"><img src="https://img.shields.io/github/license/kensnyder/sharp-db.svg?v=1.5.3" alt="ISC License"></a></p>
+<p>Classes for running SQL and building select queries for MySQL in Node</p>
+<h2>Installation</h2>
+<pre class="prettyprint source lang-bash"><code>npm install sharp-db
+</code></pre>
+<h2>Table of Contents</h2>
+<ul>
+<li><a href="#db">Db</a>
+<ul>
+<li><a href="#connection">Connection</a></li>
+<li><a href="#instantiation">Instantiation</a></li>
+<li><a href="#ssh-tunneling">SSH Tunneling</a></li>
+<li><a href="#basic-use">Basic Use</a></li>
+<li><a href="#bindings">Bindings</a></li>
+<li><a href="#methods">Methods</a></li>
+<li><a href="#useful-query-options">Useful Query Options</a></li>
+<li><a href="#solutions-to-common-problems">Solutions to Common Problems</a></li>
+</ul>
+</li>
+<li><a href="#select">Select</a>
+<ul>
+<li><a href="#selectparse">Select.parse()</a></li>
+<li><a href="#building-the-query">Building the Query</a></li>
+<li><a href="#fetching-data">Fetching Data</a></li>
+<li><a href="#counting-results">Counting Results</a></li>
+<li><a href="#specifying-the-db-instance-to-use">Set the <code>Db</code> instance</a></li>
+<li><a href="#dependent-data">Dependent Data</a></li>
+<li><a href="#other-methods">Other Methods</a></li>
+<li><a href="#selectparse-limitations">Select.parse() Limitations</a></li>
+</ul>
+</li>
+<li><a href="#databroker">DataBroker</a>
+<ul>
+<li><a href="#use-in-integration-tests">Use in Integration Tests</a></li>
+<li><a href="#insertions">Insertions</a></li>
+<li><a href="#deletions">Deletions</a></li>
+</ul>
+</li>
+<li><a href="./CONTRIBUTING.md">How to Contribute</a></li>
+<li><a href="./LICENSE.md">ISC License</a></li>
+</ul>
+<h2>Db</h2>
+<h3>Connection</h3>
+<p>Connection can be configured with environmental variables or in the constructor.</p>
+<table>
+<thead>
+<tr>
+<th>Option</th>
+<th>ENV name</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>host</code></td>
+<td>DB_HOST</td>
+<td>127.0.0.1</td>
+</tr>
+<tr>
+<td><code>port</code></td>
+<td>DB_PORT</td>
+<td>3306</td>
+</tr>
+<tr>
+<td><code>user</code></td>
+<td>DB_USER</td>
+<td>root</td>
+</tr>
+<tr>
+<td><code>password</code></td>
+<td>DB_PASSWORD</td>
+<td><em>empty string</em></td>
+</tr>
+<tr>
+<td><code>database</code></td>
+<td>DB_DATABASE</td>
+<td>undefined</td>
+</tr>
+<tr>
+<td><code>charset</code></td>
+<td>DB_CHARSET</td>
+<td>utf8mb4</td>
+</tr>
+</tbody>
+</table>
+<p>See node's mysqljs for <a href="https://github.com/mysqljs/mysql#connection-options">other options</a>.</p>
+<h3>Instantiation</h3>
+<p>Connect to MySQL server</p>
+<pre class="prettyprint source lang-js"><code>const { Db } = require('sharp-db');
+// read options from ENV
+const db1 = Db.factory();
+
+// specify options in constructor
+const db2 = new Db({
+    host: '127.0.0.1',
+    user: 'root',
+    password: '',
+    port: 3306,
+});
+
+// instance that was last created
+const db2Again = Db.factory();
+
+// Don't forget to close the connection when done
+db1.destroy();
+</code></pre>
+<h3>SSH Tunneling</h3>
+<p>Connect to MySQL through an SSH tunnel</p>
+<pre class="prettyprint source lang-js"><code>const { Db } = require('sharp-db');
+const db = Db.factory({
+    // MySQL connection as first argument
+    host: '127.0.0.1',
+    port: 3306,
+    user: 'root',
+    password: '',
+}, {
+    // SSH connection as second argument
+    host: 'example.com',
+    port: 22,
+    user: 'ubuntu',
+    privateKey: '~/.ssh/example.com.pem',
+});
+</code></pre>
+<p>SSH Tunnel Options</p>
+<table>
+<thead>
+<tr>
+<th>Option</th>
+<th>ENV name</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>host</code></td>
+<td>DB_SSH_HOST</td>
+<td>&quot;localhost&quot;</td>
+</tr>
+<tr>
+<td><code>port</code></td>
+<td>DB_SSH_PORT</td>
+<td>22</td>
+</tr>
+<tr>
+<td><code>user</code></td>
+<td>DB_SSH_USER</td>
+<td><em>none</em></td>
+</tr>
+<tr>
+<td><code>password</code></td>
+<td>DB_SSH_PASSWORD</td>
+<td><em>none</em></td>
+</tr>
+<tr>
+<td><code>privateKey</code></td>
+<td>DB_SSH_PRIVATE_KEY</td>
+<td><em>none</em></td>
+</tr>
+<tr>
+<td><code>localPort</code></td>
+<td>DB_SSH_LOCAL_PORT</td>
+<td>12346</td>
+</tr>
+</tbody>
+</table>
+<p>See all options in <a href="https://github.com/mscdex/ssh2#client-methods">ssh2's npm package</a>.</p>
+<h3>Basic use</h3>
+<p>All code examples below assume the <code>Db</code> instance has been stored in <code>db</code>.</p>
+<h4>Plain select queries</h4>
+<pre class="prettyprint source lang-js"><code>const { Db } = require('sharp-db');
+const db = Db.factory();
+const { query, results, fields } = await db.select('SELECT * FROM users');
+// query is the final query executed after value binding
+// results is an Array of objects representing the query results
+// fields is an Array of objects representing the columns that were returned
+
+// Don't forget to close the connection when done
+db.destroy();
+</code></pre>
+<p>Relevant properties of each <code>fields</code> item:</p>
+<table>
+<thead>
+<tr>
+<th>Item</th>
+<th>Description</th>
+<th>Example</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>characterSet</code></td>
+<td><a href="https://github.com/mysqljs/mysql/blob/master/lib/protocol/constants/charsets.js">Character set constant</a></td>
+<td>45</td>
+</tr>
+<tr>
+<td><code>encoding</code></td>
+<td>Character set name</td>
+<td>utf8</td>
+</tr>
+<tr>
+<td><code>name</code></td>
+<td>Name of column</td>
+<td>my_column</td>
+</tr>
+<tr>
+<td><code>columnLength</code></td>
+<td>Number of <em>bytes</em> of field</td>
+<td>400</td>
+</tr>
+<tr>
+<td><code>columnType</code></td>
+<td><a href="https://github.com/mysqljs/mysql/blob/master/lib/protocol/constants/types.js">Data type constant</a></td>
+<td>253</td>
+</tr>
+<tr>
+<td><code>flags</code></td>
+<td><a href="https://github.com/mysqljs/mysql/blob/master/lib/protocol/constants/field_flags.js">Field flag constant</a></td>
+<td>33</td>
+</tr>
+</tbody>
+</table>
+<h3>Bindings</h3>
+<p>Question-mark and colon-prefixed bindings are supported.</p>
+<h4>Binding with Question Marks</h4>
+<pre class="prettyprint source lang-js"><code>const sql = 'SELECT * FROM users WHERE is_active = ? AND department_id = ?';
+const { results: users } = await db.select(sql, true, 5);
+</code></pre>
+<h4>Named Bindings</h4>
+<pre class="prettyprint source lang-js"><code>const sql = 'SELECT * FROM users WHERE is_active = :isActive AND department_id = :departmentId';
+const { results: users } = await db.select(sql, {
+    isActive: true,
+    departmentId: 5,
+});
+</code></pre>
+<h4>Binding data types</h4>
+<pre class="prettyprint source lang-js"><code>const { results: users } = await db.select(sql, {
+    isActive: true,          // Boolean
+    departmentId: 5,         // Number
+    createdAt: '2020-02-14', // Strings
+    statusCode: [1, 2, 3],   // Arrays e.g. IN(1, 2, 3)
+    deletedAt: null,         // null e.g. NULL
+});
+</code></pre>
+<h3>Methods</h3>
+<h4>selectFirst(sql, ...bindValues)</h4>
+<p>Get only the first row.</p>
+<pre class="prettyprint source lang-js"><code>const { results: row } = await db.selectFirst(sql);
+</code></pre>
+<p>Example results: <code>{ id: 1, name: &quot;John&quot; }</code></p>
+<h4>selectValue(sql, ...bindValues)</h4>
+<p>Get only the first column of the first row.</p>
+<pre class="prettyprint source lang-js"><code>const { results: value } = await db.selectValue(sql);
+</code></pre>
+<p>Example results: <code>&quot;John&quot;</code></p>
+<h4>selectHash(sql, ...bindValues)</h4>
+<p>Get an Object with column-value pairs.</p>
+<pre class="prettyprint source lang-js"><code>const { results: hash } = await db.selectHash(sql);
+</code></pre>
+<p>Example results: <code>{ &quot;1&quot;: &quot;John&quot;, &quot;2&quot;: &quot;Jane&quot; }</code></p>
+<h4>selectList(sql, ...bindValues)</h4>
+<p>Get an Array of values for the first column of the first row.</p>
+<pre class="prettyprint source lang-js"><code>const { results: list } = await db.selectList(sql);
+</code></pre>
+<p>Example results: <code>[&quot;John&quot;, &quot;Jane&quot;]</code></p>
+<h4>selectExists(sql, ...bindValues)</h4>
+<p>Return true if query returns any rows.</p>
+<pre class="prettyprint source lang-js"><code>const { results: doesExist } = await db.selectExists(sql);
+</code></pre>
+<p>Example results: <code>true</code></p>
+<h4>selectIndexed(indexColumn, sql, ...bindValues)</h4>
+<p>Return an Object where every result row is indexed by the given field.</p>
+<pre class="prettyprint source lang-js"><code>const { results: usersById } = await db.selectIndexed('id', sql);
+</code></pre>
+<p>Example results:</p>
+<pre class="prettyprint source lang-js"><code>results = {
+  &quot;1&quot;: { id: 1, name: &quot;John&quot; },
+  &quot;2&quot;: { id: 2, name: &quot;Jane&quot; },
+}
+</code></pre>
+<h4>selectGrouped(groupColumn, sql, ...bindValues)</h4>
+<p>Return an Object where every result row is indexed by the given field.</p>
+<pre class="prettyprint source lang-js"><code>const { results: usersGroupedByOrg } = await db.selectGrouped('org', sql);
+</code></pre>
+<p>Example results:</p>
+<pre class="prettyprint source lang-js"><code>results = {
+    &quot;Marketing&quot;: [
+        { id: 1, name: &quot;John&quot;, org: &quot;Marketing&quot; },
+        { id: 2, name: &quot;Jane&quot;, org: &quot;Marketing&quot; },
+    ],
+    &quot;Finance&quot;: [
+        { id: 3, name: &quot;Jose&quot;, org: &quot;Finance&quot; },
+    ],
+}
+</code></pre>
+<h3>Useful Query Options</h3>
+<p>SQL can actually be an Object with options.</p>
+<pre class="prettyprint source lang-js"><code>const options = {
+    sql: `
+        SELECT users.*, avatars.*
+        FROM users
+        INNER JOIN avatars ON avatars.user_id = users.id
+        WHERE users.is_active = ?
+    `,
+    // kill query if not completed within 30 seconds
+    timeout: 30000,
+    // return records with keys `users` and `avatars` with their own fields nested underneath
+    nestTables: true,
+    // you can also bind values here using question marks
+    values: [true],
+};
+const { results } = await db.select(options);
+</code></pre>
+<h4>nestTables Example</h4>
+<p>Given a query of:</p>
+<pre class="prettyprint source lang-sql"><code>SELECT users.*, avatars.*
+FROM users
+INNER JOIN avatars ON avatars.user_id = users.id
+WHERE users.is_active = ?
+</code></pre>
+<p>nesting tables will return a data structure such as:</p>
+<pre class="prettyprint source lang-js"><code>results = [
+	{
+		users: {
+			id: 1,
+			name: 'John Doe',
+			is_active: true,
+		},
+		avatars: {
+			id: 101,
+			user_id: 1,
+			url: 'http://example.com/john.png'
+		}
+	},
+	{
+		users: {
+			id: 2,
+			name: 'Jane Doe',
+			is_active: true,
+		},
+		avatars: {
+			id: 102,
+			user_id: 2,
+			url: 'http://example.com/jane.png'
+		}
+	}
+]
+</code></pre>
+<h4>selectFrom(table, fields, values)</h4>
+<p>Build and run a simple select statement.</p>
+<pre class="prettyprint source lang-js"><code>const { results } = await db.selectFrom('users', ['fname','lname'], {
+    'id >': 5,
+    is_active: true,
+    department_id: [1,2],
+});
+</code></pre>
+<h4>insert(sql, ...bindVars)</h4>
+<p>Run an insert statement; return the id of the new record if applicable.</p>
+<pre class="prettyprint source lang-js"><code>const { insertId } = await db.insert(&quot;INSERT INTO users SET name='John', email='john@example.com'&quot;);
+</code></pre>
+<h4>insertInto(table, values)</h4>
+<p>Build and run an insert statement; return the id of the new record if applicable.</p>
+<pre class="prettyprint source lang-js"><code>const { insertId } = await db.insertInto('users', {
+    name: 'John',
+    email: 'john@example.com',
+});
+</code></pre>
+<h4>insertExtended(table, rows)</h4>
+<p>Build and run an extended insert statement; return the id of the last record if applicable.</p>
+<pre class="prettyprint source lang-js"><code>const { insertId } = await db.insertExtended('users', [
+    { name: 'John', email: 'john@example.com' },
+    { name: 'Jane', email: 'jane@example.com' },
+]);
+</code></pre>
+<h4>insertIntoOnDuplicateKeyUpdate(table, insert, update)</h4>
+<p>Build and run an insert statement; return the id of the new record if applicable.</p>
+<pre class="prettyprint source lang-js"><code>const { insertId, affectedRows } = await db.insertIntoOnDuplicateKeyUpdate(
+    'users',
+    {
+        sso_ref: 'A123456',
+        name: 'Jane Doe',
+        created_at: '2020-02-02',
+    },
+    {
+        name: 'Jane Doe Carter',
+        modified_at: '2020-02-02',
+    }
+);
+</code></pre>
+<h4>update(sql, ...bindValues)</h4>
+<p>Run an update statement; return the number of affected rows.</p>
+<pre class="prettyprint source lang-js"><code>const { affectedRows } = await db.update(
+    &quot;UPDATE users SET name = ? WHERE id = ?&quot;,
+    'Jane Doe Carter',
+    5
+);
+</code></pre>
+<h4>updateTable(table, set, where)</h4>
+<p>Build and run an update statement; return the number of affected rows.</p>
+<pre class="prettyprint source lang-js"><code>const { affectedRows } = await db.updateTable(
+    'users',
+    { name: 'Jane Doe Carter' },
+    { id: 5 }
+);
+</code></pre>
+<h4>delete(sql, ...bindValues)</h4>
+<p>Run a delete statement; return the number of affected rows.</p>
+<pre class="prettyprint source lang-js"><code>const { affectedRows } = await db.delete(
+    &quot;DELETE FROM users WHERE id = ? LIMIT 1&quot;,
+    5
+);
+</code></pre>
+<h4>deleteFrom(table, where, limit)</h4>
+<p>Build and run a delete statement; return the number of affected rows.</p>
+<pre class="prettyprint source lang-js"><code>const { affectedRows } = await db.deleteFrom('users', { id: 5 }, 1);
+</code></pre>
+<h4>query(sql, ...bindValues)</h4>
+<p>Run any type of statement.</p>
+<pre class="prettyprint source lang-js"><code>const { query, results, fields } = await db.query(
+    'SELECT * FROM users'
+);
+</code></pre>
+<h4>multiQuery(sql, ...bindValues)</h4>
+<p>Run multiple statements delimited by semicolon.</p>
+<pre class="prettyprint source lang-js"><code>const { query, results, fields } = await db.query(
+    'SELECT * FROM users; SELECT * FROM tags'
+);
+</code></pre>
+<h3>Solutions to Common Problems</h3>
+<h4>Connection is in closed state</h4>
+<p><code>Error: Can't add new command when connection is in closed state</code></p>
+<p>Make sure you use <code>await</code> your results before closing your connection.</p>
+<h4>ECONNRESET or error event</h4>
+<p><code>Error: read ECONNRESET</code> or <code>Emitted 'error' event on Client instance</code></p>
+<p>Your SSH connection may have timed out. To keep connection alive, you
+can send keepalive packets.</p>
+<pre class="prettyprint source lang-js"><code>const sshConfig = {
+	// ...
+	// How often (in milliseconds) to send SSH-level keepalive packets to the server (in a similar way as OpenSSH's ServerAliveInterval config option). Set to 0 to disable. Default: 0
+	keepaliveInterval: 30,
+	// How many consecutive, unanswered SSH-level keepalive packets that can be sent to the server before disconnection (similar to OpenSSH's ServerAliveCountMax config option). Default: 3
+	keepaliveCountMax: 120,
+}
+const db = new Db(mysqlConfig, sshConfig);
+</code></pre>
+<h2>Select</h2>
+<p>A Select object represents a SQL SELECT query and allows dynamically adding
+clauses including JOIN, WHERE, ORDER BY, LIMIT, OFFSET.</p>
+<h3>Select.parse()</h3>
+<p>The easiest way to define a base query is to use <code>Select.parse(sql)</code> and then
+add criteria as needed.</p>
+<pre class="prettyprint source lang-js"><code>const { Select } = require('sharp-db');
+const query = Select.parse(`
+    SELECT u.id, u.fname, u.lname, u.email, p.phone
+    FROM users
+    LEFT JOIN phone_numbers p ON p.user_id = u.id
+      AND p.type = 'main'
+    WHERE u.is_active = 1
+`);
+if (email) {
+    query.where('u.email', email);
+}
+if (areaCode) {
+    query.where('p.phone', 'LIKE ?%', areaCode);
+}
+query.sort(sortField);
+query.limit(limitTo);
+</code></pre>
+<p>You can also define binding in the base query itself.</p>
+<pre class="prettyprint source lang-js"><code>const query = Select.parse(`
+    SELECT u.id, u.fname, u.lname, u.email, a.city, a.zip
+    FROM users
+    LEFT JOIN addresses a ON a.user_id = u.id
+    WHERE a.state = :state
+`);
+query.bind('state', state);
+</code></pre>
+<p>And you can bind multiple values at once.</p>
+<pre class="prettyprint source lang-js"><code>const query = Select.parse(`
+    SELECT u.id, u.fname, u.lname, u.email, a.city, a.zip
+    FROM users
+    LEFT JOIN addresses a ON a.user_id = u.id
+    WHERE a.state = :state
+      AND a.city IN (:city)
+`);
+query.bind({ state, city });
+</code></pre>
+<h3>Building the Query</h3>
+<p>The following are the most common methods for building queries.</p>
+<ul>
+<li><code>query.columns(columnNames)</code> - Add column names to fetch</li>
+<li><code>query.column(columnName)</code> - Add a column name to fetch</li>
+<li><code>query.table(tableName)</code> - Specify the table in the FROM clause</li>
+<li><code>query.from(tableName)</code> - Same as above</li>
+<li><code>query.innerJoin(expression)</code> - Add an INNER JOIN expression</li>
+<li><code>query.leftJoin(expression)</code> - Add a LEFT JOIN expression</li>
+<li><code>query.fullJoin(expression)</code> - Add a FULL JOIN expression</li>
+<li><code>query.rightJoin(expression)</code> - Add a RIGHT JOIN expression</li>
+<li><code>query.crossJoin(expression)</code> - Add a CROSS JOIN expression</li>
+<li><code>query.leftOuterJoin(expression)</code> - Add a LEFT OUTER JOIN expression</li>
+<li><code>query.fullOuterJoin(expression)</code> - Add a FULL OUTER JOIN expression</li>
+<li><code>query.rightOuterJoin(expression)</code> - Add a RIGHT OUTER JOIN expression</li>
+<li><code>query.groupBy(column)</code> - Group by a column or expression</li>
+<li><code>query.where(column, operator, value)</code> - Require column satisfy operator</li>
+<li><code>query.where(column, value)</code> - Require column equal a value</li>
+<li><code>query.where(expression)</code> - Add an arbitrary WHERE expression</li>
+<li><code>query.where(columnValuePairs)</code> - Add multiple conditions</li>
+<li><code>query.whereBetween(column, twoValueArray)</code> - Require value BETWEEN, &lt; or &gt;</li>
+<li><code>query.orWhere(conditions)</code> - Specify multiple <code>where()</code>s joined by <code>OR</code></li>
+<li><code>query.having(column, operator, value)</code> - Having column satisfy operator</li>
+<li><code>query.having(column, value)</code> - Having column equal value</li>
+<li><code>query.having(column, value)</code> - Having column equal value</li>
+<li><code>query.having(expression)</code> - Having an arbitrary expression</li>
+<li><code>query.orHaving(expressions)</code> - Multiple <code>having()</code>s joined by OR</li>
+<li><code>query.orderBy(column)</code> - Add ORDER BY clause</li>
+<li><code>query.sortField(column, mapNames)</code> - Add ORDER BY clause with mapNames</li>
+<li><code>query.limit(num)</code> - Limit by the given number</li>
+<li><code>query.offset(num)</code> - Specify an offset</li>
+<li><code>query.page(num)</code> - Automatically calculate offset based on limit and page</li>
+</ul>
+<h3>Fetching Data</h3>
+<p>The methods to fetch data mirror those of Db.</p>
+<ul>
+<li><code>query.fetch()</code> - equivalent to <code>db.select()</code></li>
+<li><code>query.fetchFirst()</code> - equivalent to <code>db.selectFirst()</code></li>
+<li><code>query.fetchHashed()</code> - equivalent to <code>db.selectHashed()</code></li>
+<li><code>query.fetchList()</code> - equivalent to <code>db.selectList()</code></li>
+<li><code>query.fetchValue()</code> - equivalent to <code>db.selectValue()</code></li>
+<li><code>query.fetchIndexed(byField)</code> - equivalent to <code>db.selectIndexed(byField)</code></li>
+<li><code>query.fetchGrouped(byField)</code> - equivalent to <code>db.selectGrouped(byField)</code></li>
+</ul>
+<h3>Counting Results</h3>
+<p>One powerful feature of Select is that it can construct a count query to fetch
+the number of results that would have been returned if there were no LIMIT.</p>
+<pre class="prettyprint source lang-js"><code>const query = Select.parse('SELECT id, name FROM users LIMIT 5');
+const { results: users } = await query.fetch();
+const { results: count } = await query.foundRows();
+// will run the following query:
+// SELECT COUNT(*) AS foundRows FROM users
+</code></pre>
+<h3>Specifying the <code>Db</code> Instance to Use</h3>
+<p>There are three ways to specify the <code>Db</code> instance to fetch data with:</p>
+<ol>
+<li><code>query = Select.parse(sql, db)</code></li>
+<li><code>query = new Select(db)</code></li>
+<li><code>query.db = db</code></li>
+</ol>
+<p>If no instance is specified, <code>Db.factory()</code> is used.</p>
+<h3>Dependent Data</h3>
+<p>A Select object can splice in sibling or child data for each row.</p>
+<h4>withSiblingData(propertyName, siblingSql)</h4>
+<p>Example:</p>
+<pre class="prettyprint source lang-js"><code>const query = Select.parse('SELECT id, name FROM users');
+query.withSiblingData(
+    'homeAddress',
+    Select.parse(`
+        SELECT * FROM addresses
+        WHERE addresses.user_id IN(:id)
+        AND addresses.type = 'home'
+        AND addresses.deleted_at IS NULL
+    `),
+);
+query.withSiblingData(
+    'workAddress',
+    Select.parse(`
+        SELECT * FROM addresses
+        WHERE addresses.user_id IN(:id)
+        AND addresses.type = 'work'
+        AND addresses.deleted_at IS NULL
+    `),
+);
+const { results } = await query.fetch();
+</code></pre>
+<p>...and <code>results</code> for example may equal:</p>
+<pre class="prettyprint source lang-js"><code>results = [
+    {
+        id: 1,
+        name: 'John',
+        homeAddress: {
+            id: 11,
+            type: 'home',
+            is_active: 1,
+            user_id: 1,
+            street: '123 Any St.',
+            city: 'Any Town',
+            state: 'CA'
+        },
+        workAddress: {
+            id: 12,
+            type: 'work',
+            is_active: 1,
+            user_id: 1,
+            street: '123 Commerce Dr.',
+            city: 'Any Town',
+            state: 'CA',
+        },
+    },
+    {
+        id: 2,
+        name: 'Jane',
+        // rows without sibling data will be null
+        homeAddress: null,
+        workAddress: {
+            id: 12,
+            type: 'work',
+            is_active: 1,
+            user_id: 2,
+            street: '123 Tower Blvd.',
+            city: 'Any Town',
+            state: 'CA',
+        },
+    }
+]
+</code></pre>
+<h4>withChildData(propertyName, childSql)</h4>
+<p>Example:</p>
+<pre class="prettyprint source lang-js"><code>const query = Select.parse('SELECT id, headline, published_by FROM posts');
+query.withChildData(
+    'theComments',
+    Select.parse('SELECT * FROM comments WHERE comments.post_id IN(:id)')
+);
+query.withChildData(
+    'theTags',
+    Select.parse(`
+        SELECT posts_tags.post_id, tags.* FROM tags
+        INNER JOIN posts_tags ON posts_tags.tag_id = tags.id
+        WHERE posts_tags.post_id IN(:id)
+    `)
+);
+query.withSiblingData(
+    'thePublisher',
+    Select.parse('SELECT id, name FROM users WHERE user_id IN(:published_by)')
+);
+const { results } = await query.fetch();
+</code></pre>
+<p>...and <code>results</code> for example may equal:</p>
+<pre class="prettyprint source lang-js"><code>results = [
+    {
+        id: 1,
+        headline: 'Turmoil in China',
+        published_by: 1001,
+        theComments: [
+            {
+                id: 11,
+                post_id: 1,
+                user_id: 101,
+                text: 'Sad to hear',
+            },
+            {
+                id: 12,
+                post_id: 1,
+                user_id: 102,
+                text: 'Hope it works out',
+            },
+        ],
+        theTags: [
+            {
+                id: 101,
+                post_id: 1,
+                name: 'China',
+            },
+            {
+                id: 102,
+                post_id: 1,
+                name: 'Crisis',
+            },
+        ],
+        thePublisher: {
+            id: 1001,
+            name: 'John',
+        },
+    },
+    {
+        id: 2,
+        headline: 'Syria at War',
+        // records with missing child data will hae empty arrays
+        theComments: [],
+        theTags: [],
+        thePublisher: null,
+    }
+]
+</code></pre>
+<h3>Other methods</h3>
+<p>Select has a few other useful methods.</p>
+<ul>
+<li><code>query.getClone()</code> - Get an exact copy of this query object</li>
+<li><code>query.unjoin(table)</code> - Remove a join expression</li>
+<li><code>query.escape(value)</code> - Escape a raw value</li>
+<li><code>query.escapeQuoteless(value)</code> - Escape a value but avoid wrapping in quotes</li>
+<li><code>query.toString()</code> - Get prettified SQL</li>
+<li><code>query.normalized()</code> - Get raw SQL (all whitespace is spaces)</li>
+<li><code>query.toBoundSql()</code> - Get raw SQL with bindings replaced</li>
+<li><code>query.reset(field)</code> - Reset a single aspect of the query (e.g. where, having)</li>
+<li><code>query.reset()</code> - Reset query to an empty state</li>
+</ul>
+<h3>Select.parse() Limitations</h3>
+<p><code>Select.parse()</code> uses regular expressions and is not a true parser. The intent
+is to be fast and useful for 99% of situations.</p>
+<p>Below are some limitations illustrated by example.</p>
+<h4>Nested Subqueries</h4>
+<p>Most subqueries can be parsed but sub-subqueries don't work.</p>
+<pre class="prettyprint source lang-js"><code>// WILL NOT WORK
+const query = Select.parse(`
+SELECT * FROM categories_posts WHERE category_id IN(
+    SELECT id FROM categories WHERE client_id IN(
+        SELECT client_id FROM affiliations WHERE name LIKE :name
+    )
+)`);
+// WILL WORK
+const subquery = Select.parse(`SELECT id FROM categories WHERE client_id IN(
+    SELECT client_id FROM affiliations WHERE name LIKE :name
+)`);
+subquery.bind({ name: 'DogeCoin' });
+const query = Select.parse(`SELECT * FROM categories_posts WHERE`);
+query.where(`category_id IN(${subquery})`);
+</code></pre>
+<h4>Keywords in Strings</h4>
+<p>If you need to use keywords in strings, use bindings.</p>
+<pre class="prettyprint source lang-sql"><code>-- WILL NOT WORK
+SELECT id, CONCAT('WHERE ', expr) FROM users WHERE name = :name;
+-- WILL WORK
+SELECT id, CONCAT(:binding, expr) FROM users WHERE name = :name;
+</code></pre>
+<h4>Nested OR and AND Clauses</h4>
+<p>Nested logic can't be parsed properly.</p>
+<pre class="prettyprint source lang-sql"><code>-- WILL NOT WORK
+SELECT * FROM users
+WHERE (
+    fname = :fname AND (
+        lname LIKE '%john' OR lname LIKE 'john%'
+    ) OR (
+        id > 0 AND is_active IS NOT NULL
+    )
+)
+</code></pre>
+<pre class="prettyprint source lang-js"><code>// WILL WORK
+const query = Select.parse(`SELECT * FROM users`);
+query.orWhere([
+	&quot;fname = :fname AND (lname LIKE '%john' OR lname LIKE 'john%')&quot;,
+	'id > 0 AND is_active IS NOT NULL',
+]);
+</code></pre>
+<h2>DataBroker</h2>
+<p>DataBroker is useful for inserting and deleting data that will needs to be
+removed and restored.</p>
+<h3>Use in Integration Tests</h3>
+<p>With integration tests, it may be useful to insert test data, run assertions
+and then clean up the test data.</p>
+<h3>Insertions</h3>
+<p>Use the <code>.insert()</code> method to add records and then call <code>.cleanup()</code> to remove
+those records.</p>
+<p>Example:</p>
+<pre class="prettyprint source lang-js"><code>const { DataBroker, Db } = require('sharp-db');
+const broker = new DataBroker(Db.factory(config));
+const userId = await broker.insert('users', {
+	name: 'John',
+	is_active: true,
+});
+// the new user ID is also available at broker.ids
+expect(broker.ids.users[0]).toBe(userId);
+// ... integration test using userId ...
+// then clean up all data
+await broker.cleanup();
+</code></pre>
+<p>Example with composite key:</p>
+<pre class="prettyprint source lang-js"><code>const { DataBroker, Db } = require('sharp-db');
+const broker = new DataBroker(Db.factory(config));
+const userId = await broker.insert('posts_images', {
+	post_id: 1,
+	image_id: 2,
+	sort: 1,
+}, { compositeKey: ['post_id', 'image_id'] });
+// the new user ID is also available at broker.ids
+expect(broker.ids.posts_images[0]).toEqual({
+	post_id: 1,
+	image_id: 2,
+});
+// ... integration test using userId ...
+// then clean up all data
+await broker.cleanup();
+</code></pre>
+<h3>Deletions</h3>
+<p>Example:</p>
+<pre class="prettyprint source lang-js"><code>const { DataBroker, Db } = require('sharp-db');
+const broker = new DataBroker(Db.factory(config));
+// affectedRows will be the count of records deleted
+const affectedRows = await broker.delete('users', { status_id: 5 });
+// the deleted records are available at broker.deleted
+expect(broker.deleted).toHaveLength(affectedRows);
+// ... integration test ...
+// then restore all the deleted all data
+await broker.cleanup();
+</code></pre></article>
+    </section>
+
+
+
+
+
+
+</div>
+
+<br class="clear">
+
+<footer>
+    Generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.6.7</a> on Tue Oct 12 2021 17:25:24 GMT-0600 (Mountain Daylight Time) using the Minami theme.
+</footer>
+
+<script>prettyPrint();</script>
+<script src="scripts/linenumber.js"></script>
+</body>
+</html>

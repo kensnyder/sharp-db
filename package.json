@@ -1,13 +1,15 @@
 {
   "name": "sharp-db",
   "version": "1.6.0",
-  "description": "Classes for running SQL and building select queries in MySQL",
+  "description": "Classes for running SQL and building select queries for MySQL in Node",
   "main": "index.js",
   "scripts": {
     "test": "npx jest",
     "test-watch": "npx jest --watch",
     "coverage": "npx jest --collectCoverage",
-    "view-coverage": "open ./coverage/lcov-report/index.html"
+    "view-coverage": "open ./coverage/lcov-report/index.html",
+    "docs": "npx jsdoc --configure .jsdoc.json --verbose",
+    "view-docs": "open docs/index.html"
   },
   "repository": {
     "type": "git",
@@ -37,6 +39,8 @@
     "ansi-colors": "^4.1.1",
     "codecov": "^3.8.3",
     "jest": "^27.2.5",
+    "jsdoc": "^3.6.7",
+    "minami": "^1.2.3",
     "moment": "^2.29.1",
     "prettier": "^2.4.1",
     "pretty-var-export": "^1.1.5",

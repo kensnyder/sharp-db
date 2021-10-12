@@ -4,7 +4,7 @@
 [![Code Coverage](https://codecov.io/gh/kensnyder/sharp-db/branch/master/graph/badge.svg?v=1.5.3)](https://codecov.io/gh/kensnyder/sharp-db)
 [![ISC License](https://img.shields.io/github/license/kensnyder/sharp-db.svg?v=1.5.3)](https://opensource.org/licenses/ISC)
 
-Classes for running SQL and building select queries in MySQL
+Classes for running SQL and building select queries for MySQL in Node
 
 ## Installation
 

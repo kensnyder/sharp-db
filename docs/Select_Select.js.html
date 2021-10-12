@@ -1,0 +1,1166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Select/Select.js - Documentation</title>
+
+    <script src="scripts/prettify/prettify.js"></script>
+    <script src="scripts/prettify/lang-css.js"></script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="https://code.ionicframework.com/ionicons/2.0.1/css/ionicons.min.css">
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+<body>
+
+<input type="checkbox" id="nav-trigger" class="nav-trigger" />
+<label for="nav-trigger" class="navicon-button x">
+  <div class="navicon"></div>
+</label>
+
+<label for="nav-trigger" class="overlay"></label>
+
+<nav>
+    <li class="nav-link nav-home-link"><a href="index.html">Home</a></li><li class="nav-heading">Classes</li><li class="nav-heading"><span class="nav-item-type type-class">C</span><span class="nav-item-name"><a href="DataBroker.html">DataBroker</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="DataBroker.html#cleanup">cleanup</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="DataBroker.html#created_and_modified">created_and_modified</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="DataBroker.html#createdAndModified">createdAndModified</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="DataBroker.html#delete">delete</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="DataBroker.html#insert">insert</a></span></li><li class="nav-heading"><span class="nav-item-type type-class">C</span><span class="nav-item-name"><a href="Db.html">Db</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Db.html#.destroyAll">destroyAll</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Db.html#.endAll">endAll</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Db.html#.factory">factory</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Db.html#bindArgs">bindArgs</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Db.html#buildWhere">buildWhere</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Db.html#buildWheres">buildWheres</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Db.html#connect">connect</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Db.html#connectOnce">connectOnce</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Db.html#delete">delete</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Db.html#deleteFrom">deleteFrom</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Db.html#destroy">destroy</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Db.html#end">end</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Db.html#escape">escape</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Db.html#escapeLike">escapeLike</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Db.html#escapeQuoteless">escapeQuoteless</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Db.html#exportAsSql">exportAsSql</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Db.html#insert">insert</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Db.html#insertExtended">insertExtended</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Db.html#insertInto">insertInto</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Db.html#insertIntoOnDuplicateKeyUpdate">insertIntoOnDuplicateKeyUpdate</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Db.html#multiQuery">multiQuery</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Db.html#query">query</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Db.html#quote">quote</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Db.html#select">select</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Db.html#selectByKey">selectByKey</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Db.html#selectExists">selectExists</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Db.html#selectFirst">selectFirst</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Db.html#selectFrom">selectFrom</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Db.html#selectGrouped">selectGrouped</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Db.html#selectHash">selectHash</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Db.html#selectId">selectId</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Db.html#selectIndexed">selectIndexed</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Db.html#selectList">selectList</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Db.html#selectOrCreate">selectOrCreate</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Db.html#selectUuid">selectUuid</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Db.html#selectValue">selectValue</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Db.html#tpl">tpl</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Db.html#update">update</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Db.html#updateTable">updateTable</a></span></li><li class="nav-heading"><span class="nav-item-type type-class">C</span><span class="nav-item-name"><a href="Parser.html">Parser</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Parser.html#_extractSubqueries">_extractSubqueries</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Parser.html#_handleConditions">_handleConditions</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Parser.html#_handleCrossJoin">_handleCrossJoin</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Parser.html#_handleFrom">_handleFrom</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Parser.html#_handleFullJoin">_handleFullJoin</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Parser.html#_handleFullOuterJoin">_handleFullOuterJoin</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Parser.html#_handleGroupBy">_handleGroupBy</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Parser.html#_handleHaving">_handleHaving</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Parser.html#_handleInnerJoin">_handleInnerJoin</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Parser.html#_handleLeftJoin">_handleLeftJoin</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Parser.html#_handleLeftOuterJoin">_handleLeftOuterJoin</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Parser.html#_handleLimit">_handleLimit</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Parser.html#_handleOffset">_handleOffset</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Parser.html#_handleOrderBy">_handleOrderBy</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Parser.html#_handleRightJoin">_handleRightJoin</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Parser.html#_handleRightOuterJoin">_handleRightOuterJoin</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Parser.html#_handleSelect">_handleSelect</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Parser.html#_handleWhere">_handleWhere</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Parser.html#_injectSubqueries">_injectSubqueries</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Parser.html#_split">_split</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Parser.html#_stripComments">_stripComments</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Parser.html#parse">parse</a></span></li><li class="nav-heading"><span class="nav-item-type type-class">C</span><span class="nav-item-name"><a href="Select.html">Select</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#._extractBindingName">_extractBindingName</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#.init">init</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#.parse">parse</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#_conditions">_conditions</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#_isEntirelyDigits">_isEntirelyDigits</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#_isEntirelyDigitsNoZeros">_isEntirelyDigitsNoZeros</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#_isPlaceholder">_isPlaceholder</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#_spliceChildData">_spliceChildData</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#_spliceSiblingData">_spliceSiblingData</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#bind">bind</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#column">column</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#columns">columns</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#crossJoin">crossJoin</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#escape">escape</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#escapeLike">escapeLike</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#escapeQuoteless">escapeQuoteless</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#fetch">fetch</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#fetchFirst">fetchFirst</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#fetchGrouped">fetchGrouped</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#fetchHash">fetchHash</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#fetchIndexed">fetchIndexed</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#fetchList">fetchList</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#fetchValue">fetchValue</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#foundRows">foundRows</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#from">from</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#fullJoin">fullJoin</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#fullOuterJoin">fullOuterJoin</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#getClone">getClone</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#getFoundRowsQuery">getFoundRowsQuery</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#getFoundRowsSql">getFoundRowsSql</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#groupBy">groupBy</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#having">having</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#innerJoin">innerJoin</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#join">join</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#leftJoin">leftJoin</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#leftOuterJoin">leftOuterJoin</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#limit">limit</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#normalized">normalized</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#offset">offset</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#option">option</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#orderBy">orderBy</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#orHaving">orHaving</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#orWhere">orWhere</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#page">page</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#parse">parse</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#reset">reset</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#rightJoin">rightJoin</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#rightOuterJoin">rightOuterJoin</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#sortField">sortField</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#table">table</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#tables">tables</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#toBoundSql">toBoundSql</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#toString">toString</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#unbind">unbind</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#unjoin">unjoin</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#where">where</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#whereBetween">whereBetween</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#withChildData">withChildData</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#withSiblingData">withSiblingData</a></span></li><li class="nav-heading"><span class="nav-item-type type-class">C</span><span class="nav-item-name"><a href="Ssh.html">Ssh</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Ssh.html#end">end</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Ssh.html#tunnelTo">tunnelTo</a></span></li>
+</nav>
+
+<div id="main">
+    
+    <h1 class="page-title">Select/Select.js</h1>
+    
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>const mysql = require('mysql2');
+const Parser = require('../Parser/Parser.js');
+const Db = require('../Db/Db.js');
+const cloneDeep = require('lodash/cloneDeep');
+const escapeRegExp = require('lodash/escapeRegExp');
+const forOwn = require('../forOwnDefined/forOwnDefined.js');
+const substrCount = require('quickly-count-substrings');
+
+/**
+ * Build a select query
+ * Class Select
+ */
+class Select {
+	/**
+	 * Load the given SQL into this object
+	 * @param {String} sql  The SQL to parse
+	 * @returns {Select}
+	 */
+	parse(sql) {
+		this.reset();
+		const parser = new Parser(this);
+		parser.parse(sql);
+		return this;
+	}
+
+	/**
+	 * Return a new Select object that matches the given SQL
+	 * @param {String} sql  The SQL to parse
+	 * @param {Db} [db]  The Db instance to use for queries
+	 * @returns {Select}
+	 */
+	static parse(sql, db = null) {
+		return Select.init(db).parse(sql);
+	}
+
+	/**
+	 * Select constructor
+	 * @param {Db} [db]  The Db instance to use
+	 */
+	constructor(db = null) {
+		this.db = db || Db.factory();
+		this.reset();
+	}
+
+	/**
+	 * Shortcut to initialize without the `new` keyword
+	 * @param {Db} [db]  The Db instance to use
+	 * @return {Select}
+	 */
+	static init(db = null) {
+		return new Select(db || Db.factory());
+	}
+
+	/**
+	 * Get the SQL as a pretty-printed string
+	 * @return {String}
+	 */
+	toString() {
+		const lines = [
+			'SELECT',
+			this._options.length ? `  ${this._options.join('\n  ')}` : null,
+			this._columns.length ? `  ${this._columns.join(',\n  ')}` : '  *\n',
+			`FROM ${this._tables.join(', ')}`,
+			this._joins.length ? this._joins.join('\n') : null,
+			this._wheres.length ? `WHERE ${this._wheres.join('\n  AND ')}` : null,
+			this._groupBys.length ? `GROUP BY ${this._groupBys.join(',\n  ')}` : null,
+			this._havings.length ? `HAVING ${this._havings.join('\n  AND ')}` : null,
+			this._orderBys.length ? `ORDER BY ${this._orderBys.join(',\n  ')}` : null,
+		];
+		if (this._page > 0) {
+			const offset = (this._page - 1) * this._limit;
+			lines.push(`LIMIT ${this._limit}`);
+			lines.push(`OFFSET ${offset}`);
+		} else {
+			if (this._limit) {
+				lines.push(`LIMIT ${this._limit}`);
+			}
+			if (this._offset) {
+				lines.push(`OFFSET ${this._offset}`);
+			}
+		}
+
+		return lines.filter(Boolean).join('\n').trim();
+	}
+
+	/**
+	 * Get the SQL as a one-line string
+	 * @return {String}
+	 */
+	normalized() {
+		const lines = [
+			'SELECT',
+			this._options.length ? this._options.join(' ') : null,
+			this._columns.length ? this._columns.join(', ') : '*',
+			`FROM ${this._tables.join(', ')}`,
+			this._joins.length ? this._joins.join(' ') : null,
+			this._wheres.length ? `WHERE ${this._wheres.join(' AND ')}` : null,
+			this._groupBys.length ? `GROUP BY ${this._groupBys.join(', ')}` : null,
+			this._havings.length ? `HAVING ${this._havings.join(' AND ')}` : null,
+			this._orderBys.length ? `ORDER BY ${this._orderBys.join(', ')}` : null,
+		];
+
+		if (this._page > 0) {
+			const offset = (this._page - 1) * this._limit;
+			lines.push(`LIMIT ${this._limit}`);
+			lines.push(`OFFSET ${offset}`);
+		} else {
+			if (this._limit) {
+				lines.push(`LIMIT ${this._limit}`);
+			}
+			if (this._offset) {
+				lines.push(`OFFSET ${this._offset}`);
+			}
+		}
+
+		return lines.filter(Boolean).join(' ').trim();
+	}
+
+	/**
+	 * Get normalized SQL with all parameters bound
+	 * @returns {String}
+	 */
+	toBoundSql() {
+		const sql = this.normalized();
+		const options = this.db.bindArgs(sql, [this._bound]);
+		return options.sql;
+	}
+
+	/**
+	 * @param {String|Array} [field]  If given, reset the given component(s), otherwise reset all query components
+	 *     Valid components: option, column, table, where, orWhere, having, groupBy, orderBy, limit, offset, page
+	 * @return {Select}
+	 */
+	reset(field = null) {
+		if (Array.isArray(field)) {
+			field.forEach(name => this.reset(name));
+			return this;
+		}
+		if (field) {
+			const pluralizable = [
+				'option',
+				'column',
+				'table',
+				'where',
+				'having',
+				'groupBy',
+				'orderBy',
+			];
+			let prop = '_' + field.replace(/s$/, '');
+			if (pluralizable.indexOf(field) > -1) {
+				prop += 's';
+			}
+			this[prop] = ['limit', 'offset', 'page'].indexOf(field) > -1 ? null : [];
+		} else {
+			/**
+			 * The list of sibling relationship definitions
+			 * @property {Object[]}
+			 * @private
+			 */
+			this._siblings = [];
+			/**
+			 * The list of child relationship definitions
+			 * @property {Object[]}
+			 * @private
+			 */
+			this._children = [];
+			/**
+			 * The list of strings to come immediately after "SELECT"
+			 * and before column names
+			 * @property {String[]}
+			 * @private
+			 */
+			this._options = [];
+			/**
+			 * The list of column names to select
+			 * @property {String[]}
+			 * @private
+			 */
+			this._columns = [];
+			/**
+			 * The list of tables in the FROM clause
+			 * @property {String[]}
+			 * @private
+			 */
+			this._tables = [];
+			/**
+			 * The list of JOIN strings to add
+			 * @property {String[]}
+			 * @private
+			 */
+			this._joins = [];
+			/**
+			 * The list of WHERE clauses
+			 * @property {String[]}
+			 * @private
+			 */
+			this._wheres = [];
+			/**
+			 * The list of HAVING clauses
+			 * @property {String[]}
+			 * @private
+			 */
+			this._havings = [];
+			/**
+			 * The list of GROUP BY clauses
+			 * @property {String[]}
+			 * @private
+			 */
+			this._groupBys = [];
+			/**
+			 * The list of ORDER BY clauses
+			 * @property {String[]}
+			 * @private
+			 */
+			this._orderBys = [];
+			/**
+			 * The LIMIT to use
+			 * @property {Number}
+			 * @private
+			 */
+			this._limit = null;
+			/**
+			 * The OFFSET to use
+			 * @property {Number}
+			 * @private
+			 */
+			this._offset = null;
+			/**
+			 * The page used to construct an OFFSET based on the LIMIT
+			 * @property {Number}
+			 * @private
+			 */
+			this._page = null;
+			/**
+			 * Values to bind by name to the query before executing
+			 * @property {Object}
+			 * @private
+			 */
+			this._bound = {};
+		}
+		return this;
+	}
+
+	/**
+	 * Specify data from a sibling table be spliced in
+	 * Can be used for one-to-one or many-to-one relationships
+	 * @param {String} property  The name of the property into which to splice
+	 * @param {Select} siblingQuery  The Select query to fetch the sibling data
+	 * @returns {Select}
+	 * @chainable
+	 */
+	withSiblingData(property, siblingQuery) {
+		this._siblings.push({ property, query: siblingQuery });
+		return this;
+	}
+
+	/**
+	 * Specify data from a child table to be spliced in
+	 * Can be used for one-to-many or many-to-many relationships
+	 * @param {String} property  The name of the property into which to splice
+	 * @param {Select} childQuery  The Select query to fetch the child data
+	 * @returns {Select}
+	 */
+	withChildData(property, childQuery) {
+		this._children.push({ property, query: childQuery });
+		return this;
+	}
+
+	/**
+	 * Bind values by name to the query
+	 * @param {Object|String|Array} placeholder  The name of the placeholder or an object with placeholder: value pairs
+	 * @param {*} [value=null]  The value to bind when placeholder is a string
+	 * @example
+	 *     query.bind('postId', 123); // replace :postId with 123
+	 *     query.bind({ postId: 123 }); // replace :postId with 123
+	 * @return {Select}
+	 */
+	bind(placeholder, value = null) {
+		if (typeof placeholder === 'object' &amp;&amp; arguments.length === 1) {
+			forOwn(placeholder, (val, field) => {
+				this._bound[field] = val;
+			});
+			return this;
+		}
+		this._bound[placeholder] = value;
+		return this;
+	}
+
+	/**
+	 * Unbind a previously bound property
+	 * @param {String} [placeholder]
+	 * @return {Select}
+	 */
+	unbind(placeholder = null) {
+		if (placeholder) {
+			this._bound[placeholder] = undefined;
+		} else {
+			this._bound = {};
+		}
+		return this;
+	}
+
+	/**
+	 * Fetch records and splice in related data
+	 * @param [options] Query options
+	 * @return {Promise&lt;Object>}
+	 */
+	async fetch(options = {}) {
+		options.sql = this.toString();
+		const {
+			query: initialSql,
+			results,
+			fields,
+		} = await this.db.select(options, this._bound);
+		const queries1 = await this._spliceChildData(results);
+		const queries2 = await this._spliceSiblingData(results);
+		const queries = [initialSql, ...queries1, ...queries2];
+		return { queries, results, fields };
+	}
+
+	/**
+	 * Fetch the first matched record
+	 * @return {Object|null}
+	 */
+	async fetchFirst(options = {}) {
+		options.sql = this.toString();
+		const oldLimit = this._limit;
+		this.limit(1);
+		const { queries, results, fields } = await this.fetch(options);
+		this.limit(oldLimit);
+		return { queries, results: results[0], fields };
+	}
+
+	/**
+	 * Fetch each record as an object with key-value pairs
+	 * @return {Promise&lt;Object>}
+	 */
+	fetchHash(options = {}) {
+		options.sql = this.toString();
+		return this.db.selectHash(options, this._bound);
+	}
+
+	/**
+	 * Fetch each record as an array of values
+	 * @return {Promise&lt;Object>}
+	 */
+	fetchList(options = {}) {
+		options.sql = this.toString();
+		return this.db.selectList(options, this._bound);
+	}
+
+	/**
+	 * Fetch the value of first column of the first record
+	 * @return {Promise}
+	 */
+	fetchValue(options = {}) {
+		options.sql = this.toString();
+		return this.db.selectValue(options, this._bound);
+	}
+
+	/**
+	 * Fetch values and index by the given field name
+	 * @param {String} byField  The field by which to index (e.g. id)
+	 * @return {Promise&lt;Object>}
+	 */
+	async fetchIndexed(byField, options = {}) {
+		options.sql = this.toString();
+		const { queries, results, fields } = await this.fetch(options);
+		const indexed = {};
+		results.forEach(r => (indexed[r[byField]] = r));
+		return { queries, results: indexed, fields };
+	}
+
+	/**
+	 * Fetch values grouped by the given field name
+	 * @param {String} byField  The field by which to group
+	 * @example
+	 *      const query = Select.parse('SELECT * FROM comments');
+	 *      const byUser = query.fetchGrouped('user_id')
+	 *      // a key for each user id with an array of comments for each key
+	 * @return {Array}
+	 */
+	async fetchGrouped(byField, options = {}) {
+		options.sql = this.toString();
+		const { query, results, fields } = await this.fetch(options);
+		const grouped = {};
+		results.forEach(r => {
+			if (!grouped[r[byField]]) {
+				grouped[r[byField]] = [];
+			}
+			grouped[r[byField]].push(r);
+		});
+		return { query, results: grouped, fields };
+	}
+
+	/**
+	 * Clone this object
+	 * @return {Select}
+	 */
+	getClone() {
+		const copy = new Select();
+		copy._children = cloneDeep(this._children);
+		copy._siblings = cloneDeep(this._siblings);
+		copy._options = cloneDeep(this._options);
+		copy._columns = cloneDeep(this._columns);
+		copy._tables = cloneDeep(this._tables);
+		copy._joins = cloneDeep(this._joins);
+		copy._wheres = cloneDeep(this._wheres);
+		copy._havings = cloneDeep(this._havings);
+		copy._groupBys = cloneDeep(this._groupBys);
+		copy._orderBys = cloneDeep(this._orderBys);
+		copy._limit = this._limit;
+		copy._offset = this._offset;
+		copy._page = this._page;
+		copy._bound = cloneDeep(this._bound);
+		return copy;
+	}
+
+	/**
+	 * Build a version of this query that simply returns COUNT(*)
+	 * @param {String} [countExpr="*"]  Use to specify `DISTINCT colname` if needed
+	 * @return {Select}  The SQL query
+	 */
+	getFoundRowsQuery(countExpr = '*') {
+		if (this._havings.length === 0) {
+			const clone = this.getClone();
+			clone._columns = [`COUNT(${countExpr}) AS foundRows`];
+			clone._options = [];
+			clone._groupBys = [];
+			clone._orderBys = [];
+			clone._limit = null;
+			clone._offset = null;
+			clone._page = null;
+			return clone;
+		} else {
+			const subquery = this.getClone();
+			subquery._limit = null;
+			subquery._offset = null;
+			subquery._page = null;
+			return subquery;
+		}
+	}
+
+	/**
+	 * Get SQL needed to return the found rows of this query
+	 * @param {String} countExpr  The expression to use inside the COUNT()
+	 * @param {Boolean} normalize  If true, return a normalized sql
+	 * @returns {String}
+	 */
+	getFoundRowsSql(countExpr = '*', normalize = false) {
+		const query = this.getFoundRowsQuery(countExpr);
+		if (this._havings.length === 0) {
+			return normalize ? query.normalized() : query.toString();
+		} else if (normalize) {
+			const subquerySql = query.normalized();
+			return `SELECT COUNT(*) AS foundRows FROM (${subquerySql}) AS subq`;
+		} else {
+			const subquerySql = query.toString().replace(/\n/g, '\n\t');
+			return `SELECT COUNT(*) AS foundRows FROM (\n\t${subquerySql}\n) AS subq`;
+		}
+	}
+
+	/**
+	 * Run a version of this query that simply returns COUNT(*)
+	 * @param {String} [countExpr="*"]  Use to specify `DISTINCT colname` if needed
+	 * @return {Promise&lt;Number>}  The number of rows or false on error
+	 */
+	foundRows(countExpr = '*', options = {}) {
+		options.sql = this.getFoundRowsSql(countExpr);
+		return this.db.selectValue(options, this._bound);
+	}
+
+	/**
+	 * Extract the name of the first bound variable
+	 * E.g. given "SELECT * FROM users WHERE id IN(:id)" it would return "id"
+	 * @param {String} sql
+	 * @returns {*|string}
+	 * @private
+	 */
+	static _extractBindingName(sql) {
+		const match = sql.match(/:([\w_]+)/);
+		if (!match) {
+			throw new Error(`Unable to find bound variable in SQL "${sql}"`);
+		}
+		return match[1];
+	}
+
+	/**
+	 * Fetch sibling data and splice it into the given result set
+	 * @param {Array} queries  The final SQL statements that were executed
+	 */
+	async _spliceSiblingData(records) {
+		if (this._siblings.length === 0 || records.length === 0) {
+			return [];
+		}
+		const sqlQueries = [];
+		for (const { property, query } of this._siblings) {
+			const onColumn = Select._extractBindingName(query.toString());
+			const values = records.map(record => record[onColumn]);
+			query.bind(onColumn, values);
+			const { queries, results, fields } = await query.fetch();
+			const indexed = {};
+			const firstField = fields[0].name;
+			results.forEach(result => {
+				const key = result[firstField];
+				indexed[key] = result;
+			});
+			records.forEach(record => {
+				record[property] = indexed[record[onColumn]];
+			});
+			sqlQueries.push(...queries);
+		}
+		return sqlQueries;
+	}
+
+	/**
+	 * Fetch child data and splice it into the given result set
+	 * @param {Array} queries  The final SQL statements that were executed
+	 */
+	async _spliceChildData(records) {
+		if (this._children.length === 0 || records.length === 0) {
+			return [];
+		}
+		const sqlQueries = [];
+		for (const { property, query } of this._children) {
+			const onColumn = Select._extractBindingName(query.toString());
+			const values = records.map(record => record[onColumn]);
+			query.bind(onColumn, values);
+			const { queries, results, fields } = await query.fetch();
+			const firstField = fields[0].name;
+			const grouped = {};
+			results.forEach(result => {
+				const key = result[firstField];
+				if (!grouped[key]) {
+					grouped[key] = [];
+				}
+				grouped[key].push(result);
+			});
+			records.forEach(record => {
+				record[property] = grouped[record[onColumn]] || [];
+			});
+			sqlQueries.push(...queries);
+		}
+		return sqlQueries;
+	}
+
+	/**
+	 * Add an array of column names to fetch
+	 * @param {String[]} columnNames  The names of columns
+	 * @return {Select}
+	 */
+	columns(columnNames) {
+		this._columns = this._columns.concat(columnNames);
+		return this;
+	}
+
+	/**
+	 * Add a column name to fetch
+	 * @param {String} columnName  The name of the column
+	 * @return {Select}
+	 */
+	column(columnName) {
+		this._columns.push(columnName);
+		return this;
+	}
+
+	/**
+	 * Add an option expression such as "TOP 10" or "SQL_CALC_FOUND_ROWS"
+	 * @param {String} optionExpression  Expression to go after "SELECT" and before column list
+	 * @return {Select}
+	 */
+	option(optionExpression) {
+		this._options.push(optionExpression);
+		return this;
+	}
+
+	/**
+	 * Add a table to the "FROM" clause (same as .from())
+	 * @param {String} tableName  The name of the table to query
+	 * @return {Select}
+	 */
+	table(tableName) {
+		this._tables.push(tableName);
+		return this;
+	}
+
+	/**
+	 * Add multiple table to the "FROM" clause
+	 * @param {Array} tableNames  The names of the tables to query
+	 * @return {Select}
+	 */
+	tables(tableNames) {
+		this._tables.push(...tableNames);
+		return this;
+	}
+
+	/**
+	 * Add a table to the "FROM" clause (same as .table())
+	 * @param {String} tableName  The name of the table to query
+	 * @return {Select}
+	 */
+	from(tableName) {
+		this._tables.push(tableName);
+		return this;
+	}
+
+	/**
+	 * Add an INNER JOIN expression (same as .innerJoin())
+	 * @param {String} expression  The expression following the INNER JOIN keyword
+	 * @example query.join('posts p ON p.id = c.post_id');
+	 * @return {Select}
+	 */
+	join(expression) {
+		this._joins.push(`INNER JOIN ${expression}`);
+		return this;
+	}
+
+	/**
+	 * Add a LEFT JOIN expression
+	 * @param {String} expression  The expression following the LEFT JOIN keyword
+	 * @example query.leftJoin('posts p ON p.id = c.post_id');
+	 * @return {Select}
+	 */
+	leftJoin(expression) {
+		this._joins.push(`LEFT JOIN ${expression}`);
+		return this;
+	}
+
+	/**
+	 * Add a FULL JOIN expression
+	 * @param {String} expression  The expression following the FULL JOIN keyword
+	 * @example query.fullJoin('posts p ON p.id = c.post_id');
+	 * @return {Select}
+	 */
+	fullJoin(expression) {
+		this._joins.push(`FULL JOIN ${expression}`);
+		return this;
+	}
+
+	/**
+	 * Add a RIGHT JOIN expression
+	 * @param {String} expression  The expression following the RIGHT JOIN keyword
+	 * @example query.rightJoin('posts p ON p.id = c.post_id');
+	 * @return {Select}
+	 */
+	rightJoin(expression) {
+		this._joins.push(`RIGHT JOIN ${expression}`);
+		return this;
+	}
+
+	/**
+	 * Add a CROSS JOIN expression
+	 * @param {String} expression  The expression following the CROSS JOIN keyword
+	 * @example query.join('posts p ON p.id = c.post_id');
+	 * @return {Select}
+	 */
+	crossJoin(expression) {
+		this._joins.push(`CROSS JOIN ${expression}`);
+		return this;
+	}
+
+	/**
+	 * Add an INNER JOIN expression (same as ->join())
+	 * @param {String} expression  The expression following the INNER JOIN keyword
+	 * @example query.innerJoin('posts p ON p.id = c.post_id');
+	 * @return {Select}
+	 */
+	innerJoin(expression) {
+		this._joins.push(`INNER JOIN ${expression}`);
+		return this;
+	}
+
+	/**
+	 * Add a LEFT OUTER JOIN expression
+	 * @param {String} expression  The expression following the LEFT OUTER JOIN keyword
+	 * @example query.leftOuterJoin('posts p ON p.id = c.post_id');
+	 * @return {Select}
+	 */
+	leftOuterJoin(expression) {
+		this._joins.push(`LEFT OUTER JOIN ${expression}`);
+		return this;
+	}
+
+	/**
+	 * Add a FULL OUTER JOIN expression
+	 * @param {String} expression  The expression following the FULL OUTER JOIN keyword
+	 * @example query.fullOuterJoin('posts p ON p.id = c.post_id');
+	 * @return {Select}
+	 */
+	fullOuterJoin(expression) {
+		this._joins.push(`FULL OUTER JOIN ${expression}`);
+		return this;
+	}
+
+	/**
+	 * Add a RIGHT OUTER JOIN expression
+	 * @param {String} expression  The expression following the RIGHT OUTER JOIN keyword
+	 * @example query.rightOuterJoin('posts p ON p.id = c.post_id');
+	 * @return {Select}
+	 */
+	rightOuterJoin(expression) {
+		this._joins.push(`RIGHT OUTER JOIN ${expression}`);
+		return this;
+	}
+
+	/**
+	 * Remove a join condition with the specified table
+	 * @param {String|String[]} table  The name of the table or tables in the first part of the join statement
+	 * @return {Select}
+	 */
+	unjoin(table) {
+		if (Array.isArray(table)) {
+			table.forEach(t => this.unjoin(t));
+			return this;
+		}
+		table = escapeRegExp(table);
+		this._joins = this._joins.filter(join => {
+			const regex = new RegExp(`^([A-Z]+) JOIN ${table}\\b`);
+			return !regex.test(join);
+		});
+		return this;
+	}
+
+	/**
+	 * Utility function to add conditions for a clause (WHERE, HAVING)
+	 * @param {Array} collection  The collection to add the clauses to (e.g. this._wheres or this._havings)
+	 * @param {Array} criteria  A list of expressions to stringify
+	 * @property {*} criteria[0]  The expression or name of the column on which to match
+	 * @property {*} [criteria[1]]  The comparison operator; defaults to "="
+	 * @property {*} [criteria[2]]  The value to test against
+	 * @example  The following are equivalent
+	 *     this._conditions(this._wheres, ['deleted_at IS NULL']);
+	 *     this._conditions(this._wheres, ['deleted_at', null]);
+	 *     this._conditions(this._wheres, ['deleted_at', '=', null]);
+	 * @example  More examples
+	 *     this._conditions(this._wheres, ['fname', 'LIKE', 'joe']); // `fname` LIKE 'joe'
+	 *     this._conditions(this._wheres, ['fname', 'LIKE ?', 'joe']); // `fname` LIKE 'joe'
+	 *     this._conditions(this._wheres, ['fname LIKE %?%', 'joe']); // `fname` LIKE '%joe%'
+	 *     this._conditions(this._wheres, ['fname LIKE ?%', 'joe']); // `fname` LIKE 'joe%'
+	 *     this._conditions(this._wheres, ['fname', 'LIKE ?%', 'joe']); // `fname` LIKE 'joe%'
+	 *     this._conditions(this._wheres, ['price >', 10]); // `price` > 10
+	 *     this._conditions(this._wheres, ['price', '>', 10]); // `price` > 10
+	 *     this._conditions(this._wheres, ['price =', 10]); // `price` = 10
+	 *     this._conditions(this._wheres, ['price !=', 10]); // `price` != 10
+	 *     this._conditions(this._wheres, ['price', 10]); // `price` = 10
+	 *     this._conditions(this._wheres, ['price', '=', 10]); // `price` = 10
+	 *     this._conditions(this._wheres, ['price', '!=', 10]); // `price` != 10
+	 *     this._conditions(this._wheres, ['price', 'BETWEEN', [10,20]]); // `price` BETWEEN 10 AND 20
+	 *     this._conditions(this._wheres, ['price', 'NOT BETWEEN', [10,20]]); // `price` NOT BETWEEN 10 AND 20
+	 *     this._conditions(this._wheres, ['price', [10,20]]); // `price` IN(10,20)
+	 *     this._conditions(this._wheres, ['price', '=', [10,20]]); // `price` IN(10,20)
+	 *     this._conditions(this._wheres, ['price', 'IN', [10,20]]); // `price` IN(10,20)
+	 *     this._conditions(this._wheres, ['price', 'NOT IN', [10,20]]); // `price` NOT IN(10,20)
+	 * @return {Select}
+	 */
+	_conditions(collection, criteria) {
+		if (typeof criteria === 'string') {
+			collection.push(criteria);
+			return this;
+		}
+		const numArgs = criteria.length;
+		let [column, operator, value] = criteria;
+		if (Array.isArray(column)) {
+			column.forEach(val => {
+				this._conditions(collection, [val]);
+			});
+			return this;
+		} else if (typeof column === 'object') {
+			forOwn(column, (val, name) => {
+				this._conditions(collection, [name, val]);
+			});
+			return this;
+		}
+		if (/^\w+$/.test(column)) {
+			column = mysql.escapeId(column);
+		}
+		if (numArgs === 1) {
+			// condition is a stand-alone expression
+			// e.g. "SUM(price) > 10"
+			collection.push(column);
+			return this;
+		} else if (
+			numArgs === 2 &amp;&amp;
+			Array.isArray(operator) &amp;&amp;
+			operator.length > 0 &amp;&amp;
+			substrCount(column, '?') === operator.length
+		) {
+			// column is a string with question marks and operator is an array of replacements
+			// e.g. query.where('SUBSTR(prefs, ?, ?) = role', [1, 4]);
+			const values = operator;
+			let i = 0;
+			const sql = column.replace(/(%|)\?(%|)/g, ($0, $1, $2) => {
+				const escNoQuotes = this.escapeQuoteless(values[i++]);
+				return `'${$1}${escNoQuotes}${$2}'`;
+			});
+			collection.push(sql);
+			return this;
+		} else if (numArgs === 2) {
+			// condition has pairs of "column + operator" => "value"
+			// e.g. ["price >", 10]
+			// e.g. ["status LIKE ?%", 10]
+			value = operator;
+			const parts = column.split(' ');
+			column = parts.shift();
+			operator = parts.join(' ');
+		}
+		if (!operator) {
+			operator = '=';
+		}
+		operator = operator.toLocaleUpperCase();
+		const likeMatch = operator.match(
+			/^(LIKE|NOT LIKE)(?: (\?|\?%|%\?|%\?%))?$/i
+		);
+		if (operator === 'NOT BETWEEN' || operator === 'BETWEEN') {
+			// expect a two-item array
+			const from = mysql.escape(value[0]);
+			const to = mysql.escape(value[1]);
+			collection.push(`${column} ${operator} ${from} AND ${to}`);
+		} else if (likeMatch) {
+			const like = likeMatch[1].toUpperCase(); // Either LIKE or NOT LIKE
+			const infix = likeMatch[2]; // ONE OF ?% or %?% or %? or ?
+			if (Array.isArray(value)) {
+				const ors = [];
+				for (const v of value) {
+					const quoted = this.escapeLike(infix, v);
+					ors.push(`${column} ${like} ${quoted}`);
+				}
+				const joined = ors.join(' OR ');
+				collection.push(`(${joined})`);
+			} else {
+				const quoted = this.escapeLike(infix, value);
+				collection.push(`${column} ${like} ${quoted}`);
+			}
+		} else if (value === null) {
+			collection.push(
+				operator === '=' ? `${column} IS NULL` : `${column} IS NOT NULL`
+			);
+		} else if (Array.isArray(value)) {
+			// an array of values should be IN or NOT IN
+			const inVals = value.map(v => mysql.escape(v));
+			const joined = inVals.join(',');
+			collection.push(
+				operator === '=' || operator === 'IN'
+					? `${column} IN(${joined})`
+					: `${column} NOT IN(${joined})`
+			);
+		} else if (operator === 'IN' || operator === 'NOT IN') {
+			// in clause that is not array
+			value = mysql.escape(value);
+			collection.push(`${column} ${operator}(${value})`);
+		} else {
+			value = mysql.escape(value);
+			collection.push(`${column} ${operator} ${value}`);
+		}
+		return this;
+	}
+
+	/**
+	 * Add a group by column or expression
+	 * @param {String} column  The name of a column (or expression) to group by
+	 * @return {Select}
+	 */
+	groupBy(column) {
+		this._groupBys.push(column);
+		return this;
+	}
+
+	/**
+	 * Add WHERE clauses to conditions (See _conditions for usage)
+	 * @param {String} column  The expression or name of the column on which to match
+	 * @param {*} [operator]  The comparison operator; defaults to "="
+	 * @param {*} [value]  The value to test against
+	 * @return {Select}
+	 */
+	where(...args) {
+		this._conditions(this._wheres, args);
+		return this;
+	}
+
+	/**
+	 * Add a WHERE clause with a BETWEEN condition
+	 * @param {String} column  The column name
+	 * @param {Array} twoValueArray  The two values to be between
+	 * @return {Select}
+	 */
+	whereBetween(column, twoValueArray) {
+		const isNullish = v =>
+			v === undefined || v === null || v === false || isNaN(v);
+		if (!isNullish(twoValueArray[0]) &amp;&amp; !isNullish(twoValueArray[1])) {
+			this.where(column, 'BETWEEN', twoValueArray);
+		} else if (!isNullish(twoValueArray[0]) &amp;&amp; isNullish(twoValueArray[1])) {
+			this.where(column, '>=', twoValueArray[0]);
+		} else if (isNullish(twoValueArray[0]) &amp;&amp; !isNullish(twoValueArray[1])) {
+			this.where(column, '&lt;=', twoValueArray[1]);
+		} else {
+			// both are nullish!
+			throw new Error(
+				'Select.whereBetween(): Array must have at least 1 non nullish value'
+			);
+		}
+		return this;
+	}
+
+	/**
+	 * Add WHERE conditions to place inside an OR block (See _conditions for usage)
+	 * @param {Array} conditions  A list where each item is an array with parameters that would be taken by where()
+	 * @return {Select}
+	 */
+	orWhere(conditions) {
+		const criteria = [];
+
+		// TODO: something wrong with this loop
+		conditions.forEach(condition => {
+			this._conditions(criteria, condition);
+		});
+		const joined = criteria.join(' OR ');
+		if (joined.slice(0, 1) === '(' &amp;&amp; joined.slice(-1) === ')') {
+			this.where(joined);
+		} else {
+			this.where(`(${joined})`);
+		}
+		return this;
+	}
+
+	/**
+	 * Add a HAVING condition (See _conditions for usage)
+	 * @param {String} column  The expression or name of the column on which to match
+	 * @param {*} [operator]  The comparison operator; defaults to "="
+	 * @param {*} [value]  The value to test against
+	 * @return {Select}
+	 */
+	having(...args) {
+		this._conditions(this._havings, args);
+		return this;
+	}
+
+	/**
+	 * Add an OR with conditions under the HAVING clause
+	 * @param {Array[]} conditions
+	 * @returns {Select}
+	 */
+	orHaving(conditions) {
+		const criteria = [];
+		conditions.forEach(condition => {
+			this._conditions(criteria, condition);
+		});
+		const joined = criteria.join(' OR ');
+		this.having(`(${joined})`);
+		return this;
+	}
+
+	/**
+	 * Add a column or expression to order by
+	 * @param {String} column  The column name or expression to sort by. Include DESC or prefix with - to sort descending
+	 * @return {Select}
+	 */
+	orderBy(column) {
+		this._orderBys.push(column.replace(/^-(.+)/, '$1 DESC'));
+		return this;
+	}
+
+	/**
+	 * Sort by the given column, with a map of columns to translate
+	 * @param {String} column  The column name such as "created_at" or "-created_at" for descending
+	 * @param {Object} [mapNames={}]  Column names to translate from one name to another
+	 * @example
+	 *     query.sortField('-modified_at'); // ORDER BY modified_at DESC
+	 *     query.sortField('created_at', ['created_at'=>'created']); // ORDER BY created
+	 * @return {Select}
+	 */
+	sortField(column, mapNames = {}) {
+		const direction = column.slice(0, 1) === '-' ? 'DESC' : 'ASC';
+		column = column.replace(/^-/, '');
+		column = mapNames[column] || column;
+		this.orderBy(`${column} ${direction}`);
+		return this;
+	}
+
+	/**
+	 * Check to see if the given string is ? or a bound variable like :var
+	 * @param {String} string  The input string
+	 * @return {Boolean}
+	 * @private
+	 */
+	_isPlaceholder(string) {
+		return string === '?' || /^:\w+$/.test(string);
+	}
+
+	/**
+	 * Check to see if the given string is 0 or all digits not starting with 0
+	 * @param {String} string  The input string
+	 * @return {Boolean}
+	 * @private
+	 */
+	_isEntirelyDigits(string) {
+		return /^(0|[1-9]\d*)$/.test(string);
+	}
+
+	/**
+	 * Check to see if the given string is all digits
+	 * @param {String} string  The input string
+	 * @return {Boolean}
+	 * @private
+	 */
+	_isEntirelyDigitsNoZeros(string) {
+		return /^[1-9]\d*$/.test(string);
+	}
+
+	/**
+	 * Limit results to the given number
+	 * @param {Number|String} max  The number to limit by (placeholder string or integer greater than 0)
+	 * @return {Select}
+	 */
+	limit(max) {
+		if (typeof max === 'string') {
+			max = max.trim();
+			if (this._isPlaceholder(max)) {
+				// is a placeholder like ? or :var
+				this._limit = max;
+			} else if (this._isEntirelyDigitsNoZeros(max)) {
+				// is entirely digits (no leading zeros)
+				this._limit = parseInt(max, 10);
+			}
+		} else if (typeof max === 'number' &amp;&amp; Number.isInteger(max) &amp;&amp; max >= 1) {
+			this._limit = max;
+		}
+		return this;
+	}
+
+	/**
+	 * Fetch results from the given offset
+	 * @param {Number|String} number  The offset (placeholder string or integer greater than or equal to 0)
+	 * @return {Select}
+	 */
+	offset(number) {
+		if (typeof number === 'string') {
+			number = number.trim();
+			if (this._isPlaceholder(number)) {
+				// is a placeholder like ? or :var
+				this._offset = number;
+			} else if (this._isEntirelyDigits(number)) {
+				// is entirely digits (or zero)
+				this._offset = parseInt(number, 10);
+			}
+		} else if (
+			typeof number === 'number' &amp;&amp;
+			Number.isInteger(number) &amp;&amp;
+			number >= 0
+		) {
+			this._offset = number;
+		}
+		return this;
+	}
+
+	/**
+	 * Set the offset based on the limit with the given page number
+	 * @param {Number|String} number  The page number (integer greater than 0)
+	 * @return {Select}
+	 */
+	page(number) {
+		if (typeof number === 'string') {
+			number = number.trim();
+			if (this._isEntirelyDigitsNoZeros(number)) {
+				// is entirely digits (no leading zeros)
+				this._page = parseInt(number, 10);
+			}
+		} else if (
+			typeof number === 'number' &amp;&amp;
+			Number.isInteger(number) &amp;&amp;
+			number >= 1
+		) {
+			this._page = number;
+		}
+		return this;
+	}
+
+	/**
+	 * Manually escape a value
+	 * @param {*} value  The value to escape
+	 * @return {string}
+	 */
+	escape(value) {
+		return this.db.escape(value);
+	}
+
+	/**
+	 * Manually escape a value without quotes
+	 * @param {*} value  The value to escape without quotes
+	 * @return {string}
+	 */
+	escapeQuoteless(value) {
+		return this.db.escapeQuoteless(value);
+	}
+
+	/**
+	 * Get the proper escaping for a LIKE or NOT LIKE clause
+	 * @param {String} infix  One of ?% or %?% or %? or ?
+	 * @param {String} value  The value to search for
+	 * @return {String}
+	 */
+	escapeLike(infix, value) {
+		return this.db.escapeLike(infix, value);
+	}
+}
+
+module.exports = Select;
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<br class="clear">
+
+<footer>
+    Generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.6.7</a> on Tue Oct 12 2021 17:25:24 GMT-0600 (Mountain Daylight Time) using the Minami theme.
+</footer>
+
+<script>prettyPrint();</script>
+<script src="scripts/linenumber.js"></script>
+</body>
+</html>

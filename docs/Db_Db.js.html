@@ -1,0 +1,1170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Db/Db.js - Documentation</title>
+
+    <script src="scripts/prettify/prettify.js"></script>
+    <script src="scripts/prettify/lang-css.js"></script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="https://code.ionicframework.com/ionicons/2.0.1/css/ionicons.min.css">
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+<body>
+
+<input type="checkbox" id="nav-trigger" class="nav-trigger" />
+<label for="nav-trigger" class="navicon-button x">
+  <div class="navicon"></div>
+</label>
+
+<label for="nav-trigger" class="overlay"></label>
+
+<nav>
+    <li class="nav-link nav-home-link"><a href="index.html">Home</a></li><li class="nav-heading">Classes</li><li class="nav-heading"><span class="nav-item-type type-class">C</span><span class="nav-item-name"><a href="DataBroker.html">DataBroker</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="DataBroker.html#cleanup">cleanup</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="DataBroker.html#created_and_modified">created_and_modified</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="DataBroker.html#createdAndModified">createdAndModified</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="DataBroker.html#delete">delete</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="DataBroker.html#insert">insert</a></span></li><li class="nav-heading"><span class="nav-item-type type-class">C</span><span class="nav-item-name"><a href="Db.html">Db</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Db.html#.destroyAll">destroyAll</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Db.html#.endAll">endAll</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Db.html#.factory">factory</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Db.html#bindArgs">bindArgs</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Db.html#buildWhere">buildWhere</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Db.html#buildWheres">buildWheres</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Db.html#connect">connect</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Db.html#connectOnce">connectOnce</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Db.html#delete">delete</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Db.html#deleteFrom">deleteFrom</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Db.html#destroy">destroy</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Db.html#end">end</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Db.html#escape">escape</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Db.html#escapeLike">escapeLike</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Db.html#escapeQuoteless">escapeQuoteless</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Db.html#exportAsSql">exportAsSql</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Db.html#insert">insert</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Db.html#insertExtended">insertExtended</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Db.html#insertInto">insertInto</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Db.html#insertIntoOnDuplicateKeyUpdate">insertIntoOnDuplicateKeyUpdate</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Db.html#multiQuery">multiQuery</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Db.html#query">query</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Db.html#quote">quote</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Db.html#select">select</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Db.html#selectByKey">selectByKey</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Db.html#selectExists">selectExists</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Db.html#selectFirst">selectFirst</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Db.html#selectFrom">selectFrom</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Db.html#selectGrouped">selectGrouped</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Db.html#selectHash">selectHash</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Db.html#selectId">selectId</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Db.html#selectIndexed">selectIndexed</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Db.html#selectList">selectList</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Db.html#selectOrCreate">selectOrCreate</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Db.html#selectUuid">selectUuid</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Db.html#selectValue">selectValue</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Db.html#tpl">tpl</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Db.html#update">update</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Db.html#updateTable">updateTable</a></span></li><li class="nav-heading"><span class="nav-item-type type-class">C</span><span class="nav-item-name"><a href="Parser.html">Parser</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Parser.html#_extractSubqueries">_extractSubqueries</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Parser.html#_handleConditions">_handleConditions</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Parser.html#_handleCrossJoin">_handleCrossJoin</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Parser.html#_handleFrom">_handleFrom</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Parser.html#_handleFullJoin">_handleFullJoin</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Parser.html#_handleFullOuterJoin">_handleFullOuterJoin</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Parser.html#_handleGroupBy">_handleGroupBy</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Parser.html#_handleHaving">_handleHaving</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Parser.html#_handleInnerJoin">_handleInnerJoin</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Parser.html#_handleLeftJoin">_handleLeftJoin</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Parser.html#_handleLeftOuterJoin">_handleLeftOuterJoin</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Parser.html#_handleLimit">_handleLimit</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Parser.html#_handleOffset">_handleOffset</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Parser.html#_handleOrderBy">_handleOrderBy</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Parser.html#_handleRightJoin">_handleRightJoin</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Parser.html#_handleRightOuterJoin">_handleRightOuterJoin</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Parser.html#_handleSelect">_handleSelect</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Parser.html#_handleWhere">_handleWhere</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Parser.html#_injectSubqueries">_injectSubqueries</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Parser.html#_split">_split</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Parser.html#_stripComments">_stripComments</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Parser.html#parse">parse</a></span></li><li class="nav-heading"><span class="nav-item-type type-class">C</span><span class="nav-item-name"><a href="Select.html">Select</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#._extractBindingName">_extractBindingName</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#.init">init</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#.parse">parse</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#_conditions">_conditions</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#_isEntirelyDigits">_isEntirelyDigits</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#_isEntirelyDigitsNoZeros">_isEntirelyDigitsNoZeros</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#_isPlaceholder">_isPlaceholder</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#_spliceChildData">_spliceChildData</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#_spliceSiblingData">_spliceSiblingData</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#bind">bind</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#column">column</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#columns">columns</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#crossJoin">crossJoin</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#escape">escape</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#escapeLike">escapeLike</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#escapeQuoteless">escapeQuoteless</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#fetch">fetch</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#fetchFirst">fetchFirst</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#fetchGrouped">fetchGrouped</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#fetchHash">fetchHash</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#fetchIndexed">fetchIndexed</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#fetchList">fetchList</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#fetchValue">fetchValue</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#foundRows">foundRows</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#from">from</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#fullJoin">fullJoin</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#fullOuterJoin">fullOuterJoin</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#getClone">getClone</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#getFoundRowsQuery">getFoundRowsQuery</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#getFoundRowsSql">getFoundRowsSql</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#groupBy">groupBy</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#having">having</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#innerJoin">innerJoin</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#join">join</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#leftJoin">leftJoin</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#leftOuterJoin">leftOuterJoin</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#limit">limit</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#normalized">normalized</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#offset">offset</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#option">option</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#orderBy">orderBy</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#orHaving">orHaving</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#orWhere">orWhere</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#page">page</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#parse">parse</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#reset">reset</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#rightJoin">rightJoin</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#rightOuterJoin">rightOuterJoin</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#sortField">sortField</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#table">table</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#tables">tables</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#toBoundSql">toBoundSql</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#toString">toString</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#unbind">unbind</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#unjoin">unjoin</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#where">where</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#whereBetween">whereBetween</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#withChildData">withChildData</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Select.html#withSiblingData">withSiblingData</a></span></li><li class="nav-heading"><span class="nav-item-type type-class">C</span><span class="nav-item-name"><a href="Ssh.html">Ssh</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Ssh.html#end">end</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Ssh.html#tunnelTo">tunnelTo</a></span></li>
+</nav>
+
+<div id="main">
+    
+    <h1 class="page-title">Db/Db.js</h1>
+    
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>const forOwn = require('../forOwnDefined/forOwnDefined.js');
+const mysql = require('mysql2');
+const Ssh = require('../Ssh/Ssh.js');
+const chunk = require('lodash/chunk');
+const { isPlainObject } = require('is-plain-object');
+const decorateError = require('../decorateError/decorateError.js');
+
+/**
+ * Simple database class for mysql
+ */
+class Db {
+	/**
+	 * Specify connection details for MySQL and optionally SSH
+	 * @param {Object} [config]  MySQL connection details such as host, login, password, encoding, database
+	 * @see https://github.com/mysqljs/mysql#connection-options
+	 * @param {Object} [sshConfig]  SSH connection details including host, port, user, privateKey
+	 * @see https://github.com/mscdex/ssh2#client-methods
+	 */
+	constructor(config = {}, sshConfig = null) {
+		const env = process.env;
+		/**
+		 * The config used for this instance
+		 * @type {Object}
+		 */
+		this.config = {
+			...config,
+			host: config.host || env.DB_HOST || env.RDS_HOSTNAME || '127.0.0.1',
+			user: config.user || env.DB_USER || env.RDS_USERNAME || 'root',
+			password: config.password || env.DB_PASSWORD || env.RDS_PASSWORD || '',
+			database:
+				config.database || env.DB_DATABASE || env.RDS_DATABASE || undefined,
+			port: config.port || env.DB_PORT || env.RDS_PORT || 3306,
+			charset: config.charset || env.DB_CHARSET || env.RDS_CHARSET || 'utf8mb4',
+		};
+		if (sshConfig) {
+			/**
+			 * The Ssh instance for tunnelling
+			 * @type {Ssh}
+			 */
+			this.ssh = new Ssh(sshConfig);
+		}
+		Db.instances.push(this);
+	}
+
+	/**
+	 * Create a new QuickDb instance or return the last used one.
+	 * Specify connection details for MySQL and optionally SSH
+	 * @param {Object} [config]  MySQL connection details such as host, login, password, encoding, database
+	 * @see https://github.com/mysqljs/mysql#connection-options
+	 * @param {Object} [sshConfig]  SSH connection details including host, port, user, privateKey
+	 * @see https://github.com/mscdex/ssh2#client-methods
+	 * @return {Db}
+	 */
+	static factory(config = {}, sshConfig = null) {
+		if (Db.instances.length === 0) {
+			return new Db(config, sshConfig);
+		}
+		return Db.instances[Db.instances.length - 1];
+	}
+
+	/**
+	 * Make a new connection to MySQL
+	 */
+	async connect() {
+		if (this.ssh) {
+			await this.ssh.tunnelTo(this);
+		}
+		/**
+		 * The mysql2 library connection object
+		 * @type {Object}
+		 */
+		this.connection = mysql.createConnection(this.config);
+		return new Promise((resolve, reject) => {
+			this.connection.connect(error => {
+				if (error) {
+					decorateError(error);
+					reject(error);
+				} else {
+					resolve();
+				}
+			});
+		});
+	}
+
+	/**
+	 * Make a new connection to MySQL if not already connected
+	 */
+	async connectOnce() {
+		if (!this.connection) {
+			await this.connect();
+		}
+	}
+
+	/**
+	 * Close this connection to the database
+	 * @return {Promise}  Resolves when connection has been closed
+	 */
+	end() {
+		return new Promise((resolve, reject) => {
+			if (this.connection) {
+				const idx = Db.instances.indexOf(this);
+				if (idx > -1) {
+					Db.instances.splice(idx, 1);
+				}
+				this.connection.end(error => {
+					if (this.ssh) {
+						this.ssh.end();
+					}
+					if (error) {
+						decorateError(error);
+						reject(error);
+					} else {
+						resolve();
+					}
+				});
+			} else {
+				if (this.ssh) {
+					this.ssh.end();
+				}
+				resolve();
+			}
+		});
+	}
+
+	/**
+	 * Destroy the connection to the database
+	 * @return {Db}
+	 */
+	destroy() {
+		if (this.ssh) {
+			this.ssh.end();
+		}
+		if (this.connection &amp;&amp; this.connection.destroy) {
+			const idx = Db.instances.indexOf(this);
+			if (idx > -1) {
+				Db.instances.splice(idx, 1);
+			}
+			this.connection.destroy();
+		}
+		return this;
+	}
+
+	/**
+	 * Close all connections to the database
+	 * @return {Promise}  Resolves when all connections have been closed
+	 */
+	static endAll() {
+		return Promise.all(Db.instances.map(db => db.end()));
+	}
+
+	/**
+	 * Destroy all connections to the database
+	 * @return {Db}
+	 */
+	static destroyAll() {
+		Db.instances.forEach(db => db.destroy());
+		return Db;
+	}
+
+	/**
+	 * Run a statement of any type
+	 * @param {String|Object} sql  The sql to run
+	 * @param {*} ...bindVars  Values to bind to the sql placeholders
+	 * @returns {Promise&lt;Object>}
+	 * @property {String} query  The final SQL that was executed
+	 * @property {Array} results  The result rows
+	 * @property {Object[]} fields  Info about the selected fields
+	 */
+	async query(sql, ...bindVars) {
+		await this.connectOnce();
+		const options = this.bindArgs(sql, bindVars);
+		return new Promise((resolve, reject) => {
+			const query = this.connection.query(options, (error, results, fields) => {
+				if (error) {
+					decorateError(error, options);
+					reject(error);
+				} else {
+					resolve({ query, results, fields });
+				}
+			});
+		});
+	}
+
+	/**
+	 * Run multiple statements separated by semicolon
+	 * @param {String|Object} sql  The sql to run
+	 * @param {*} ...bindVars Values to bind to the sql placeholders
+	 * @returns {Promise&lt;Object>}
+	 * @property {String} query  The final SQL that was executed
+	 * @property {Array} results  One element for every statement in the query
+	 * @property {Object[]} fields  Info about the selected fields
+	 */
+	async multiQuery(sql, ...bindVars) {
+		await this.connectOnce();
+		const options = this.bindArgs(sql, bindVars);
+		options.multipleStatements = true;
+		return this.query(options);
+	}
+
+	/**
+	 * Return result rows for the given SELECT statement
+	 * @param {String|Object} sql  The SQL to run
+	 * @param {*} ...bindVars The values to bind to the each question mark or named binding
+	 * @return {Promise&lt;Object>}
+	 * @property {String} query  The final SQL that was executed
+	 * @property {Array} results  The result rows
+	 * @property {Object[]} fields  Info about the selected fields
+	 */
+	async select(sql, ...bindVars) {
+		await this.connectOnce();
+		const options = this.bindArgs(sql, bindVars);
+		return new Promise((resolve, reject) => {
+			const query = this.connection.query(options, (error, results, fields) => {
+				if (error) {
+					decorateError(error, options);
+					reject(error);
+				} else {
+					resolve({ query, results, fields });
+				}
+			});
+		});
+	}
+
+	/**
+	 * Return result array as col1 => col2 pairs for the given SELECT statement
+	 * @param {String|Object} sql  The SQL to run
+	 * @param {*} ...bindVars The values to bind to the each question mark or named binding
+	 * @return {Promise&lt;Object>}
+	 * @property {String} query  The final SQL that was executed
+	 * @property {Object} results  The result object with key-value pairs
+	 * @property {Object[]} fields  Info about the selected fields
+	 */
+	async selectHash(sql, ...bindVars) {
+		await this.connectOnce();
+		const options = this.bindArgs(sql, bindVars);
+		return new Promise((resolve, reject) => {
+			const query = this.connection.query(options, (error, results, fields) => {
+				if (error) {
+					decorateError(error, options);
+					reject(error);
+				} else {
+					const key = fields[0].name;
+					const val = fields[1].name;
+					const hash = {};
+					results.forEach(result => {
+						hash[result[key]] = result[val];
+					});
+					resolve({
+						query,
+						results: hash,
+						fields,
+					});
+				}
+			});
+		});
+	}
+
+	/**
+	 * Return result array as col1 for the given SELECT statement
+	 * @param {String|Object} sql  The SQL to run
+	 * @param {*} ...bindVars The values to bind to the each question mark or named binding
+	 * @return {Promise&lt;Object>}
+	 * @property {String} query  The final SQL that was executed
+	 * @property {Array} results  The result list
+	 * @property {Object[]} fields  Info about the selected fields
+	 */
+	async selectList(sql, ...bindVars) {
+		await this.connectOnce();
+		const options = this.bindArgs(sql, bindVars);
+		return new Promise((resolve, reject) => {
+			const query = this.connection.query(options, (error, results, fields) => {
+				if (error) {
+					decorateError(error, options);
+					reject(error);
+				} else {
+					const name = fields[0].name;
+					const list = results.map(result => result[name]);
+					resolve({
+						query,
+						results: list,
+						fields,
+					});
+				}
+			});
+		});
+	}
+
+	/**
+	 * Return records all grouped by one of the column's values
+	 * @param {String} groupField  The name of the field to group by
+	 * @param {String|Object} sql  The SQL to run
+	 * @param {*} ...bindVars The values to bind to the each question mark or named binding
+	 * @return {Promise&lt;Object>}
+	 * @property {String} query  The final SQL that was executed
+	 * @property {Object} results  Result rows grouped by groupField
+	 * @property {Object[]} fields  Info about the selected fields
+	 */
+	async selectGrouped(groupField, sql, ...bindVars) {
+		await this.connectOnce();
+		const options = this.bindArgs(sql, bindVars);
+		return new Promise((resolve, reject) => {
+			const query = this.connection.query(options, (error, results, fields) => {
+				if (error) {
+					decorateError(error, options);
+					reject(error);
+				} else {
+					const groups = {};
+					results.forEach(result => {
+						if (!groups[result[groupField]]) {
+							groups[result[groupField]] = [];
+						}
+						groups[result[groupField]].push(result);
+					});
+					resolve({
+						query,
+						results: groups,
+						fields,
+					});
+				}
+			});
+		});
+	}
+
+	/**
+	 * Return records all indexed by one of the column's values
+	 * @param {String} indexField  The name of the field to index by
+	 * @param {String|Object} sql  The SQL to run
+	 * @param {*} ...bindVars The values to bind to the each question mark or named binding
+	 * @return {Promise&lt;Object>}
+	 * @property {String} query  The final SQL that was executed
+	 * @property {Object} results  The results indexed by indexField
+	 * @property {Object[]} fields  Info about the selected fields
+	 */
+	async selectIndexed(indexField, sql, ...bindVars) {
+		await this.connectOnce();
+		const options = this.bindArgs(sql, bindVars);
+		return new Promise((resolve, reject) => {
+			const query = this.connection.query(options, (error, results, fields) => {
+				if (error) {
+					decorateError(error, options);
+					reject(error);
+				} else {
+					const hash = {};
+					results.forEach(result => {
+						hash[result[indexField]] = result;
+					});
+					resolve({
+						query,
+						results: hash,
+						fields,
+					});
+				}
+			});
+		});
+	}
+
+	/**
+	 * Return first result row for the given SELECT statement
+	 * @param {String|Object} sql  The SQL to run
+	 * @param {*} ...bindVars The values to bind to the each question mark or named binding
+	 * @return {Promise&lt;Object>}
+	 * @property {String} query  The final SQL that was executed
+	 * @property {Object|undefined} results  The result row or undefined
+	 * @property {Object[]} fields  Info about the selected fields
+	 */
+	async selectFirst(sql, ...bindVars) {
+		await this.connectOnce();
+		const options = this.bindArgs(sql, bindVars);
+		return new Promise((resolve, reject) => {
+			const query = this.connection.query(options, (error, results, fields) => {
+				if (error) {
+					decorateError(error, options);
+					reject(error);
+				} else {
+					resolve({
+						query,
+						results: results[0],
+						fields,
+					});
+				}
+			});
+		});
+	}
+
+	/**
+	 * Return first column value for the first result row for the given SELECT statement
+	 * @param {String|Object} sql  The SQL to run
+	 * @param {*} ...bindVars The values to bind to the each question mark or named binding
+	 * @return {Promise&lt;Object>}
+	 * @property {String} query  The final SQL that was executed
+	 * @property {*} results  The value returned in the first field of the first row
+	 * @property {Object[]} fields  Info about the selected fields
+	 */
+	async selectValue(sql, ...bindVars) {
+		await this.connectOnce();
+		const options = this.bindArgs(sql, bindVars);
+		return new Promise((resolve, reject) => {
+			const query = this.connection.query(options, (error, results, fields) => {
+				if (error) {
+					decorateError(error, options);
+					reject(error);
+				} else {
+					let value = undefined;
+					if (results.length > 0) {
+						const name = fields[0].name;
+						value = results[0][name];
+					}
+					resolve({
+						query,
+						results: value,
+						fields,
+					});
+				}
+			});
+		});
+	}
+
+	/**
+	 * Run the given SELECT statement wrapped in a SELECT EXISTS query
+	 * @param {String|Object} sql  The SQL to run
+	 * @param {*} ...bindVars The values to bind to the each question mark or named binding
+	 * @return {Promise&lt;Object>}
+	 * @property {String} query  The final SQL that was executed
+	 * @property {Boolean} results  True if any records match query
+	 * @property {Object[]} fields  Info about the selected fields
+	 */
+	selectExists(sql, ...bindVars) {
+		const options = this.bindArgs(sql, bindVars);
+		options.sql = `SELECT EXISTS (${options.sql}) AS does_it_exist`;
+		return this.selectValue(options).then(
+			({ query, results, fields }) => {
+				return {
+					query,
+					results: Boolean(results),
+					fields,
+				};
+			},
+			err => err
+		);
+	}
+
+	/**
+	 * Run the given INSERT statement
+	 * @param {String|Object} sql  The SQL to run
+	 * @param {*} ...bindVars The values to bind to the each question mark or named binding
+	 * @return {Promise&lt;Object>}
+	 * @property {String} query  The final SQL that was executed
+	 * @property {Number} insertId  The id of the last inserted record
+	 */
+	async insert(sql, ...bindVars) {
+		await this.connectOnce();
+		const options = this.bindArgs(sql, bindVars);
+		return new Promise((resolve, reject) => {
+			const query = this.connection.query(options, (error, results) => {
+				if (error) {
+					decorateError(error, options);
+					reject(error);
+				} else {
+					resolve({
+						query,
+						insertId: results.insertId,
+						affectedRows: results.affectedRows,
+						changedRows: results.changedRows,
+					});
+				}
+			});
+		});
+	}
+
+	/**
+	 * Run the given UPDATE statement
+	 * @param {String|Object} sql  The SQL to run
+	 * @param {*} ...bindVars The values to bind to the each question mark or named binding
+	 * @return {Promise&lt;Object>}
+	 * @property {String} query  The final SQL that was executed
+	 * @property {Number} affectedRows  The number of rows matching the WHERE criteria
+	 * @property {Number} changedRows  The number of rows affected by the statement
+	 */
+	async update(sql, ...bindVars) {
+		await this.connectOnce();
+		const options = this.bindArgs(sql, bindVars);
+		return new Promise((resolve, reject) => {
+			const query = this.connection.query(options, (error, results) => {
+				if (error) {
+					decorateError(error, options);
+					reject(error);
+				} else {
+					resolve({
+						query,
+						affectedRows: results.affectedRows,
+						changedRows: results.changedRows,
+					});
+				}
+			});
+		});
+	}
+
+	/**
+	 * Run the given DELETE statement
+	 * @param {String|Object} sql  The SQL to run
+	 * @param {*} ...bindVars The values to bind to the each question mark or named binding
+	 * @return {Promise&lt;Object>}
+	 * @property {String} query  The final SQL that was executed
+	 * @property {Number} changedRows  The number of rows affected by the statement
+	 */
+	delete(sql, ...bindVars) {
+		return this.update(sql, ...bindVars);
+	}
+
+	/**
+	 * Build a SELECT statement and return result rows
+	 * @param {String} table  The name of the table
+	 * @param {Array} fields  An array of field names to select
+	 * @param {Object} criteria  Params to construct the WHERE clause - see Db#buildWhere
+	 * @param {String} extra  Additional raw SQL such as GROUP BY, ORDER BY, or LIMIT
+	 * @return {Promise&lt;Object>}
+	 * @property {String} query  The final SQL that was executed
+	 * @property {Array} results  The result rows
+	 * @property {Object[]} fields  Info about the selected fields
+	 * @see Db#buildWhere
+	 */
+	selectFrom(table, fields = [], criteria = {}, extra = '') {
+		if (!Array.isArray(fields)) {
+			throw new Error('Db.selectFrom fields must be an array');
+		}
+		if (typeof criteria !== 'object') {
+			throw new Error('Db.selectFrom criteria must be an array');
+		}
+		this.connectOnce();
+		const escFields = fields.map(field => this.quote(field));
+		const escFieldsString = fields.length ? escFields.join(', ') : '*';
+		const escTable = this.quote(table);
+		const escWhere = this.buildWheres(criteria);
+		const sql =
+			`SELECT ${escFieldsString} FROM ${escTable} WHERE ${escWhere} ${extra}`.trim();
+		return this.select(sql);
+	}
+
+	/**
+	 * Select the record with the given UUID
+	 * @param {String} table  The name of the table from which to select
+	 * @param {String} column  The name of the column from which to select
+	 * @param {String} value  The value of the record for that column
+	 * @return {Promise&lt;Object>}
+	 * @property {String} query  The final SQL that was executed
+	 * @property {Object|undefined} results  The result row or undefined
+	 * @property {Object[]} fields  Info about the selected fields
+	 */
+	selectByKey(table, column, value) {
+		const escTable = this.quote(table);
+		const escColumn = this.quote(column);
+		return this.selectFirst(
+			`SELECT * FROM ${escTable} WHERE ${escColumn} = ?`,
+			value
+		);
+	}
+
+	/**
+	 * Select the record with the given id
+	 * @param {String} table  The name of the table from which to select
+	 * @param {String} id  The value of the id column
+	 * @return {Promise&lt;Object>}
+	 * @property {String} query  The final SQL that was executed
+	 * @property {Object|undefined} results  The result row or undefined
+	 * @property {Object[]} fields  Info about the selected fields
+	 */
+	selectId(table, id) {
+		return this.selectByKey(table, 'id', id);
+	}
+
+	/**
+	 * Select the record with the given UUID
+	 * @param {String} table  The name of the table from which to select
+	 * @param {String} uuid  The value of the uuid column
+	 * @return {Promise&lt;Object>}
+	 * @property {String} query  The final SQL that was executed
+	 * @property {Object|undefined} results  The result row or undefined
+	 * @property {Object[]} fields  Info about the selected fields
+	 */
+	selectUuid(table, uuid) {
+		return this.selectByKey(table, 'uuid', uuid);
+	}
+
+	/**
+	 * Find a record or add a new one
+	 * @param {String} table  The name of the table from which to select
+	 * @param {Object} criteria  Criteria by which to find the row
+	 * @param {Object} newValues  The values to use to insert if the record doesn't exist
+	 * @return {Promise&lt;Object>}
+	 * @property {String} query  The final SQL that was executed
+	 * @property {Object|undefined} results  The result row or undefined
+	 * @property {Object[]} fields  Info about the selected fields
+	 * @property {Number} insertId  The id of the last inserted record
+	 */
+	selectOrCreate(table, criteria, newValues) {
+		return this.selectFrom(table, ['*'], criteria).then(
+			({ query, results, fields }) => {
+				if (results.length > 0) {
+					return {
+						query,
+						results: results[0],
+						fields,
+					};
+				} else {
+					return this.insertInto(table, newValues);
+				}
+			},
+			err => err
+		);
+	}
+
+	/**
+	 * Build an INSERT statement and run it
+	 * @param {String} table  The name of the table
+	 * @param {Object} insert  column-value pairs to insert
+	 * @return {Promise&lt;Object>}
+	 * @property {String} query  The final SQL that was executed
+	 * @property {Number} insertId  The id of the last inserted record
+	 */
+	insertInto(table, insert) {
+		// build insert expression
+		const sets = [];
+		forOwn(insert, (value, field) => {
+			sets.push(this.quote(field) + '=' + mysql.escape(value));
+		});
+		if (sets.length === 0) {
+			throw new Error('Db.insertInto requires a non-empty insert Object');
+		}
+		const escTable = this.quote(table);
+		const setSql = sets.join(', ');
+		const insertSql = `INSERT INTO ${escTable} SET ${setSql}`;
+		return this.insert(insertSql);
+	}
+
+	/**
+	 * Run an "INSERT INTO ... ON DUPLICATE KEY UPDATE" query where
+	 * if a key conflicts, update the given fields
+	 * @param {String} table  The name of the table
+	 * @param {Object} insert  An array with column => value pairs for insertion
+	 * @param {Object} update  An array with column => value pairs for update
+	 * @return {Promise&lt;Object>}
+	 * @property {Number} insertId  The id of the last inserted or updated record
+	 * @property {Number} affectedRows  The number of rows matching the WHERE criteria
+	 * @property {Number} changedRows  The number of rows affected by the statement
+	 */
+	async insertIntoOnDuplicateKeyUpdate(table, insert, update) {
+		// build insert expression
+		const sets = [];
+		forOwn(insert, (value, field) => {
+			sets.push(this.quote(field) + '=' + mysql.escape(value));
+		});
+		if (sets.length === 0) {
+			throw new Error(
+				'Db.insertIntoOnDuplicateKeyUpdate requires a non-empty insert Object'
+			);
+		}
+		// build update expression
+		const updates = [];
+		forOwn(update, (value, field) => {
+			updates.push(this.quote(field) + '=' + mysql.escape(value));
+		});
+		if (updates.length === 0) {
+			throw new Error(
+				'Db.insertIntoOnDuplicateKeyUpdate requires a non-empty update Object'
+			);
+		}
+		table = this.quote(table);
+		const setSql = sets.join(', ');
+		const updateSql = updates.join(', ');
+		// combine
+		const sql = `INSERT INTO ${table} SET ${setSql} ON DUPLICATE KEY UPDATE ${updateSql}`;
+		// run
+		await this.connectOnce();
+		return new Promise((resolve, reject) => {
+			const query = this.connection.query(sql, (error, results) => {
+				if (error) {
+					decorateError(error, { sql });
+					reject(error);
+				} else {
+					resolve({
+						query,
+						insertId: results.insertId,
+						affectedRows: results.affectedRows,
+						changedRows: results.changedRows,
+					});
+				}
+			});
+		});
+	}
+
+	/**
+	 * Build an INSERT statement and run it
+	 * @param {String} table  The name of the table
+	 * @param {Array} inserts  list of column-value pairs to insert
+	 * @return {Promise&lt;Object>}
+	 * @property {String} query  The final SQL that was executed
+	 * @property {Number} insertId  The id of the last inserted record
+	 */
+	insertExtended(table, inserts) {
+		// build insert expression
+		if (!Array.isArray(inserts) || inserts.length === 0) {
+			throw new Error('Db.insertExtended inserts must be a non-empty array');
+		}
+		const fields = [];
+		forOwn(inserts[0], (value, field) => {
+			fields.push(this.quote(field));
+		});
+		const batches = [];
+		inserts.forEach(insert => {
+			const values = [];
+			forOwn(insert, value => {
+				values.push(this.escape(value));
+			});
+			batches.push('(' + values.join(', ') + ')');
+		});
+		const escTable = this.quote(table);
+		const fieldsSql = fields.join(', ');
+		const batchesSql = batches.join(', ');
+		const insertSql = `INSERT INTO ${escTable} (${fieldsSql}) VALUES ${batchesSql}`;
+		return this.insert(insertSql);
+	}
+
+	/**
+	 * Build an UPDATE statement and run it
+	 * @param {String} table  The name of the table
+	 * @param {Object} set  An array of column => value pairs to update
+	 * @param {Object} where  Params to construct the WHERE clause - see Db#buildWhere
+	 * @return {Promise&lt;Object>}
+	 * @property {String} query  The final SQL that was executed
+	 * @property {Number} affectedRows  The number of rows matching the WHERE criteria
+	 * @property {Number} changedRows  The number of rows affected by the statement
+	 * @see Db#buildWhere
+	 */
+	updateTable(table, set, where = {}) {
+		const sets = [];
+		forOwn(set, (value, field) => {
+			sets.push(this.quote(field) + '=' + this.escape(value));
+		});
+		if (sets.length === 0) {
+			throw new Error('Db.updateTable requires a non-empty set Object');
+		}
+		const escTable = this.quote(table);
+		const setSql = sets.join(', ');
+		const escWhere = this.buildWheres(where);
+		const sql = `UPDATE ${escTable} SET ${setSql} WHERE ${escWhere}`;
+		return this.update(sql, set);
+	}
+
+	/**
+	 * Construct a delete query and run
+	 * @param {String} table  The name of the table from which to delete
+	 * @param {Object} where  WHERE conditions on which to delete - see Db#buildWhere
+	 * @param {Number} limit  Limit deletion to this many records
+	 * @return {Promise&lt;Object>}
+	 * @property {String} query  The final SQL that was executed
+	 * @property {Number} affectedRows  The number of rows matching the WHERE criteria
+	 * @property {Number} changedRows  The number of rows affected by the statement
+	 * @see Db#buildWhere
+	 */
+	async deleteFrom(table, where, limit = null) {
+		await this.connectOnce();
+		const escTable = this.quote(table);
+		const escWhere = this.buildWheres(where);
+		let sql = `DELETE FROM ${escTable} WHERE ${escWhere}`;
+		if (limit > 0) {
+			sql += ` LIMIT ${limit}`;
+		}
+		return this.delete(sql);
+	}
+
+	/**
+	 * Construct INSERT statements suitable for a backup
+	 * @param {String} table  The name of the table from which to fetch records
+	 * @param {Object} where  WHERE conditions on which to fetch records - see Db#buildWhere
+	 * @see Db#buildWhere
+	 * @param {Object} options  Additional options
+	 * @property {Number} limit  Limit export to this many records
+	 * @property {Number} chunkSize  If > 0, restrict INSERT STATEMENTS to a maximum of this many records
+	 * @property {Boolean} discardIds  If true, columns selected as "id" will have a NULL value
+	 * @property {Boolean} disableForeignKeyChecks  If true, add statements to disable and re-enable foreign key checks
+	 * @property {Boolean} lockTables  If true, add statements to lock and unlock tables
+	 * @return {Promise&lt;Object>}
+	 * @property {String} results  The exported SQL
+	 * @property {String} query  The SQL that was executed to fetch records
+	 * @property {Object[]} fields  Details on the fields fetched
+	 * @property {Number} affectedRows  The number of rows matching the WHERE criteria
+	 * @property {Number} chunks  The number of chunks of rows
+	 */
+	async exportAsSql(
+		table,
+		where = {},
+		{
+			limit = 0,
+			chunkSize = 250,
+			discardIds = false,
+			truncateTable = false,
+			disableForeignKeyChecks = false,
+			lockTables = false,
+		} = {}
+	) {
+		await this.connectOnce();
+		// get results
+		const addl = limit > 0 ? `LIMIT ${limit}` : '';
+		const {
+			results: rows,
+			fields,
+			query,
+		} = await this.selectFrom(table, [], where, addl);
+		if (rows.length === 0) {
+			return {
+				results: '',
+				fields,
+				query,
+				affectedRows: 0,
+				chunks: 0,
+			};
+		}
+		// build column names
+		const quotedFields = [];
+		for (const field of fields) {
+			quotedFields.push(this.quote(field.name));
+		}
+		const fieldsString = quotedFields.join(',');
+		const quotedTable = this.quote(table);
+		// start building lines of sql to insert
+		const lines = [];
+		if (disableForeignKeyChecks) {
+			lines.push(
+				'/*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;'
+			);
+		}
+		if (lockTables) {
+			lines.push(`LOCK TABLES ${quotedTable} WRITE;`);
+		}
+		if (truncateTable) {
+			lines.push(`TRUNCATE TABLE ${quotedTable};`);
+		}
+		// take rows in chunks so a single statement isn't too long
+		const chunks = chunk(rows, chunkSize);
+		for (const chunkOfRows of chunks) {
+			const rowStrings = [];
+			for (const values of chunkOfRows) {
+				const escapedValues = [];
+				// collect the value for each field
+				for (const field of fields) {
+					if (discardIds &amp;&amp; field.name === 'id') {
+						escapedValues.push('NULL');
+					} else {
+						escapedValues.push(this.escape(values[field.name]));
+					}
+				}
+				const valuesString = escapedValues.join(',');
+				rowStrings.push(`(${valuesString})`);
+			}
+			const insertsString = rowStrings.join(',\n');
+			lines.push(
+				`INSERT INTO ${quotedTable} (${fieldsString}) VALUES\n${insertsString};`
+			);
+		}
+		if (lockTables) {
+			lines.push('UNLOCK TABLES;');
+		}
+		if (disableForeignKeyChecks) {
+			lines.push('/*!40014 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS */;');
+		}
+		return {
+			results: lines.join('\n'),
+			fields,
+			query,
+			affectedRows: rows.length,
+			chunks: chunks.length,
+		};
+	}
+
+	/**
+	 * Build a where clause from an object of field-value pairs.
+	 * Used internally by #selectFrom, #updateTable, #deleteFrom
+	 * @see Db#buildWhere
+	 * @param {Object} wheres  An object with field-value pairs (field may be field space operator)
+	 * @return {String}
+	 * @example
+	 * db.buildWheres({
+	 *     'start_date BETWEEN: ['2012-01-01','2013-01-01'],
+	 *     'start_date >': '2013-01-01',
+	 *     'start_date !=': '2013-01-01',
+	 *     'start_date': null, // `start_date` IS NULL
+	 *     'start_date !=': null, // `start_date` IS NOT NULL
+	 *     id: [1,2,3], // `id` IN (1,2,3)
+	 *     'id !=': [1,2,3], // `id` NOT IN (1,2,3)
+	 *     'id IN': [1,2,3], // `id` IN (1,2,3)
+	 *     'id NOT IN': [1,2,3], // `id` NOT IN (1,2,3)
+	 * })
+	 */
+	buildWheres(wheres) {
+		const clauses = [];
+		for (const field in wheres) {
+			if (!wheres.hasOwnProperty(field)) {
+				continue;
+			}
+			clauses.push(this.buildWhere(field, wheres[field]));
+		}
+		return clauses.length ? clauses.join(' AND ') : '1';
+	}
+
+	/**
+	 * Construct where clause element from the given field and value
+	 * @param {String} field  The field or field space operator
+	 * @param {*} value  The value to bind
+	 * @return {String}
+	 * @example
+	 * db.buildWhere('start_date BETWEEN', ['2012-01-01','2013-01-01']);
+	 * db.buildWhere('start_date >', '2013-01-01');
+	 * db.buildWhere('start_date !=', '2013-01-01');
+	 * db.buildWhere('start_date', null); // `start_date` IS NULL
+	 * db.buildWhere('start_date !=', null); // `start_date` IS NOT NULL
+	 * db.buildWhere('id', [1,2,3]); // `id` IN (1,2,3)
+	 * db.buildWhere('id !=', [1,2,3]); // `id` NOT IN (1,2,3)
+	 * db.buildWhere('id IN', [1,2,3]); // `id` IN (1,2,3)
+	 * db.buildWhere('id NOT IN', [1,2,3]); // `id` NOT IN (1,2,3)
+	 */
+	buildWhere(field, value = undefined) {
+		if (value === undefined) {
+			return field;
+		}
+		let [name, operator] = field.split(/\s+/);
+		name = this.quote(name);
+		operator = operator ? operator.toUpperCase() : '=';
+		if (operator === 'BETWEEN') {
+			const val0 = mysql.escape(value[0]);
+			const val1 = mysql.escape(value[1]);
+			return `${name} BETWEEN ${val0} AND ${val1}`;
+		} else if (value === null) {
+			return operator === '=' ? `${name} IS NULL` : `${name} IS NOT NULL`;
+		} else if (Array.isArray(value)) {
+			const values = value.map(val => mysql.escape(val));
+			return operator === '=' || operator === 'IN'
+				? `${name} IN(${values})`
+				: `${name} NOT IN(${values})`;
+		}
+		const escVal = mysql.escape(value);
+		return `${name} ${operator} ${escVal}`;
+	}
+
+	/**
+	 * Bind an arguments to a query
+	 * @param {String|Object} sql  The base SQL query
+	 * @param {*} args  A value, an object with key/value paris, or an array of values to bind
+	 * @return {Object}
+	 * @property {String} sql  The final SQL with bound values replaced
+	 * @example
+	 * db.select('SELECT * FROM users WHERE id = ?', 100);
+	 * db.bindArgs('SELECT * FROM users WHERE id = ?', 100); // SELECT * FROM users WHERE id = '100'
+	 * db.select('SELECT * FROM users WHERE id = :id', { id: 100 });
+	 * db.bindArgs('SELECT * FROM users WHERE id = :id', { id: 100 }); // SELECT * FROM users WHERE id = '100'
+	 */
+	bindArgs(sql, args) {
+		const options = typeof sql == 'object' ? sql : { sql };
+		if (options.sql === '' || typeof options.sql !== 'string') {
+			throw new Error('SQL must be a non-empty empty string');
+		}
+		if (!Array.isArray(args)) {
+			args = [];
+		}
+		if (Array.isArray(sql.values)) {
+			args = sql.values.concat(args);
+		} else if (sql.values) {
+			args = [sql.values].concat(args);
+		}
+		options.values = undefined;
+		options.bound = {};
+		args.forEach((arg, i) => {
+			if (
+				arg instanceof Boolean ||
+				arg instanceof Number ||
+				arg instanceof String
+			) {
+				arg = arg.valueOf();
+			}
+			if (isPlainObject(arg)) {
+				options.sql = options.sql.replace(/:([\w_]+)/g, ($0, $1) => {
+					if (arg.hasOwnProperty($1) &amp;&amp; arg[$1] !== undefined) {
+						options.bound[$1] = arg[$1];
+						return mysql.escape(arg[$1]);
+					}
+					return $0;
+				});
+			} else {
+				options.bound[String(i)] = arg;
+				options.sql = options.sql.replace('?', mysql.escape(arg));
+			}
+		});
+		return options;
+	}
+
+	/**
+	 * Escape a value for use in a raw query and surround with apostrophes
+	 * @param {*} value  The value to escape
+	 * @return {String}
+	 */
+	escape(value) {
+		return mysql.escape(value);
+	}
+
+	/**
+	 * Escape a value for use in a raw query without apostrophes
+	 * @param {String|Number|Boolean|null} value  The value to escape
+	 * @return {String}
+	 */
+	escapeQuoteless(value) {
+		let escaped = mysql.escape(value);
+		if (escaped.slice(0, 1) === "'" &amp;&amp; escaped.slice(-1) === "'") {
+			escaped = escaped.slice(1, -1);
+		}
+		return escaped;
+	}
+
+	/**
+	 * Get the proper escaping for a LIKE or NOT LIKE clause
+	 * @param {String} infix  One of ?% or %?% or %? or ?
+	 * @param {String} value  The value to search for
+	 * @return {String}
+	 */
+	escapeLike(infix, value) {
+		// use ?% for LIKE 'value%'
+		// use %?% for LIKE '%value%'
+		// use %? for LIKE '%value'
+		// use ? for LIKE 'value'
+		const quoteless = this.escapeQuoteless(value);
+		switch (infix) {
+			case '?':
+			default:
+				return `'${quoteless}'`;
+			case '?%':
+				return `'${quoteless}%'`;
+			case '%?':
+				return `'%${quoteless}'`;
+			case '%?%':
+				return `'%${quoteless}%'`;
+		}
+	}
+
+	/**
+	 * Escape an identifier such as a table or column
+	 * @param identifier
+	 * @return {*}
+	 */
+	quote(identifier) {
+		if (/[`()]/.test(identifier)) {
+			return identifier;
+		}
+		let quoted = mysql.escapeId(identifier);
+		if (/`\*`$/.test(quoted)) {
+			quoted = quoted.slice(0, -3) + '*';
+		}
+		return quoted;
+	}
+
+	/**
+	 * Return an object with query methods to run on template literals
+	 * (backticked strings) where interpolated strings are automatically escaped
+	 * @example
+	 * const { select, selectValue } = Db.factory().tpl();
+	 * const users = await select`SELECT * FROM users WHERE id IN(${userIds})`;
+	 * const count = await selectValue`SELECT COUNT(*) FROM users WHERE is_active = ${isActive}`;
+	 * @return {Object}  Object with query methods
+	 * @property {Function} select  Same as Db#select()
+	 * @property {Function} selectFirst  Same as Db#selectFirst()
+	 * @property {Function} selectList  Same as Db#selectList()
+	 * @property {Function} selectHash  Same as Db#selectHash()
+	 * @property {Function} selectValue  Same as Db#selectValue()
+	 * @property {Function} insert  Same as Db#insert()
+	 * @property {Function} update  Same as Db#update()
+	 * @property {Function} delete  Same as Db#delete()
+	 */
+	tpl() {
+		function toSql(templateData, variables) {
+			let s = templateData[0];
+			variables.forEach((variable, i) => {
+				s += mysql.escape(variable);
+				s += templateData[i + 1];
+			});
+			return s;
+		}
+		const supported = [
+			'select',
+			'selectFirst',
+			'selectList',
+			'selectHash',
+			'selectValue',
+			'insert',
+			'update',
+			'delete',
+		];
+		const functions = {};
+		supported.forEach(name => {
+			functions[name] = (templateData, ...variables) => {
+				return this[name](toSql(templateData, variables));
+			};
+		});
+		return functions;
+	}
+}
+
+/**
+ * A list of all the Db instances that have been created
+ * @type {Array}
+ */
+Db.instances = [];
+
+module.exports = Db;
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<br class="clear">
+
+<footer>
+    Generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.6.7</a> on Tue Oct 12 2021 17:25:24 GMT-0600 (Mountain Daylight Time) using the Minami theme.
+</footer>
+
+<script>prettyPrint();</script>
+<script src="scripts/linenumber.js"></script>
+</body>
+</html>
