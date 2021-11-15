@@ -594,15 +594,79 @@ class Db {
 	 */
 	selectOrCreate(table, criteria, newValues) {
 		return this.selectFrom(table, ['*'], criteria).then(
-			({ query, results, fields }) => {
+			async ({ query, results, fields }) => {
 				if (results.length > 0) {
 					return {
 						query,
 						results: results[0],
+						insertId: null,
+						affectedRows: 0,
+						changedRows: 0,
+						fields,
+					};
+				}
+				try {
+					const { query, insertId, affectedRows, changedRows } =
+						await this.insertInto(table, newValues);
+					if (!insertId) {
+						throw new Error(`Unknown error getting insertId from ${query}`);
+					}
+					const { results: newRow, fields } = await this.selectFrom(
+						table,
+						['*'],
+						criteria
+					);
+					if (!newRow) {
+						throw new Error(
+							`Error fetching newly created record from ${table}`
+						);
+					}
+					return {
+						query,
+						results: newRow,
+						insertId,
+						affectedRows,
+						changedRows,
+						fields,
+					};
+				} catch (e) {
+					return Promise.reject(e);
+				}
+			},
+			err => err
+		);
+	}
+
+	/**
+	 * Find a record's id or add a new one
+	 * @param {String} table  The name of the table from which to select
+	 * @param {Object} criteria  Criteria by which to find the row
+	 * @param {Object} newValues  The values to use to insert if the record doesn't exist
+	 * @return {Promise<Object>}
+	 * @property {String} query  The final SQL that was executed
+	 * @property {Object} results  The result row or new values
+	 * @property {Object[]} fields  Info about the selected fields
+	 * @property {Number} insertId  The id of the last inserted record
+	 */
+	selectOrCreateId(table, criteria, newValues) {
+		this.selectFrom(table, ['id'], criteria).then(
+			async ({ query, results, fields }) => {
+				if (results.length > 0) {
+					return {
+						query,
+						results: results[0].id,
 						fields,
 					};
 				} else {
-					return this.insertInto(table, newValues);
+					return this.insertInto(table, newValues).then(
+						({ query, insertId, fields }) => {
+							return {
+								query,
+								results: insertId,
+								fields,
+							};
+						}
+					);
 				}
 			},
 			err => err

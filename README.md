@@ -1,8 +1,8 @@
 # sharp-db
 
-[![Build Status](https://travis-ci.com/kensnyder/sharp-db.svg?branch=master&v=1.5.3)](https://travis-ci.org/kensnyder/sharp-db)
-[![Code Coverage](https://codecov.io/gh/kensnyder/sharp-db/branch/master/graph/badge.svg?v=1.5.3)](https://codecov.io/gh/kensnyder/sharp-db)
-[![ISC License](https://img.shields.io/github/license/kensnyder/sharp-db.svg?v=1.5.3)](https://opensource.org/licenses/ISC)
+[![Build Status](https://travis-ci.com/kensnyder/sharp-db.svg?branch=master&v=1.6.0)](https://travis-ci.org/kensnyder/sharp-db)
+[![Code Coverage](https://codecov.io/gh/kensnyder/sharp-db/branch/master/graph/badge.svg?v=1.6.0)](https://codecov.io/gh/kensnyder/sharp-db)
+[![ISC License](https://img.shields.io/github/license/kensnyder/sharp-db.svg?v=1.6.0)](https://opensource.org/licenses/ISC)
 
 Classes for running SQL and building select queries for MySQL in Node
 
@@ -279,11 +279,11 @@ const newHit = {
 	url: 'https://example.com',
 }
 
-const urlRecord = await db.selectOrCreate('urls', { url: newHit.url }));
+const { results } = await db.selectOrCreate('urls', { url: newHit.url }));
 
 await db.insert('hits', {
     date: newHit.date,
-	url_id: urlRecord.id,
+	url_id: results.id,
 })
 ```
 
