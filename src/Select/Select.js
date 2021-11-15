@@ -5,6 +5,7 @@ const cloneDeep = require('lodash/cloneDeep');
 const escapeRegExp = require('lodash/escapeRegExp');
 const forOwn = require('../forOwnDefined/forOwnDefined.js');
 const substrCount = require('quickly-count-substrings');
+const decoratePromise = require('../decoratePromise/decoratePromise.js');
 
 /**
  * Build a select query
@@ -315,7 +316,7 @@ class Select {
 		const queries1 = await this._spliceChildData(results);
 		const queries2 = await this._spliceSiblingData(results);
 		const queries = [initialSql, ...queries1, ...queries2];
-		return { queries, results, fields };
+		return decoratePromise(Promise.resolve({ queries, results, fields }));
 	}
 
 	/**
@@ -328,7 +329,9 @@ class Select {
 		this.limit(1);
 		const { queries, results, fields } = await this.fetch(options);
 		this.limit(oldLimit);
-		return { queries, results: results[0], fields };
+		return decoratePromise(
+			Promise.resolve({ queries, results: results[0], fields })
+		);
 	}
 
 	/**
@@ -368,7 +371,9 @@ class Select {
 		const { queries, results, fields } = await this.fetch(options);
 		const indexed = {};
 		results.forEach(r => (indexed[r[byField]] = r));
-		return { queries, results: indexed, fields };
+		return decoratePromise(
+			Promise.resolve({ queries, results: indexed, fields })
+		);
 	}
 
 	/**
@@ -390,7 +395,9 @@ class Select {
 			}
 			grouped[r[byField]].push(r);
 		});
-		return { query, results: grouped, fields };
+		return decoratePromise(
+			Promise.resolve({ query, results: grouped, fields })
+		);
 	}
 
 	/**

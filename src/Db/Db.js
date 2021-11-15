@@ -4,6 +4,7 @@ const Ssh = require('../Ssh/Ssh.js');
 const chunk = require('lodash/chunk');
 const { isPlainObject } = require('is-plain-object');
 const decorateError = require('../decorateError/decorateError.js');
+const decoratePromise = require('../decoratePromise/decoratePromise.js');
 
 /**
  * Simple database class for mysql
@@ -70,16 +71,18 @@ class Db {
 		 * @type {Object}
 		 */
 		this.connection = mysql.createConnection(this.config);
-		return new Promise((resolve, reject) => {
-			this.connection.connect(error => {
-				if (error) {
-					decorateError(error);
-					reject(error);
-				} else {
-					resolve();
-				}
-			});
-		});
+		return decoratePromise(
+			new Promise((resolve, reject) => {
+				this.connection.connect(error => {
+					if (error) {
+						decorateError(error);
+						reject(error);
+					} else {
+						resolve();
+					}
+				});
+			})
+		);
 	}
 
 	/**
@@ -96,30 +99,32 @@ class Db {
 	 * @return {Promise}  Resolves when connection has been closed
 	 */
 	end() {
-		return new Promise((resolve, reject) => {
-			if (this.connection) {
-				const idx = Db.instances.indexOf(this);
-				if (idx > -1) {
-					Db.instances.splice(idx, 1);
-				}
-				this.connection.end(error => {
+		return decoratePromise(
+			new Promise((resolve, reject) => {
+				if (this.connection) {
+					const idx = Db.instances.indexOf(this);
+					if (idx > -1) {
+						Db.instances.splice(idx, 1);
+					}
+					this.connection.end(error => {
+						if (this.ssh) {
+							this.ssh.end();
+						}
+						if (error) {
+							decorateError(error);
+							reject(error);
+						} else {
+							resolve();
+						}
+					});
+				} else {
 					if (this.ssh) {
 						this.ssh.end();
 					}
-					if (error) {
-						decorateError(error);
-						reject(error);
-					} else {
-						resolve();
-					}
-				});
-			} else {
-				if (this.ssh) {
-					this.ssh.end();
+					resolve();
 				}
-				resolve();
-			}
-		});
+			})
+		);
 	}
 
 	/**
@@ -145,7 +150,7 @@ class Db {
 	 * @return {Promise}  Resolves when all connections have been closed
 	 */
 	static endAll() {
-		return Promise.all(Db.instances.map(db => db.end()));
+		return decoratePromise(Promise.all(Db.instances.map(db => db.end())));
 	}
 
 	/**
@@ -169,16 +174,21 @@ class Db {
 	async query(sql, ...bindVars) {
 		await this.connectOnce();
 		const options = this.bindArgs(sql, bindVars);
-		return new Promise((resolve, reject) => {
-			const query = this.connection.query(options, (error, results, fields) => {
-				if (error) {
-					decorateError(error, options);
-					reject(error);
-				} else {
-					resolve({ query, results, fields });
-				}
-			});
-		});
+		return decoratePromise(
+			new Promise((resolve, reject) => {
+				const query = this.connection.query(
+					options,
+					(error, results, fields) => {
+						if (error) {
+							decorateError(error, options);
+							reject(error);
+						} else {
+							resolve({ query, results, fields });
+						}
+					}
+				);
+			})
+		);
 	}
 
 	/**
@@ -209,16 +219,21 @@ class Db {
 	async select(sql, ...bindVars) {
 		await this.connectOnce();
 		const options = this.bindArgs(sql, bindVars);
-		return new Promise((resolve, reject) => {
-			const query = this.connection.query(options, (error, results, fields) => {
-				if (error) {
-					decorateError(error, options);
-					reject(error);
-				} else {
-					resolve({ query, results, fields });
-				}
-			});
-		});
+		return decoratePromise(
+			new Promise((resolve, reject) => {
+				const query = this.connection.query(
+					options,
+					(error, results, fields) => {
+						if (error) {
+							decorateError(error, options);
+							reject(error);
+						} else {
+							resolve({ query, results, fields });
+						}
+					}
+				);
+			})
+		);
 	}
 
 	/**
@@ -233,26 +248,31 @@ class Db {
 	async selectHash(sql, ...bindVars) {
 		await this.connectOnce();
 		const options = this.bindArgs(sql, bindVars);
-		return new Promise((resolve, reject) => {
-			const query = this.connection.query(options, (error, results, fields) => {
-				if (error) {
-					decorateError(error, options);
-					reject(error);
-				} else {
-					const key = fields[0].name;
-					const val = fields[1].name;
-					const hash = {};
-					results.forEach(result => {
-						hash[result[key]] = result[val];
-					});
-					resolve({
-						query,
-						results: hash,
-						fields,
-					});
-				}
-			});
-		});
+		return decoratePromise(
+			new Promise((resolve, reject) => {
+				const query = this.connection.query(
+					options,
+					(error, results, fields) => {
+						if (error) {
+							decorateError(error, options);
+							reject(error);
+						} else {
+							const key = fields[0].name;
+							const val = fields[1].name;
+							const hash = {};
+							results.forEach(result => {
+								hash[result[key]] = result[val];
+							});
+							resolve({
+								query,
+								results: hash,
+								fields,
+							});
+						}
+					}
+				);
+			})
+		);
 	}
 
 	/**
@@ -267,22 +287,27 @@ class Db {
 	async selectList(sql, ...bindVars) {
 		await this.connectOnce();
 		const options = this.bindArgs(sql, bindVars);
-		return new Promise((resolve, reject) => {
-			const query = this.connection.query(options, (error, results, fields) => {
-				if (error) {
-					decorateError(error, options);
-					reject(error);
-				} else {
-					const name = fields[0].name;
-					const list = results.map(result => result[name]);
-					resolve({
-						query,
-						results: list,
-						fields,
-					});
-				}
-			});
-		});
+		return decoratePromise(
+			new Promise((resolve, reject) => {
+				const query = this.connection.query(
+					options,
+					(error, results, fields) => {
+						if (error) {
+							decorateError(error, options);
+							reject(error);
+						} else {
+							const name = fields[0].name;
+							const list = results.map(result => result[name]);
+							resolve({
+								query,
+								results: list,
+								fields,
+							});
+						}
+					}
+				);
+			})
+		);
 	}
 
 	/**
@@ -298,27 +323,32 @@ class Db {
 	async selectGrouped(groupField, sql, ...bindVars) {
 		await this.connectOnce();
 		const options = this.bindArgs(sql, bindVars);
-		return new Promise((resolve, reject) => {
-			const query = this.connection.query(options, (error, results, fields) => {
-				if (error) {
-					decorateError(error, options);
-					reject(error);
-				} else {
-					const groups = {};
-					results.forEach(result => {
-						if (!groups[result[groupField]]) {
-							groups[result[groupField]] = [];
+		return decoratePromise(
+			new Promise((resolve, reject) => {
+				const query = this.connection.query(
+					options,
+					(error, results, fields) => {
+						if (error) {
+							decorateError(error, options);
+							reject(error);
+						} else {
+							const groups = {};
+							results.forEach(result => {
+								if (!groups[result[groupField]]) {
+									groups[result[groupField]] = [];
+								}
+								groups[result[groupField]].push(result);
+							});
+							resolve({
+								query,
+								results: groups,
+								fields,
+							});
 						}
-						groups[result[groupField]].push(result);
-					});
-					resolve({
-						query,
-						results: groups,
-						fields,
-					});
-				}
-			});
-		});
+					}
+				);
+			})
+		);
 	}
 
 	/**
@@ -334,24 +364,29 @@ class Db {
 	async selectIndexed(indexField, sql, ...bindVars) {
 		await this.connectOnce();
 		const options = this.bindArgs(sql, bindVars);
-		return new Promise((resolve, reject) => {
-			const query = this.connection.query(options, (error, results, fields) => {
-				if (error) {
-					decorateError(error, options);
-					reject(error);
-				} else {
-					const hash = {};
-					results.forEach(result => {
-						hash[result[indexField]] = result;
-					});
-					resolve({
-						query,
-						results: hash,
-						fields,
-					});
-				}
-			});
-		});
+		return decoratePromise(
+			new Promise((resolve, reject) => {
+				const query = this.connection.query(
+					options,
+					(error, results, fields) => {
+						if (error) {
+							decorateError(error, options);
+							reject(error);
+						} else {
+							const hash = {};
+							results.forEach(result => {
+								hash[result[indexField]] = result;
+							});
+							resolve({
+								query,
+								results: hash,
+								fields,
+							});
+						}
+					}
+				);
+			})
+		);
 	}
 
 	/**
@@ -366,20 +401,25 @@ class Db {
 	async selectFirst(sql, ...bindVars) {
 		await this.connectOnce();
 		const options = this.bindArgs(sql, bindVars);
-		return new Promise((resolve, reject) => {
-			const query = this.connection.query(options, (error, results, fields) => {
-				if (error) {
-					decorateError(error, options);
-					reject(error);
-				} else {
-					resolve({
-						query,
-						results: results[0],
-						fields,
-					});
-				}
-			});
-		});
+		return decoratePromise(
+			new Promise((resolve, reject) => {
+				const query = this.connection.query(
+					options,
+					(error, results, fields) => {
+						if (error) {
+							decorateError(error, options);
+							reject(error);
+						} else {
+							resolve({
+								query,
+								results: results[0],
+								fields,
+							});
+						}
+					}
+				);
+			})
+		);
 	}
 
 	/**
@@ -394,25 +434,30 @@ class Db {
 	async selectValue(sql, ...bindVars) {
 		await this.connectOnce();
 		const options = this.bindArgs(sql, bindVars);
-		return new Promise((resolve, reject) => {
-			const query = this.connection.query(options, (error, results, fields) => {
-				if (error) {
-					decorateError(error, options);
-					reject(error);
-				} else {
-					let value = undefined;
-					if (results.length > 0) {
-						const name = fields[0].name;
-						value = results[0][name];
+		return decoratePromise(
+			new Promise((resolve, reject) => {
+				const query = this.connection.query(
+					options,
+					(error, results, fields) => {
+						if (error) {
+							decorateError(error, options);
+							reject(error);
+						} else {
+							let value = undefined;
+							if (results.length > 0) {
+								const name = fields[0].name;
+								value = results[0][name];
+							}
+							resolve({
+								query,
+								results: value,
+								fields,
+							});
+						}
 					}
-					resolve({
-						query,
-						results: value,
-						fields,
-					});
-				}
-			});
-		});
+				);
+			})
+		);
 	}
 
 	/**
@@ -427,15 +472,17 @@ class Db {
 	selectExists(sql, ...bindVars) {
 		const options = this.bindArgs(sql, bindVars);
 		options.sql = `SELECT EXISTS (${options.sql}) AS does_it_exist`;
-		return this.selectValue(options).then(
-			({ query, results, fields }) => {
-				return {
-					query,
-					results: Boolean(results),
-					fields,
-				};
-			},
-			err => err
+		return decoratePromise(
+			this.selectValue(options).then(
+				({ query, results, fields }) => {
+					return {
+						query,
+						results: Boolean(results),
+						fields,
+					};
+				},
+				err => err
+			)
 		);
 	}
 
@@ -450,21 +497,23 @@ class Db {
 	async insert(sql, ...bindVars) {
 		await this.connectOnce();
 		const options = this.bindArgs(sql, bindVars);
-		return new Promise((resolve, reject) => {
-			const query = this.connection.query(options, (error, results) => {
-				if (error) {
-					decorateError(error, options);
-					reject(error);
-				} else {
-					resolve({
-						query,
-						insertId: results.insertId,
-						affectedRows: results.affectedRows,
-						changedRows: results.changedRows,
-					});
-				}
-			});
-		});
+		return decoratePromise(
+			new Promise((resolve, reject) => {
+				const query = this.connection.query(options, (error, results) => {
+					if (error) {
+						decorateError(error, options);
+						reject(error);
+					} else {
+						resolve({
+							query,
+							insertId: results.insertId,
+							affectedRows: results.affectedRows,
+							changedRows: results.changedRows,
+						});
+					}
+				});
+			})
+		);
 	}
 
 	/**
@@ -479,20 +528,22 @@ class Db {
 	async update(sql, ...bindVars) {
 		await this.connectOnce();
 		const options = this.bindArgs(sql, bindVars);
-		return new Promise((resolve, reject) => {
-			const query = this.connection.query(options, (error, results) => {
-				if (error) {
-					decorateError(error, options);
-					reject(error);
-				} else {
-					resolve({
-						query,
-						affectedRows: results.affectedRows,
-						changedRows: results.changedRows,
-					});
-				}
-			});
-		});
+		return decoratePromise(
+			new Promise((resolve, reject) => {
+				const query = this.connection.query(options, (error, results) => {
+					if (error) {
+						decorateError(error, options);
+						reject(error);
+					} else {
+						resolve({
+							query,
+							affectedRows: results.affectedRows,
+							changedRows: results.changedRows,
+						});
+					}
+				});
+			})
+		);
 	}
 
 	/**
@@ -588,24 +639,87 @@ class Db {
 	 * @param {Object} newValues  The values to use to insert if the record doesn't exist
 	 * @return {Promise<Object>}
 	 * @property {String} query  The final SQL that was executed
-	 * @property {Object|undefined} results  The result row or undefined
+	 * @property {Object} results  The result row or new values
 	 * @property {Object[]} fields  Info about the selected fields
 	 * @property {Number} insertId  The id of the last inserted record
 	 */
 	selectOrCreate(table, criteria, newValues) {
-		return this.selectFrom(table, ['*'], criteria).then(
-			({ query, results, fields }) => {
-				if (results.length > 0) {
-					return {
-						query,
-						results: results[0],
-						fields,
-					};
-				} else {
-					return this.insertInto(table, newValues);
-				}
-			},
-			err => err
+		return decoratePromise(
+			this.selectFrom(table, ['*'], criteria).then(
+				async ({ query, results, fields }) => {
+					if (results.length > 0) {
+						return {
+							query,
+							results: results[0],
+							insertId: null,
+							affectedRows: 0,
+							changedRows: 0,
+							fields,
+						};
+					} else {
+						try {
+							const { query, insertId, affectedRows, changedRows } =
+								await this.insertInto(table, newValues);
+							if (!insertId) {
+								throw new Error(`Unknown error getting insertId from ${query}`);
+							}
+							const { results: newRow, fields } = await this.selectFrom(
+								table,
+								['*'],
+								criteria
+							);
+							if (!newRow) {
+								throw new Error(
+									`Error fetching newly created record from ${table}`
+								);
+							}
+							return {
+								query,
+								results: newRow,
+								insertId,
+								affectedRows,
+								changedRows,
+								fields,
+							};
+						} catch (e) {
+							return Promise.reject(e);
+						}
+					}
+				},
+				err => err
+			)
+		);
+	}
+
+	/**
+	 * Find a record's id or add a new one
+	 * @param {String} table  The name of the table from which to select
+	 * @param {Object} criteria  Criteria by which to find the row
+	 * @param {Object} newValues  The values to use to insert if the record doesn't exist
+	 * @return {Promise<Object>}
+	 * @property {String} query  The final SQL that was executed
+	 * @property {Object} results  The result row or new values
+	 * @property {Object[]} fields  Info about the selected fields
+	 * @property {Number} insertId  The id of the last inserted record
+	 */
+	selectOrCreateId(table, criteria, newValues) {
+		return decoratePromise(
+			this.selectFrom(table, ['id'], criteria).then(
+				async ({ query, results, fields }) => {
+					if (results.length > 0) {
+						return {
+							query,
+							results: results[0].id,
+							fields,
+						};
+					} else {
+						return this.insertInto(table, newValues).then(
+							({ insertId }) => insertId
+						);
+					}
+				},
+				err => err
+			)
 		);
 	}
 
@@ -671,21 +785,23 @@ class Db {
 		const sql = `INSERT INTO ${table} SET ${setSql} ON DUPLICATE KEY UPDATE ${updateSql}`;
 		// run
 		await this.connectOnce();
-		return new Promise((resolve, reject) => {
-			const query = this.connection.query(sql, (error, results) => {
-				if (error) {
-					decorateError(error, { sql });
-					reject(error);
-				} else {
-					resolve({
-						query,
-						insertId: results.insertId,
-						affectedRows: results.affectedRows,
-						changedRows: results.changedRows,
-					});
-				}
-			});
-		});
+		return decoratePromise(
+			new Promise((resolve, reject) => {
+				const query = this.connection.query(sql, (error, results) => {
+					if (error) {
+						decorateError(error, { sql });
+						reject(error);
+					} else {
+						resolve({
+							query,
+							insertId: results.insertId,
+							affectedRows: results.affectedRows,
+							changedRows: results.changedRows,
+						});
+					}
+				});
+			})
+		);
 	}
 
 	/**
@@ -863,13 +979,15 @@ class Db {
 		if (disableForeignKeyChecks) {
 			lines.push('/*!40014 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS */;');
 		}
-		return {
-			results: lines.join('\n'),
-			fields,
-			query,
-			affectedRows: rows.length,
-			chunks: chunks.length,
-		};
+		return decoratePromise(
+			Promise.resolve({
+				results: lines.join('\n'),
+				fields,
+				query,
+				affectedRows: rows.length,
+				chunks: chunks.length,
+			})
+		);
 	}
 
 	/**

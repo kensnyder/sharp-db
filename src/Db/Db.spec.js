@@ -10,6 +10,7 @@ describe('Db', () => {
 	beforeEach(() => {
 		Db.instances.length = 0;
 		db = Db.factory();
+		mysqlMock.reset();
 	});
 	describe('class', () => {
 		it('should be instantiable', () => {
@@ -218,6 +219,14 @@ describe('Db', () => {
 			);
 			const { results } = await db.select('SELECT * FROM foo');
 			expect(results).toEqual([]);
+		});
+		xit('should decorate Promises', () => {
+			function tryIt() {
+				const sql = 'SELECT * FROM users';
+				const promise = db.select(sql);
+				console.dir(promise.results);
+			}
+			expect(tryIt).toThrow(/Did you forget "await"\?/);
 		});
 	});
 	describe('selectHash()', () => {
@@ -546,6 +555,9 @@ describe('Db', () => {
 		it('should insert a new record', async () => {
 			mysqlMock.pushResponse({ results: [] });
 			mysqlMock.pushResponse({ results: { insertId: 5 } });
+			mysqlMock.pushResponse({
+				results: [{ id: 5, sso_ref: 'A123456', name: 'Jane Doe' }],
+			});
 			const { insertId } = await db.selectOrCreate(
 				'users',
 				{ sso_ref: 'A123456' },
@@ -591,22 +603,19 @@ describe('Db', () => {
 		it('should return last insert and affected', async () => {
 			const mockResults = { insertId: 5, affectedRows: 1 };
 			mysqlMock.pushResponse({ results: mockResults });
-			const {
-				query,
-				insertId,
-				affectedRows,
-			} = await db.insertIntoOnDuplicateKeyUpdate(
-				'users',
-				{
-					sso_ref: 'A123456',
-					name: 'Jane Doe',
-					created_at: '2020-02-02',
-				},
-				{
-					name: 'Jane Doe',
-					modified_at: '2020-02-02',
-				}
-			);
+			const { query, insertId, affectedRows } =
+				await db.insertIntoOnDuplicateKeyUpdate(
+					'users',
+					{
+						sso_ref: 'A123456',
+						name: 'Jane Doe',
+						created_at: '2020-02-02',
+					},
+					{
+						name: 'Jane Doe',
+						modified_at: '2020-02-02',
+					}
+				);
 			expect(insertId).toBe(5);
 			expect(affectedRows).toBe(1);
 			expect(query).toBe(
@@ -824,9 +833,8 @@ describe('Db', () => {
 		it('should template Strings', async () => {
 			const { select } = db.tpl();
 			const email = 'john@example.com';
-			const {
-				query,
-			} = await select`SELECT * FROM users WHERE email = ${email}`;
+			const { query } =
+				await select`SELECT * FROM users WHERE email = ${email}`;
 			expect(query).toBe(
 				"SELECT * FROM users WHERE email = 'john@example.com'"
 			);
@@ -834,9 +842,8 @@ describe('Db', () => {
 		it('should template Booleans', async () => {
 			const { select } = db.tpl();
 			const isActive = true;
-			const {
-				query,
-			} = await select`SELECT * FROM users WHERE is_active = ${isActive}`;
+			const { query } =
+				await select`SELECT * FROM users WHERE is_active = ${isActive}`;
 			expect(query).toBe('SELECT * FROM users WHERE is_active = true');
 		});
 		it('should template Arrays', async () => {
@@ -862,9 +869,8 @@ describe('Db', () => {
 			mysqlMock.pushResponse({ results: mockResults, fields: mockFields });
 			const { selectList } = db.tpl();
 			const id = 4;
-			const {
-				query,
-			} = await selectList`SELECT email FROM users WHERE id > ${id}`;
+			const { query } =
+				await selectList`SELECT email FROM users WHERE id > ${id}`;
 			expect(query).toBe('SELECT email FROM users WHERE id > 4');
 		});
 		it('should allow selectHash', async () => {
@@ -876,9 +882,8 @@ describe('Db', () => {
 			mysqlMock.pushResponse({ results: mockResults, fields: mockFields });
 			const { selectHash } = db.tpl();
 			const id = 4;
-			const {
-				query,
-			} = await selectHash`SELECT id, name FROM users WHERE id > ${id}`;
+			const { query } =
+				await selectHash`SELECT id, name FROM users WHERE id > ${id}`;
 			expect(query).toBe('SELECT id, name FROM users WHERE id > 4');
 		});
 		it('should allow selectValue', async () => {
@@ -887,18 +892,16 @@ describe('Db', () => {
 			mysqlMock.pushResponse({ results: mockResults, fields: mockFields });
 			const { selectValue } = db.tpl();
 			const id = 4;
-			const {
-				query,
-			} = await selectValue`SELECT email FROM users WHERE id = ${id}`;
+			const { query } =
+				await selectValue`SELECT email FROM users WHERE id = ${id}`;
 			expect(query).toBe('SELECT email FROM users WHERE id = 4');
 		});
 		it('should allow insert', async () => {
 			const { insert } = db.tpl();
 			const name = 'Jane Doe';
 			const email = 'jane@example.com';
-			const {
-				query,
-			} = await insert`INSERT INTO users VALUES (${name}, ${email})`;
+			const { query } =
+				await insert`INSERT INTO users VALUES (${name}, ${email})`;
 			expect(query).toBe(
 				"INSERT INTO users VALUES ('Jane Doe', 'jane@example.com')"
 			);
@@ -907,9 +910,8 @@ describe('Db', () => {
 			const { update } = db.tpl();
 			const name = 'Jane Doe';
 			const email = 'jane@example.com';
-			const {
-				query,
-			} = await update`UPDATE users SET name = ${name} WHERE email = ${email}`;
+			const { query } =
+				await update`UPDATE users SET name = ${name} WHERE email = ${email}`;
 			expect(query).toBe(
 				"UPDATE users SET name = 'Jane Doe' WHERE email = 'jane@example.com'"
 			);
@@ -976,13 +978,8 @@ describe('Db', () => {
 			];
 			const mockFields = [{ name: 'id' }, { name: 'fname' }];
 			mysqlMock.pushResponse({ results: mockResults, fields: mockFields });
-			const {
-				results,
-				fields,
-				query,
-				affectedRows,
-				chunks,
-			} = await db.exportAsSql('users');
+			const { results, fields, query, affectedRows, chunks } =
+				await db.exportAsSql('users');
 			expect(results).toBe(
 				`
 INSERT INTO \`users\` (\`id\`,\`fname\`) VALUES
@@ -999,13 +996,8 @@ INSERT INTO \`users\` (\`id\`,\`fname\`) VALUES
 			const mockResults = [];
 			const mockFields = [{ name: 'id' }, { name: 'fname' }];
 			mysqlMock.pushResponse({ results: mockResults, fields: mockFields });
-			const {
-				results,
-				fields,
-				query,
-				affectedRows,
-				chunks,
-			} = await db.exportAsSql('users');
+			const { results, fields, query, affectedRows, chunks } =
+				await db.exportAsSql('users');
 			expect(results).toBe('');
 			expect(fields).toEqual(mockFields);
 			expect(query).toBe('SELECT * FROM `users` WHERE 1');
