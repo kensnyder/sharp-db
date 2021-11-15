@@ -265,6 +265,28 @@ results = {
 }
 ```
 
+#### selectOrCreate(table, criteria[, newValues])
+
+Select a record or create a new record. Good when normalizing data that is frequently referenced.
+
+For example, say I have a table `hits` with a column `url_id` and a table `urls` with columns `id` and `url`.
+
+I want to add a new hit record with a given URL. You might write this:
+
+```js
+const newHit = {
+    date: '2021-10-15 17:43:24',
+	url: 'https://example.com',
+}
+
+const urlRecord = await db.selectOrCreate('urls', { url: newHit.url }));
+
+await db.insert('hits', {
+    date: newHit.date,
+	url_id: urlRecord.id,
+})
+```
+
 ### Useful Query Options
 
 SQL can actually be an Object with options.

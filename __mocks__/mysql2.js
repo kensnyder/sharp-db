@@ -58,6 +58,11 @@ const mysql2 = {
 		nextEnds.push(resp);
 		return this;
 	},
+	reset() {
+		nextResponses.length = 0;
+		nextEnds.length = 0;
+		nextConnects.length = 0;
+	},
 };
 
 module.exports = mysql2;
