@@ -10,6 +10,7 @@ describe('Db', () => {
 	beforeEach(() => {
 		Db.instances.length = 0;
 		db = Db.factory();
+		mysqlMock.reset();
 	});
 	describe('class', () => {
 		it('should be instantiable', () => {
@@ -544,8 +545,14 @@ describe('Db', () => {
 			expect(results).toEqual(mockResults[0]);
 		});
 		it('should insert a new record', async () => {
+			const newRow = {
+				sso_ref: 'A123456',
+				name: 'Jane Doe',
+				id: 5,
+			};
 			mysqlMock.pushResponse({ results: [] });
 			mysqlMock.pushResponse({ results: { insertId: 5 } });
+			mysqlMock.pushResponse({ results: [newRow] });
 			const { insertId } = await db.selectOrCreate(
 				'users',
 				{ sso_ref: 'A123456' },
@@ -553,18 +560,102 @@ describe('Db', () => {
 			);
 			expect(insertId).toBe(5);
 		});
-		it('should error mysql errors', async () => {
-			mysqlMock.pushResponse({ error: new Error('foo') });
+		it('should throw error if insertId is falsy', async () => {
+			let error;
 			try {
-				return await db.selectOrCreate(
+				mysqlMock.pushResponse({ results: [] });
+				mysqlMock.pushResponse({ results: {} });
+				await db.selectOrCreate(
 					'users',
 					{ sso_ref: 'A123456' },
 					{ sso_ref: 'A123456', name: 'Jane Doe' }
 				);
 			} catch (e) {
-				expect(e).toBeInstanceOf(Error);
-				expect(e.message).toBeInstanceOf('Foo');
+				error = e;
 			}
+			expect(error).toBeInstanceOf(Error);
+		});
+		it('should return new row', async () => {
+			const newRow = {
+				sso_ref: 'A123456',
+				name: 'Jane Doe',
+				id: 5,
+			};
+			mysqlMock.pushResponse({ results: [] });
+			mysqlMock.pushResponse({ results: { insertId: 5 } });
+			mysqlMock.pushResponse({ results: [newRow] });
+			const { results, insertId } = await db.selectOrCreate(
+				'users',
+				{ sso_ref: 'A123456' },
+				{ sso_ref: 'A123456', name: 'Jane Doe' }
+			);
+			expect(insertId).toBe(5);
+			expect(results).toEqual(newRow);
+		});
+		it('should throw error if new row is falsy', async () => {
+			let error;
+			try {
+				mysqlMock.pushResponse({ results: [] });
+				mysqlMock.pushResponse({ results: { insertId: 5 } });
+				mysqlMock.pushResponse({
+					results: false,
+				});
+				await db.selectOrCreate(
+					'users',
+					{ sso_ref: 'A123456' },
+					{ sso_ref: 'A123456', name: 'Jane Doe' }
+				);
+			} catch (e) {
+				error = e;
+			}
+			expect(error).toBeInstanceOf(Error);
+		});
+		it('should throw error if initial select fails', async () => {
+			let error;
+			try {
+				await db.selectOrCreate('users', 'invalid', {
+					sso_ref: 'A123456',
+					name: 'Jane Doe',
+				});
+			} catch (e) {
+				error = e;
+			}
+			expect(error).toBeInstanceOf(Error);
+		});
+	});
+	describe('selectOrCreateId()', () => {
+		it('should return the id of the new record', async () => {
+			mysqlMock.pushResponse({ results: [] });
+			mysqlMock.pushResponse({ results: { insertId: 5 } });
+			const { results } = await db.selectOrCreateId(
+				'users',
+				{ sso_ref: 'A123456' },
+				{ sso_ref: 'A123456', name: 'Jane Doe' }
+			);
+			expect(results).toBe(5);
+		});
+		it('should return the record if existing', async () => {
+			mysqlMock.pushResponse({ results: [{ a: 1, b: 2, id: 5 }] });
+			const { results } = await db.selectOrCreateId(
+				'users',
+				{ a: 1 },
+				{ a: 1, b: 2 }
+			);
+			expect(results).toBe(5);
+		});
+		it('should throw error if initial select fails', async () => {
+			let error;
+			try {
+				mysqlMock.pushResponse({ results: null });
+				await db.selectOrCreateId(
+					'users',
+					{ sso_ref: 'A123456' },
+					{ sso_ref: 'A123456', name: 'Jane Doe' }
+				);
+			} catch (e) {
+				error = e;
+			}
+			expect(error).toBeInstanceOf(Error);
 		});
 	});
 	describe('insertInto()', () => {
@@ -591,22 +682,19 @@ describe('Db', () => {
 		it('should return last insert and affected', async () => {
 			const mockResults = { insertId: 5, affectedRows: 1 };
 			mysqlMock.pushResponse({ results: mockResults });
-			const {
-				query,
-				insertId,
-				affectedRows,
-			} = await db.insertIntoOnDuplicateKeyUpdate(
-				'users',
-				{
-					sso_ref: 'A123456',
-					name: 'Jane Doe',
-					created_at: '2020-02-02',
-				},
-				{
-					name: 'Jane Doe',
-					modified_at: '2020-02-02',
-				}
-			);
+			const { query, insertId, affectedRows } =
+				await db.insertIntoOnDuplicateKeyUpdate(
+					'users',
+					{
+						sso_ref: 'A123456',
+						name: 'Jane Doe',
+						created_at: '2020-02-02',
+					},
+					{
+						name: 'Jane Doe',
+						modified_at: '2020-02-02',
+					}
+				);
 			expect(insertId).toBe(5);
 			expect(affectedRows).toBe(1);
 			expect(query).toBe(
@@ -824,9 +912,8 @@ describe('Db', () => {
 		it('should template Strings', async () => {
 			const { select } = db.tpl();
 			const email = 'john@example.com';
-			const {
-				query,
-			} = await select`SELECT * FROM users WHERE email = ${email}`;
+			const { query } =
+				await select`SELECT * FROM users WHERE email = ${email}`;
 			expect(query).toBe(
 				"SELECT * FROM users WHERE email = 'john@example.com'"
 			);
@@ -834,9 +921,8 @@ describe('Db', () => {
 		it('should template Booleans', async () => {
 			const { select } = db.tpl();
 			const isActive = true;
-			const {
-				query,
-			} = await select`SELECT * FROM users WHERE is_active = ${isActive}`;
+			const { query } =
+				await select`SELECT * FROM users WHERE is_active = ${isActive}`;
 			expect(query).toBe('SELECT * FROM users WHERE is_active = true');
 		});
 		it('should template Arrays', async () => {
@@ -844,6 +930,11 @@ describe('Db', () => {
 			const ids = [1, 3];
 			const { query } = await select`SELECT * FROM users WHERE id IN(${ids})`;
 			expect(query).toBe('SELECT * FROM users WHERE id IN(1, 3)');
+		});
+		it('should cache templating', async () => {
+			const { select: select1 } = db.tpl();
+			const { select: select2 } = db.tpl();
+			expect(select1).toBe(select2);
 		});
 	});
 	describe('tpl() functions', () => {
@@ -862,9 +953,8 @@ describe('Db', () => {
 			mysqlMock.pushResponse({ results: mockResults, fields: mockFields });
 			const { selectList } = db.tpl();
 			const id = 4;
-			const {
-				query,
-			} = await selectList`SELECT email FROM users WHERE id > ${id}`;
+			const { query } =
+				await selectList`SELECT email FROM users WHERE id > ${id}`;
 			expect(query).toBe('SELECT email FROM users WHERE id > 4');
 		});
 		it('should allow selectHash', async () => {
@@ -876,9 +966,8 @@ describe('Db', () => {
 			mysqlMock.pushResponse({ results: mockResults, fields: mockFields });
 			const { selectHash } = db.tpl();
 			const id = 4;
-			const {
-				query,
-			} = await selectHash`SELECT id, name FROM users WHERE id > ${id}`;
+			const { query } =
+				await selectHash`SELECT id, name FROM users WHERE id > ${id}`;
 			expect(query).toBe('SELECT id, name FROM users WHERE id > 4');
 		});
 		it('should allow selectValue', async () => {
@@ -887,18 +976,16 @@ describe('Db', () => {
 			mysqlMock.pushResponse({ results: mockResults, fields: mockFields });
 			const { selectValue } = db.tpl();
 			const id = 4;
-			const {
-				query,
-			} = await selectValue`SELECT email FROM users WHERE id = ${id}`;
+			const { query } =
+				await selectValue`SELECT email FROM users WHERE id = ${id}`;
 			expect(query).toBe('SELECT email FROM users WHERE id = 4');
 		});
 		it('should allow insert', async () => {
 			const { insert } = db.tpl();
 			const name = 'Jane Doe';
 			const email = 'jane@example.com';
-			const {
-				query,
-			} = await insert`INSERT INTO users VALUES (${name}, ${email})`;
+			const { query } =
+				await insert`INSERT INTO users VALUES (${name}, ${email})`;
 			expect(query).toBe(
 				"INSERT INTO users VALUES ('Jane Doe', 'jane@example.com')"
 			);
@@ -907,9 +994,8 @@ describe('Db', () => {
 			const { update } = db.tpl();
 			const name = 'Jane Doe';
 			const email = 'jane@example.com';
-			const {
-				query,
-			} = await update`UPDATE users SET name = ${name} WHERE email = ${email}`;
+			const { query } =
+				await update`UPDATE users SET name = ${name} WHERE email = ${email}`;
 			expect(query).toBe(
 				"UPDATE users SET name = 'Jane Doe' WHERE email = 'jane@example.com'"
 			);
@@ -976,13 +1062,8 @@ describe('Db', () => {
 			];
 			const mockFields = [{ name: 'id' }, { name: 'fname' }];
 			mysqlMock.pushResponse({ results: mockResults, fields: mockFields });
-			const {
-				results,
-				fields,
-				query,
-				affectedRows,
-				chunks,
-			} = await db.exportAsSql('users');
+			const { results, fields, query, affectedRows, chunks } =
+				await db.exportAsSql('users');
 			expect(results).toBe(
 				`
 INSERT INTO \`users\` (\`id\`,\`fname\`) VALUES
@@ -999,13 +1080,8 @@ INSERT INTO \`users\` (\`id\`,\`fname\`) VALUES
 			const mockResults = [];
 			const mockFields = [{ name: 'id' }, { name: 'fname' }];
 			mysqlMock.pushResponse({ results: mockResults, fields: mockFields });
-			const {
-				results,
-				fields,
-				query,
-				affectedRows,
-				chunks,
-			} = await db.exportAsSql('users');
+			const { results, fields, query, affectedRows, chunks } =
+				await db.exportAsSql('users');
 			expect(results).toBe('');
 			expect(fields).toEqual(mockFields);
 			expect(query).toBe('SELECT * FROM `users` WHERE 1');
@@ -1317,6 +1393,60 @@ INSERT INTO \`users\` (\`id\`,\`fname\`) VALUES
 		});
 		it('should avoid backticks on *', () => {
 			expect(db.quote('*')).toBe('*');
+		});
+	});
+	describe('withInstance()', () => {
+		it('should run handler', async () => {
+			const mockResults = [{ foo: 1 }, { foo: 2 }];
+			mysqlMock.pushResponse({ results: mockResults });
+			const { results } = await Db.withInstance(db => {
+				return db.select('SELECT foo FROM bar');
+			});
+			expect(results).toEqual(mockResults);
+		});
+		it('should accept mysql config', async () => {
+			const mysqlConfig = { user: 'root' };
+			const results = await Db.withInstance(mysqlConfig, db => {
+				return db;
+			});
+			expect(results).toBeInstanceOf(Db);
+			expect(results.config.user).toBe('root');
+		});
+		it('should accept ssh config', async () => {
+			const mysqlConfig = {};
+			const sshConfig = { user: 'ubuntu' };
+			const results = await Db.withInstance(mysqlConfig, sshConfig, db => {
+				return db;
+			});
+			expect(results).toBeInstanceOf(Db);
+			expect(results.ssh.config.user).toBe('ubuntu');
+		});
+		it('should call db.end()', async () => {
+			const spy = jest.fn(() => Promise.resolve(1));
+			await Db.withInstance(db => {
+				db.end = spy;
+			});
+			expect(spy).toHaveBeenCalled();
+		});
+		it('should return Error on handler failure', async () => {
+			const spy = jest.fn(() => Promise.resolve(1));
+			const res = await Db.withInstance(db => {
+				db.end = spy;
+				throw new Error('foo');
+			});
+			expect(spy).toHaveBeenCalled();
+			expect(res).toBeInstanceOf(Error);
+		});
+		it('should return Error on db.end() failure', async () => {
+			const spy = jest.fn(() => {
+				throw new Error('bar2');
+			});
+			const res = await Db.withInstance(db => {
+				db.end = spy;
+				return 17;
+			});
+			expect(spy).toHaveBeenCalled();
+			expect(res).toBeInstanceOf(Error);
 		});
 	});
 });

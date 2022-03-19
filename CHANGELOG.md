@@ -1,5 +1,15 @@
 ## Change Log
 
+### v1.7.0 on 2022-03-19
+
+- Add Db.withInstance()
+- Switch from travis to appveyor
+
+### v1.6.0 on 2021-10-12
+
+- Upgrade ssh2 to version 1.x; [see ssh2's changelog](https://github.com/mscdex/ssh2/issues/935)
+- Use jsdoc to generate documentation
+
 ### v1.5.3 on 2021-10-12
 
 - Allow limit and offset to use placeholders

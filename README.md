@@ -1,10 +1,10 @@
 # sharp-db
 
-[![Build Status](https://travis-ci.com/kensnyder/sharp-db.svg?branch=master&v=1.5.3)](https://travis-ci.org/kensnyder/sharp-db)
-[![Code Coverage](https://codecov.io/gh/kensnyder/sharp-db/branch/master/graph/badge.svg?v=1.5.3)](https://codecov.io/gh/kensnyder/sharp-db)
-[![ISC License](https://img.shields.io/github/license/kensnyder/sharp-db.svg?v=1.5.3)](https://opensource.org/licenses/ISC)
+[![Build Status](https://travis-ci.com/kensnyder/sharp-db.svg?branch=master&v=1.7.0)](https://travis-ci.org/kensnyder/sharp-db)
+[![Code Coverage](https://codecov.io/gh/kensnyder/sharp-db/branch/master/graph/badge.svg?v=1.7.0)](https://codecov.io/gh/kensnyder/sharp-db)
+[![ISC License](https://img.shields.io/github/license/kensnyder/sharp-db.svg?v=1.7.0)](https://opensource.org/licenses/ISC)
 
-Classes for running SQL and building select queries in MySQL
+Classes for running SQL and building select queries for MySQL in Node
 
 ## Installation
 
@@ -77,7 +77,23 @@ const db2 = new Db({
 const db2Again = Db.factory();
 
 // Don't forget to close the connection when done
-db1.destroy();
+db1.end();
+```
+
+#### Auto factory and end
+
+You can use `await Db.withInstance(db => /* do stuff with db */)`
+to get an instance, do something, and then close the connection.
+
+```js
+const { Db } = require('sharp-db');
+
+// read options from ENV, instantiate and call db.end() automatically
+const emailDomain = await Db.withInstance(async db => {
+    const sql = 'SELECT email FROM users WWHERE id = 5';
+    const { results: email } = await db.selectValue(sql);
+    return email.split('@').pop();
+});
 ```
 
 ### SSH Tunneling
@@ -263,6 +279,28 @@ results = {
         { id: 3, name: "Jose", org: "Finance" },
     ],
 }
+```
+
+#### selectOrCreate(table, criteria[, newValues])
+
+Select a record or create a new record. Good when normalizing data that is frequently referenced.
+
+For example, say I have a table `hits` with a column `url_id` and a table `urls` with columns `id` and `url`.
+
+I want to add a new hit record with a given URL. You might write this:
+
+```js
+const newHit = {
+    date: '2021-10-15 17:43:24',
+	url: 'https://example.com',
+}
+
+const { results } = await db.selectOrCreate('urls', { url: newHit.url }));
+
+await db.insert('hits', {
+    date: newHit.date,
+	url_id: results.id,
+})
 ```
 
 ### Useful Query Options
