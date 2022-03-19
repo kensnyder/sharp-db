@@ -611,19 +611,19 @@ class Db {
 					if (!insertId) {
 						throw new Error(`Unknown error getting insertId from ${query}`);
 					}
-					const { results: newRow, fields } = await this.selectFrom(
+					const { results: newRows, fields } = await this.selectFrom(
 						table,
 						['*'],
 						criteria
 					);
-					if (!newRow) {
+					if (!newRows || !newRows[0]) {
 						throw new Error(
 							`Error fetching newly created record from ${table}`
 						);
 					}
 					return {
 						query,
-						results: newRow,
+						results: newRows[0],
 						insertId,
 						affectedRows,
 						changedRows,
@@ -633,6 +633,7 @@ class Db {
 					return Promise.reject(e);
 				}
 			},
+			/* istanbul ignore next */
 			err => err
 		);
 	}
@@ -649,7 +650,7 @@ class Db {
 	 * @property {Number} insertId  The id of the last inserted record
 	 */
 	selectOrCreateId(table, criteria, newValues) {
-		this.selectFrom(table, ['id'], criteria).then(
+		return this.selectFrom(table, ['id'], criteria).then(
 			async ({ query, results, fields }) => {
 				if (results.length > 0) {
 					return {
@@ -669,6 +670,7 @@ class Db {
 					);
 				}
 			},
+			/* istanbul ignore next */
 			err => err
 		);
 	}
@@ -1123,7 +1125,8 @@ class Db {
 	 * Return an object with query methods to run on template literals
 	 * (backticked strings) where interpolated strings are automatically escaped
 	 * @example
-	 * const { select, selectValue } = Db.factory().tpl();
+	 * const db = Db.factory();
+	 * const { select, selectValue } = db.tpl();
 	 * const users = await select`SELECT * FROM users WHERE id IN(${userIds})`;
 	 * const count = await selectValue`SELECT COUNT(*) FROM users WHERE is_active = ${isActive}`;
 	 * @return {Object}  Object with query methods
@@ -1137,31 +1140,76 @@ class Db {
 	 * @property {Function} delete  Same as Db#delete()
 	 */
 	tpl() {
-		function toSql(templateData, variables) {
-			let s = templateData[0];
-			variables.forEach((variable, i) => {
-				s += mysql.escape(variable);
-				s += templateData[i + 1];
+		if (!this._templatized) {
+			function toSql(templateData, variables) {
+				let s = templateData[0];
+				variables.forEach((variable, i) => {
+					s += mysql.escape(variable);
+					s += templateData[i + 1];
+				});
+				return s;
+			}
+			const supported = [
+				'select',
+				'selectFirst',
+				'selectList',
+				'selectHash',
+				'selectValue',
+				'insert',
+				'update',
+				'delete',
+			];
+			const functions = {};
+			supported.forEach(name => {
+				functions[name] = (templateData, ...variables) => {
+					return this[name](toSql(templateData, variables));
+				};
 			});
-			return s;
+			this._templatized = functions;
 		}
-		const supported = [
-			'select',
-			'selectFirst',
-			'selectList',
-			'selectHash',
-			'selectValue',
-			'insert',
-			'update',
-			'delete',
-		];
-		const functions = {};
-		supported.forEach(name => {
-			functions[name] = (templateData, ...variables) => {
-				return this[name](toSql(templateData, variables));
-			};
-		});
-		return functions;
+		return this._templatized;
+	}
+
+	/**
+	 * Run the given handler by passing a new database instance. Three signatures:
+	 *   Db.withInstance(handler)
+	 *   Db.withInstance(mysqlConfig, handler)
+	 *   Db.withInstance(mysqlConfig, sshConfig, handler)
+	 * @example
+	 *   const addresses = await Db.withInstance(async db => {
+	 *   	const sql = 'SELECT * FROM animals WHERE type = "cat"';
+	 *      const { results: cats } = await db.select(sql);
+	 *      const homes = await findHomes(cats);
+	 *      return homes.map(home => home.address);
+	 *   });
+	 * @param {Object} [config]  The mysql connection information (or omit to read from env)
+	 * @param {Object} [sshConfig]  The ssh config information (or omit to read from env)
+	 * @param {Function} handler  The function to pass the Db instance to
+	 * @returns {Promise<Error|*>}
+	 */
+	static async withInstance(config, sshConfig, handler) {
+		if (typeof config === 'function') {
+			handler = config;
+			config = {};
+			sshConfig = null;
+		}
+		if (typeof sshConfig === 'function') {
+			handler = sshConfig;
+			sshConfig = null;
+		}
+		const db = new Db(config, sshConfig);
+		try {
+			const res = await handler(db);
+			await db.end();
+			return res;
+		} catch (e) {
+			try {
+				await db.end();
+			} catch (e2) {
+				return e2;
+			}
+			return e;
+		}
 	}
 }
 

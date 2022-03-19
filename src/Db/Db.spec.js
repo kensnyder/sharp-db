@@ -545,14 +545,117 @@ describe('Db', () => {
 			expect(results).toEqual(mockResults[0]);
 		});
 		it('should insert a new record', async () => {
+			const newRow = {
+				sso_ref: 'A123456',
+				name: 'Jane Doe',
+				id: 5,
+			};
 			mysqlMock.pushResponse({ results: [] });
 			mysqlMock.pushResponse({ results: { insertId: 5 } });
+			mysqlMock.pushResponse({ results: [newRow] });
 			const { insertId } = await db.selectOrCreate(
 				'users',
 				{ sso_ref: 'A123456' },
 				{ sso_ref: 'A123456', name: 'Jane Doe' }
 			);
 			expect(insertId).toBe(5);
+		});
+		it('should throw error if insertId is falsy', async () => {
+			let error;
+			try {
+				mysqlMock.pushResponse({ results: [] });
+				mysqlMock.pushResponse({ results: {} });
+				await db.selectOrCreate(
+					'users',
+					{ sso_ref: 'A123456' },
+					{ sso_ref: 'A123456', name: 'Jane Doe' }
+				);
+			} catch (e) {
+				error = e;
+			}
+			expect(error).toBeInstanceOf(Error);
+		});
+		it('should return new row', async () => {
+			const newRow = {
+				sso_ref: 'A123456',
+				name: 'Jane Doe',
+				id: 5,
+			};
+			mysqlMock.pushResponse({ results: [] });
+			mysqlMock.pushResponse({ results: { insertId: 5 } });
+			mysqlMock.pushResponse({ results: [newRow] });
+			const { results, insertId } = await db.selectOrCreate(
+				'users',
+				{ sso_ref: 'A123456' },
+				{ sso_ref: 'A123456', name: 'Jane Doe' }
+			);
+			expect(insertId).toBe(5);
+			expect(results).toEqual(newRow);
+		});
+		it('should throw error if new row is falsy', async () => {
+			let error;
+			try {
+				mysqlMock.pushResponse({ results: [] });
+				mysqlMock.pushResponse({ results: { insertId: 5 } });
+				mysqlMock.pushResponse({
+					results: false,
+				});
+				await db.selectOrCreate(
+					'users',
+					{ sso_ref: 'A123456' },
+					{ sso_ref: 'A123456', name: 'Jane Doe' }
+				);
+			} catch (e) {
+				error = e;
+			}
+			expect(error).toBeInstanceOf(Error);
+		});
+		it('should throw error if initial select fails', async () => {
+			let error;
+			try {
+				await db.selectOrCreate('users', 'invalid', {
+					sso_ref: 'A123456',
+					name: 'Jane Doe',
+				});
+			} catch (e) {
+				error = e;
+			}
+			expect(error).toBeInstanceOf(Error);
+		});
+	});
+	describe('selectOrCreateId()', () => {
+		it('should return the id of the new record', async () => {
+			mysqlMock.pushResponse({ results: [] });
+			mysqlMock.pushResponse({ results: { insertId: 5 } });
+			const { results } = await db.selectOrCreateId(
+				'users',
+				{ sso_ref: 'A123456' },
+				{ sso_ref: 'A123456', name: 'Jane Doe' }
+			);
+			expect(results).toBe(5);
+		});
+		it('should return the record if existing', async () => {
+			mysqlMock.pushResponse({ results: [{ a: 1, b: 2, id: 5 }] });
+			const { results } = await db.selectOrCreateId(
+				'users',
+				{ a: 1 },
+				{ a: 1, b: 2 }
+			);
+			expect(results).toBe(5);
+		});
+		it('should throw error if initial select fails', async () => {
+			let error;
+			try {
+				mysqlMock.pushResponse({ results: null });
+				await db.selectOrCreateId(
+					'users',
+					{ sso_ref: 'A123456' },
+					{ sso_ref: 'A123456', name: 'Jane Doe' }
+				);
+			} catch (e) {
+				error = e;
+			}
+			expect(error).toBeInstanceOf(Error);
 		});
 	});
 	describe('insertInto()', () => {
@@ -827,6 +930,11 @@ describe('Db', () => {
 			const ids = [1, 3];
 			const { query } = await select`SELECT * FROM users WHERE id IN(${ids})`;
 			expect(query).toBe('SELECT * FROM users WHERE id IN(1, 3)');
+		});
+		it('should cache templating', async () => {
+			const { select: select1 } = db.tpl();
+			const { select: select2 } = db.tpl();
+			expect(select1).toBe(select2);
 		});
 	});
 	describe('tpl() functions', () => {
@@ -1285,6 +1393,60 @@ INSERT INTO \`users\` (\`id\`,\`fname\`) VALUES
 		});
 		it('should avoid backticks on *', () => {
 			expect(db.quote('*')).toBe('*');
+		});
+	});
+	describe('withInstance()', () => {
+		it('should run handler', async () => {
+			const mockResults = [{ foo: 1 }, { foo: 2 }];
+			mysqlMock.pushResponse({ results: mockResults });
+			const { results } = await Db.withInstance(db => {
+				return db.select('SELECT foo FROM bar');
+			});
+			expect(results).toEqual(mockResults);
+		});
+		it('should accept mysql config', async () => {
+			const mysqlConfig = { user: 'root' };
+			const results = await Db.withInstance(mysqlConfig, db => {
+				return db;
+			});
+			expect(results).toBeInstanceOf(Db);
+			expect(results.config.user).toBe('root');
+		});
+		it('should accept ssh config', async () => {
+			const mysqlConfig = {};
+			const sshConfig = { user: 'ubuntu' };
+			const results = await Db.withInstance(mysqlConfig, sshConfig, db => {
+				return db;
+			});
+			expect(results).toBeInstanceOf(Db);
+			expect(results.ssh.config.user).toBe('ubuntu');
+		});
+		it('should call db.end()', async () => {
+			const spy = jest.fn(() => Promise.resolve(1));
+			await Db.withInstance(db => {
+				db.end = spy;
+			});
+			expect(spy).toHaveBeenCalled();
+		});
+		it('should return Error on handler failure', async () => {
+			const spy = jest.fn(() => Promise.resolve(1));
+			const res = await Db.withInstance(db => {
+				db.end = spy;
+				throw new Error('foo');
+			});
+			expect(spy).toHaveBeenCalled();
+			expect(res).toBeInstanceOf(Error);
+		});
+		it('should return Error on db.end() failure', async () => {
+			const spy = jest.fn(() => {
+				throw new Error('bar2');
+			});
+			const res = await Db.withInstance(db => {
+				db.end = spy;
+				return 17;
+			});
+			expect(spy).toHaveBeenCalled();
+			expect(res).toBeInstanceOf(Error);
 		});
 	});
 });
