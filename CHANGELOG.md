@@ -1,5 +1,9 @@
 ## Change Log
 
+### v1.7.1 on 2022-03-20
+
+- Tweak error behavior of Db.withInstance()
+
 ### v1.7.0 on 2022-03-19
 
 - Add Db.withInstance()

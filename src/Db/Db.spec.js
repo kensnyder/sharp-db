@@ -1435,18 +1435,16 @@ INSERT INTO \`users\` (\`id\`,\`fname\`) VALUES
 				throw new Error('foo');
 			});
 			expect(spy).toHaveBeenCalled();
-			expect(res).toBeInstanceOf(Error);
+			expect(res.error).toBeInstanceOf(Error);
 		});
-		it('should return Error on db.end() failure', async () => {
-			const spy = jest.fn(() => {
-				throw new Error('bar2');
-			});
+		it('should ignore error on db.end() failure', async () => {
+			const spy = jest.fn(() => Promise.reject('foobar'));
 			const res = await Db.withInstance(db => {
 				db.end = spy;
 				return 17;
 			});
 			expect(spy).toHaveBeenCalled();
-			expect(res).toBeInstanceOf(Error);
+			expect(res).toBe(17);
 		});
 	});
 });
