@@ -5,6 +5,8 @@ const chunk = require('lodash/chunk');
 const { isPlainObject } = require('is-plain-object');
 const decorateError = require('../decorateError/decorateError.js');
 
+const noop = () => {};
+
 /**
  * Simple database class for mysql
  */
@@ -1200,15 +1202,11 @@ class Db {
 		const db = new Db(config, sshConfig);
 		try {
 			const res = await handler(db);
-			await db.end();
+			db.end().then(noop, noop);
 			return res;
-		} catch (e) {
-			try {
-				await db.end();
-			} catch (e2) {
-				return e2;
-			}
-			return e;
+		} catch (error) {
+			db.end().then(noop, noop);
+			return { error };
 		}
 	}
 }
