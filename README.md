@@ -90,9 +90,34 @@ const { Db } = require('sharp-db');
 
 // read options from ENV, instantiate and call db.end() automatically
 const emailDomain = await Db.withInstance(async db => {
-    const sql = 'SELECT email FROM users WWHERE id = 5';
+    const sql = 'SELECT email FROM users WHERE id = 5';
     const { results: email } = await db.selectValue(sql);
     return email.split('@').pop();
+});
+```
+
+**WARNING:** Your handler function must return a promise that resolves AFTER
+your query has returned a result. Failing to do so will result in `db.end()`
+being called before your query is run. You may see an Error similar to the
+following:
+
+```[ERROR] -1 (N/A): Can't add new command when connection is in closed state```
+
+For example:
+```js
+// WILL FAIL:
+Db.withInstance(db => {
+    db.insertInto('users', user);
+});
+
+// WILL SUCCEED:
+Db.withInstance(db => {
+    return db.insertInto('users', user);
+});
+// ALSO OK:
+Db.withInstance(async db => {
+    const { insertId } = await db.insertInto('users', user);
+    return insertId;
 });
 ```
 
