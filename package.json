@@ -33,7 +33,7 @@
     "lodash": "^4.17.21",
     "mysql2": "^2.3.3",
     "quickly-count-substrings": "^1.0.0",
-    "ssh2": "^1.7.0"
+    "ssh2": "^1.9.0"
   },
   "devDependencies": {
     "ansi-colors": "^4.1.1",
