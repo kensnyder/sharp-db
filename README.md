@@ -89,12 +89,25 @@ to get an instance, do something, and then close the connection.
 const { Db } = require('sharp-db');
 
 // read options from ENV, instantiate and call db.end() automatically
-const emailDomain = await Db.withInstance(async db => {
+const { error, domain } = await Db.withInstance(async db => {
     const sql = 'SELECT email FROM users WHERE id = 5';
     const { results: email } = await db.selectValue(sql);
-    return email.split('@').pop();
+    return {
+        domain: email.split('@').pop(),
+    };
 });
 ```
+
+`Db.withInstance()` will return one of the following:
+
+1. `{ error }` where error is an object from mysql2. [Full docs](https://github.com/mysqljs/mysql#error-handling). Summary:
+  - `error.sqlMessage` The textual description of the error
+  - `error.code` The string error code such as `PROTOCOL_CONNECTION_LOST`
+  - `error.errno` The associated number code
+  - `error.fatal` True if the error caused the connection to close
+  - `error.sql` The full SQL of the failed query
+  - `error.sqlState` The five-character SQLSTATE code
+2. Whatever value is returned from the handler. We suggest always returning an object, expecting the caller to check `.error`.
 
 **WARNING:** Your handler function must return a promise that resolves AFTER
 your query has returned a result. Failing to do so will result in `db.end()`
@@ -106,18 +119,20 @@ following:
 For example:
 ```js
 // WILL FAIL:
-Db.withInstance(db => {
+const { error } = Db.withInstance(db => {
     db.insertInto('users', user);
 });
 
 // WILL SUCCEED:
-Db.withInstance(db => {
+const { error, results } = Db.withInstance(db => {
     return db.insertInto('users', user);
 });
 // ALSO OK:
-Db.withInstance(async db => {
+const { error, newUserId } = Db.withInstance(async db => {
     const { insertId } = await db.insertInto('users', user);
-    return insertId;
+    return {
+        newUserId: insertId,
+	};
 });
 ```
 

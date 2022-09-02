@@ -1,5 +1,10 @@
 ## Change Log
 
+### v1.7.2 on 2022-09-02
+
+- Properly close ssh connections, even after errors
+- Improve docs on Db.withInstance()
+
 ### v1.7.1 on 2022-03-20
 
 - Tweak error behavior of Db.withInstance()

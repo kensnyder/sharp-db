@@ -98,6 +98,9 @@ class Db {
 	 * @return {Promise}  Resolves when connection has been closed
 	 */
 	end() {
+		if (this.ssh) {
+			this.ssh.end();
+		}
 		return new Promise((resolve, reject) => {
 			if (this.connection) {
 				const idx = Db.instances.indexOf(this);
@@ -105,9 +108,6 @@ class Db {
 					Db.instances.splice(idx, 1);
 				}
 				this.connection.end(error => {
-					if (this.ssh) {
-						this.ssh.end();
-					}
 					if (error) {
 						decorateError(error);
 						reject(error);
@@ -116,9 +116,6 @@ class Db {
 					}
 				});
 			} else {
-				if (this.ssh) {
-					this.ssh.end();
-				}
 				resolve();
 			}
 		});
@@ -1182,7 +1179,9 @@ class Db {
 	 *   	const sql = 'SELECT * FROM animals WHERE type = "cat"';
 	 *      const { results: cats } = await db.select(sql);
 	 *      const homes = await findHomes(cats);
-	 *      return homes.map(home => home.address);
+	 *      return {
+	 *          homes: homes.map(home => home.address);
+	 *      };
 	 *   });
 	 * @param {Object} [config]  The mysql connection information (or omit to read from env)
 	 * @param {Object} [sshConfig]  The ssh config information (or omit to read from env)
