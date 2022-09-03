@@ -1,9 +1,8 @@
-const forOwn = require('../forOwnDefined/forOwnDefined.js');
 const mysql = require('mysql2');
 const Ssh = require('../Ssh/Ssh.js');
-const chunk = require('lodash/chunk');
 const { isPlainObject } = require('is-plain-object');
 const decorateError = require('../decorateError/decorateError.js');
+const SqlBuilder = require('../SqlBuilder/SqlBuilder.js');
 
 const noop = () => {};
 
@@ -510,28 +509,17 @@ class Db {
 	 * Build a SELECT statement and return result rows
 	 * @param {String} table  The name of the table
 	 * @param {Array} fields  An array of field names to select
-	 * @param {Object} criteria  Params to construct the WHERE clause - see Db#buildWhere
+	 * @param {Object} criteria  Params to construct the WHERE clause - see SqlBuilder#buildWhere
 	 * @param {String} extra  Additional raw SQL such as GROUP BY, ORDER BY, or LIMIT
 	 * @return {Promise<Object>}
 	 * @property {String} query  The final SQL that was executed
 	 * @property {Array} results  The result rows
 	 * @property {Object[]} fields  Info about the selected fields
-	 * @see Db#buildWhere
+	 * @see SqlBuilder#buildWhere
 	 */
 	selectFrom(table, fields = [], criteria = {}, extra = '') {
-		if (!Array.isArray(fields)) {
-			throw new Error('Db.selectFrom fields must be an array');
-		}
-		if (typeof criteria !== 'object') {
-			throw new Error('Db.selectFrom criteria must be an array');
-		}
 		this.connectOnce();
-		const escFields = fields.map(field => this.quote(field));
-		const escFieldsString = fields.length ? escFields.join(', ') : '*';
-		const escTable = this.quote(table);
-		const escWhere = this.buildWheres(criteria);
-		const sql =
-			`SELECT ${escFieldsString} FROM ${escTable} WHERE ${escWhere} ${extra}`.trim();
+		const sql = SqlBuilder.selectFrom(table, fields, criteria, extra);
 		return this.select(sql);
 	}
 
@@ -683,18 +671,8 @@ class Db {
 	 * @property {Number} insertId  The id of the last inserted record
 	 */
 	insertInto(table, insert) {
-		// build insert expression
-		const sets = [];
-		forOwn(insert, (value, field) => {
-			sets.push(this.quote(field) + '=' + mysql.escape(value));
-		});
-		if (sets.length === 0) {
-			throw new Error('Db.insertInto requires a non-empty insert Object');
-		}
-		const escTable = this.quote(table);
-		const setSql = sets.join(', ');
-		const insertSql = `INSERT INTO ${escTable} SET ${setSql}`;
-		return this.insert(insertSql);
+		const sql = SqlBuilder.insertInto(table, insert);
+		return this.insert(sql);
 	}
 
 	/**
@@ -709,32 +687,11 @@ class Db {
 	 * @property {Number} changedRows  The number of rows affected by the statement
 	 */
 	async insertIntoOnDuplicateKeyUpdate(table, insert, update) {
-		// build insert expression
-		const sets = [];
-		forOwn(insert, (value, field) => {
-			sets.push(this.quote(field) + '=' + mysql.escape(value));
-		});
-		if (sets.length === 0) {
-			throw new Error(
-				'Db.insertIntoOnDuplicateKeyUpdate requires a non-empty insert Object'
-			);
-		}
-		// build update expression
-		const updates = [];
-		forOwn(update, (value, field) => {
-			updates.push(this.quote(field) + '=' + mysql.escape(value));
-		});
-		if (updates.length === 0) {
-			throw new Error(
-				'Db.insertIntoOnDuplicateKeyUpdate requires a non-empty update Object'
-			);
-		}
-		table = this.quote(table);
-		const setSql = sets.join(', ');
-		const updateSql = updates.join(', ');
-		// combine
-		const sql = `INSERT INTO ${table} SET ${setSql} ON DUPLICATE KEY UPDATE ${updateSql}`;
-		// run
+		const sql = SqlBuilder.insertIntoOnDuplicateKeyUpdate(
+			table,
+			insert,
+			update
+		);
 		await this.connectOnce();
 		return new Promise((resolve, reject) => {
 			const query = this.connection.query(sql, (error, results) => {
@@ -762,82 +719,48 @@ class Db {
 	 * @property {Number} insertId  The id of the last inserted record
 	 */
 	insertExtended(table, inserts) {
-		// build insert expression
-		if (!Array.isArray(inserts) || inserts.length === 0) {
-			throw new Error('Db.insertExtended inserts must be a non-empty array');
-		}
-		const fields = [];
-		forOwn(inserts[0], (value, field) => {
-			fields.push(this.quote(field));
-		});
-		const batches = [];
-		inserts.forEach(insert => {
-			const values = [];
-			forOwn(insert, value => {
-				values.push(this.escape(value));
-			});
-			batches.push('(' + values.join(', ') + ')');
-		});
-		const escTable = this.quote(table);
-		const fieldsSql = fields.join(', ');
-		const batchesSql = batches.join(', ');
-		const insertSql = `INSERT INTO ${escTable} (${fieldsSql}) VALUES ${batchesSql}`;
-		return this.insert(insertSql);
+		const sql = SqlBuilder.insertExtended(table, inserts);
+		return this.insert(sql);
 	}
 
 	/**
 	 * Build an UPDATE statement and run it
 	 * @param {String} table  The name of the table
 	 * @param {Object} set  An array of column => value pairs to update
-	 * @param {Object} where  Params to construct the WHERE clause - see Db#buildWhere
+	 * @param {Object} where  Params to construct the WHERE clause - see SqlBuilder#buildWheres
 	 * @return {Promise<Object>}
 	 * @property {String} query  The final SQL that was executed
 	 * @property {Number} affectedRows  The number of rows matching the WHERE criteria
 	 * @property {Number} changedRows  The number of rows affected by the statement
-	 * @see Db#buildWhere
+	 * @see SqlBuilder#buildWheres
 	 */
 	updateTable(table, set, where = {}) {
-		const sets = [];
-		forOwn(set, (value, field) => {
-			sets.push(this.quote(field) + '=' + this.escape(value));
-		});
-		if (sets.length === 0) {
-			throw new Error('Db.updateTable requires a non-empty set Object');
-		}
-		const escTable = this.quote(table);
-		const setSql = sets.join(', ');
-		const escWhere = this.buildWheres(where);
-		const sql = `UPDATE ${escTable} SET ${setSql} WHERE ${escWhere}`;
+		const sql = SqlBuilder.updateTable(table, set, where);
 		return this.update(sql, set);
 	}
 
 	/**
 	 * Construct a delete query and run
 	 * @param {String} table  The name of the table from which to delete
-	 * @param {Object} where  WHERE conditions on which to delete - see Db#buildWhere
+	 * @param {Object} where  WHERE conditions on which to delete - see SqlBuilder#buildWheres
 	 * @param {Number} limit  Limit deletion to this many records
 	 * @return {Promise<Object>}
 	 * @property {String} query  The final SQL that was executed
 	 * @property {Number} affectedRows  The number of rows matching the WHERE criteria
 	 * @property {Number} changedRows  The number of rows affected by the statement
-	 * @see Db#buildWhere
+	 * @see SqlBuilder#buildWheres
 	 */
 	async deleteFrom(table, where, limit = null) {
 		await this.connectOnce();
-		const escTable = this.quote(table);
-		const escWhere = this.buildWheres(where);
-		let sql = `DELETE FROM ${escTable} WHERE ${escWhere}`;
-		if (limit > 0) {
-			sql += ` LIMIT ${limit}`;
-		}
+		const sql = SqlBuilder.deleteFrom(table, where, limit);
 		return this.delete(sql);
 	}
 
 	/**
 	 * Construct INSERT statements suitable for a backup
 	 * @param {String} table  The name of the table from which to fetch records
-	 * @param {Object} where  WHERE conditions on which to fetch records - see Db#buildWhere
-	 * @see Db#buildWhere
+	 * @param {Object} where  WHERE conditions on which to fetch records - see SqlBuilder#buildWheres
+	 * @see SqlBuilder#buildWheres
 	 * @param {Object} options  Additional options
 	 * @property {Number} limit  Limit export to this many records
 	 * @property {Number} chunkSize  If > 0, restrict INSERT STATEMENTS to a maximum of this many records
@@ -865,12 +788,12 @@ class Db {
 	) {
 		await this.connectOnce();
 		// get results
-		const addl = limit > 0 ? `LIMIT ${limit}` : '';
+		const additional = limit > 0 ? `LIMIT ${limit}` : '';
 		const {
 			results: rows,
 			fields,
 			query,
-		} = await this.selectFrom(table, [], where, addl);
+		} = await this.selectFrom(table, [], where, additional);
 		if (rows.length === 0) {
 			return {
 				results: '',
@@ -880,130 +803,21 @@ class Db {
 				chunks: 0,
 			};
 		}
-		// build column names
-		const quotedFields = [];
-		for (const field of fields) {
-			quotedFields.push(this.quote(field.name));
-		}
-		const fieldsString = quotedFields.join(',');
-		const quotedTable = this.quote(table);
-		// start building lines of sql to insert
-		const lines = [];
-		if (disableForeignKeyChecks) {
-			lines.push(
-				'/*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;'
-			);
-		}
-		if (lockTables) {
-			lines.push(`LOCK TABLES ${quotedTable} WRITE;`);
-		}
-		if (truncateTable) {
-			lines.push(`TRUNCATE TABLE ${quotedTable};`);
-		}
-		// take rows in chunks so a single statement isn't too long
-		const chunks = chunk(rows, chunkSize);
-		for (const chunkOfRows of chunks) {
-			const rowStrings = [];
-			for (const values of chunkOfRows) {
-				const escapedValues = [];
-				// collect the value for each field
-				for (const field of fields) {
-					if (discardIds && field.name === 'id') {
-						escapedValues.push('NULL');
-					} else {
-						escapedValues.push(this.escape(values[field.name]));
-					}
-				}
-				const valuesString = escapedValues.join(',');
-				rowStrings.push(`(${valuesString})`);
-			}
-			const insertsString = rowStrings.join(',\n');
-			lines.push(
-				`INSERT INTO ${quotedTable} (${fieldsString}) VALUES\n${insertsString};`
-			);
-		}
-		if (lockTables) {
-			lines.push('UNLOCK TABLES;');
-		}
-		if (disableForeignKeyChecks) {
-			lines.push('/*!40014 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS */;');
-		}
+		const sql = SqlBuilder.exportRows(table, rows, {
+			fields,
+			chunkSize,
+			discardIds,
+			truncateTable,
+			disableForeignKeyChecks,
+			lockTables,
+		});
 		return {
-			results: lines.join('\n'),
+			results: sql,
 			fields,
 			query,
 			affectedRows: rows.length,
-			chunks: chunks.length,
+			chunks: Math.ceil(rows.length / chunkSize),
 		};
-	}
-
-	/**
-	 * Build a where clause from an object of field-value pairs.
-	 * Used internally by #selectFrom, #updateTable, #deleteFrom
-	 * @see Db#buildWhere
-	 * @param {Object} wheres  An object with field-value pairs (field may be field space operator)
-	 * @return {String}
-	 * @example
-	 * db.buildWheres({
-	 *     'start_date BETWEEN: ['2012-01-01','2013-01-01'],
-	 *     'start_date >': '2013-01-01',
-	 *     'start_date !=': '2013-01-01',
-	 *     'start_date': null, // `start_date` IS NULL
-	 *     'start_date !=': null, // `start_date` IS NOT NULL
-	 *     id: [1,2,3], // `id` IN (1,2,3)
-	 *     'id !=': [1,2,3], // `id` NOT IN (1,2,3)
-	 *     'id IN': [1,2,3], // `id` IN (1,2,3)
-	 *     'id NOT IN': [1,2,3], // `id` NOT IN (1,2,3)
-	 * })
-	 */
-	buildWheres(wheres) {
-		const clauses = [];
-		for (const field in wheres) {
-			if (!wheres.hasOwnProperty(field)) {
-				continue;
-			}
-			clauses.push(this.buildWhere(field, wheres[field]));
-		}
-		return clauses.length ? clauses.join(' AND ') : '1';
-	}
-
-	/**
-	 * Construct where clause element from the given field and value
-	 * @param {String} field  The field or field space operator
-	 * @param {*} value  The value to bind
-	 * @return {String}
-	 * @example
-	 * db.buildWhere('start_date BETWEEN', ['2012-01-01','2013-01-01']);
-	 * db.buildWhere('start_date >', '2013-01-01');
-	 * db.buildWhere('start_date !=', '2013-01-01');
-	 * db.buildWhere('start_date', null); // `start_date` IS NULL
-	 * db.buildWhere('start_date !=', null); // `start_date` IS NOT NULL
-	 * db.buildWhere('id', [1,2,3]); // `id` IN (1,2,3)
-	 * db.buildWhere('id !=', [1,2,3]); // `id` NOT IN (1,2,3)
-	 * db.buildWhere('id IN', [1,2,3]); // `id` IN (1,2,3)
-	 * db.buildWhere('id NOT IN', [1,2,3]); // `id` NOT IN (1,2,3)
-	 */
-	buildWhere(field, value = undefined) {
-		if (value === undefined) {
-			return field;
-		}
-		let [name, operator] = field.split(/\s+/);
-		name = this.quote(name);
-		operator = operator ? operator.toUpperCase() : '=';
-		if (operator === 'BETWEEN') {
-			const val0 = mysql.escape(value[0]);
-			const val1 = mysql.escape(value[1]);
-			return `${name} BETWEEN ${val0} AND ${val1}`;
-		} else if (value === null) {
-			return operator === '=' ? `${name} IS NULL` : `${name} IS NOT NULL`;
-		} else if (Array.isArray(value)) {
-			const values = value.map(val => mysql.escape(val));
-			return operator === '=' || operator === 'IN'
-				? `${name} IN(${values})`
-				: `${name} NOT IN(${values})`;
-		}
-		const escVal = mysql.escape(value);
-		return `${name} ${operator} ${escVal}`;
 	}
 
 	/**
