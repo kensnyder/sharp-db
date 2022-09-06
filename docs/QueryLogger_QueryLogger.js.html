@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>Ssh/Ssh.js - Documentation</title>
+    <title>QueryLogger/QueryLogger.js - Documentation</title>
 
     <script src="scripts/prettify/prettify.js"></script>
     <script src="scripts/prettify/lang-css.js"></script>
@@ -29,7 +29,7 @@
 
 <div id="main">
     
-    <h1 class="page-title">Ssh/Ssh.js</h1>
+    <h1 class="page-title">QueryLogger/QueryLogger.js</h1>
     
 
     
@@ -39,87 +39,102 @@
     
     <section>
         <article>
-            <pre class="prettyprint source linenums"><code>const os = require('os');
-const fs = require('fs');
-const Client = require('ssh2').Client;
-
-/**
- * Class to allow connecting to a DB through an ssh tunnel
- */
-class Ssh {
-	/**
-	 * Specify connection details including, host, port, user, privateKey
-	 * @param {Object} [config]  Configuration to send to npm's ssh2
-	 */
-	constructor(config = {}) {
-		const env = process.env;
-		this.config = {
-			...config,
-			host: config.host || env.DB_SSH_HOST || 'localhost',
-			port: config.port || env.DB_SSH_PORT || 22,
-			user: config.user || env.DB_SSH_USER,
-			localPort: config.localPort || env.DB_SSH_LOCAL_PORT || 12347,
-		};
-		if (config.privateKey || env.DB_SSH_PRIVATE_KEY) {
-			this.config.privateKey = config.privateKey || env.DB_SSH_PRIVATE_KEY;
-			if (this.config.privateKey.match(/\.pem$/)) {
-				const pkeyPath = this.config.privateKey.replace(/^~/, os.homedir());
-				if (!fs.existsSync(pkeyPath)) {
-					throw new Error(`Private key file not found at "${pkeyPath}".`);
-				}
-				this.config.privateKey = fs.readFileSync(pkeyPath, {
-					encoding: 'utf8',
-				});
-			}
-		} else if (config.password || env.DB_SSH_PASSWORD) {
-			this.config.password = config.password || env.DB_SSH_PASSWORD;
-		}
+            <pre class="prettyprint source linenums"><code>class QueryLogger {
+	constructor() {
+		this._logs = [];
+		this._watching = [];
 	}
 
 	/**
-	 * Setup a tunnel for the given Db instance
-	 * @param {Db} db  A Db instance
-	 * @returns {Promise}  Resolves when tunnel is established
+	 * Watch the given Db instance
+	 * @param {Db} db  The Db instance
+	 * @param {String[]} events  A list of events to watch for
+	 *   Default is query, select, insert, update, delete
+	 * @return {QueryLogger}
 	 */
-	tunnelTo(db) {
-		return new Promise((resolve, reject) => {
-			if (!db.config || !db.config.host || !db.config.port) {
-				reject(new Error('Db config must have host and port.'));
-			}
-			this.connection = new Client();
-			this.connection.on('ready', () => {
-				this.connection.forwardOut(
-					'127.0.0.1',
-					this.config.localPort,
-					db.config.host,
-					db.config.port,
-					(err, stream) => {
-						if (err) {
-							this.end();
-							return reject(err);
-						}
-						// override db host, since we're operating from within the SSH tunnel
-						db.config.host = 'localhost';
-						db.config.stream = stream;
-						resolve();
-					}
-				);
-			});
-			this.connection.connect(this.config);
+	watch(db, events = ['query', 'select', 'insert', 'update', 'delete']) {
+		for (const event of events) {
+			db.on(event, this.capture);
+		}
+		this._watching.push({
+			db,
+			events,
 		});
+		return this;
 	}
 
 	/**
-	 * Close the ssh tunnel
+	 * Stop watching the given Db instance
+	 * @param {Db} db  The db to stop watching
+	 * @return {QueryLogger}
 	 */
-	end() {
-		if (this.connection) {
-			this.connection.end();
+	unwatch(db) {
+		const newWatchList = [];
+		for (const watched of this._watching) {
+			if (watched.db === db) {
+				for (const event of watched.events) {
+					db.off(event, this.capture);
+				}
+			} else {
+				newWatchList.push(watched);
+			}
 		}
+		this._watching = newWatchList;
+		return this;
+	}
+
+	/**
+	 * Save the type and query from a DbEvent object
+	 * @param {DbEvent} evt  The DbEvent object
+	 * @return {QueryLogger}
+	 */
+	capture = evt => {
+		this._logs.push({
+			type: evt.type,
+			query: evt.data.query,
+			db: evt.target,
+		});
+		return this;
+	};
+
+	/**
+	 * Clear out all logs
+	 * @return {QueryLogger}
+	 */
+	clear() {
+		this._logs = [];
+		return this;
+	}
+
+	/**
+	 * Get the raw array of logs
+	 * @return {Object[]}
+	 */
+	getLogs() {
+		return this._logs;
+	}
+
+	/**
+	 * Get all the query strings
+	 * @param {Function} [filter=null]  Function used to filter the logs
+	 * @return {String[]}
+	 */
+	getQueries(filter = null) {
+		const filtered = filter ? this._logs.filter(filter) : this._logs;
+		return filtered.map(log => log.query);
+	}
+
+	/**
+	 * Get the query string from the last query
+	 * @return {String|null}
+	 */
+	getLastQuery() {
+		const last = this._logs[this._logs.length - 1];
+		return last ? last.query : null;
 	}
 }
 
-module.exports = Ssh;
+module.exports = QueryLogger;
 </code></pre>
         </article>
     </section>

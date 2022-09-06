@@ -5,7 +5,11 @@
 	},
 	"source": {
 		"include": ["src", "README.md"],
-		"exclude": ["src/decorateError/decorateError.js","src/forOwnDefined/forOwnDefined.js"],
+		"exclude": [
+			"src/decorateError/decorateError.js",
+			"src/forOwnDefined/forOwnDefined.js",
+			"src/chunk/chunk.js"
+		],
 		"includePattern": ".js$",
 		"excludePattern": "(node_modules/|docs|.spec.js)"
 	},

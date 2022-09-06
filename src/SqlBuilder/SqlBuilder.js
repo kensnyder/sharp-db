@@ -1,5 +1,5 @@
 const mysql = require('mysql2');
-const chunk = require('lodash/chunk');
+const chunk = require('../chunk/chunk.js');
 const forOwn = require('../forOwnDefined/forOwnDefined.js');
 
 class SqlBuilder {
@@ -19,6 +19,11 @@ class SqlBuilder {
 		return quoted;
 	}
 
+	/**
+	 * Escape a value for use in a raw query and surround with apostrophes
+	 * @param {*} value  The value to escape
+	 * @return {String}
+	 */
 	static escape(value) {
 		return mysql.escape(value);
 	}
@@ -49,9 +54,29 @@ class SqlBuilder {
 		return sql.trim();
 	}
 
-	static insertInto(table, insert) {
+	/**
+	 * Select the record with the given column value
+	 * @param {String} table  The name of the table from which to select
+	 * @param {String} column  The name of the column from which to select
+	 * @param {String} value  The value of the record for that column
+	 * @return {String}
+	 */
+	static selectBy(table, column, value) {
+		const escTable = this.quote(table);
+		const escColumn = this.quote(column);
+		const escValue = this.escape(value);
+		return `SELECT * FROM ${escTable} WHERE ${escColumn} = ${escValue}`;
+	}
+
+	/**
+	 * Build an INSERT statement
+	 * @param {String} table  The name of the table
+	 * @param {Object} row  column-value pairs to insert
+	 * @return {String}
+	 */
+	static insertInto(table, row) {
 		const sets = [];
-		forOwn(insert, (value, field) => {
+		forOwn(row, (value, field) => {
 			sets.push(SqlBuilder.quote(field) + '=' + SqlBuilder.escape(value));
 		});
 		if (sets.length === 0) {
@@ -63,6 +88,14 @@ class SqlBuilder {
 		const setSql = sets.join(', ');
 		return `INSERT INTO ${escTable} SET ${setSql}`;
 	}
+
+	/**
+	 * Build an "INSERT INTO ... ON DUPLICATE KEY UPDATE" query
+	 * @param {String} table  The name of the table
+	 * @param {Object} insert  An array with column => value pairs for insertion
+	 * @param {Object} update  An array with column => value pairs for update
+	 * @return {String}
+	 */
 	static insertIntoOnDuplicateKeyUpdate(table, insert, update) {
 		const sets = [];
 		forOwn(insert, (value, field) => {
@@ -89,17 +122,24 @@ class SqlBuilder {
 		// combine
 		return `INSERT INTO ${table} SET ${setSql} ON DUPLICATE KEY UPDATE ${updateSql}`;
 	}
-	static insertExtended(table, inserts) {
+
+	/**
+	 * Build an INSERT statement with multiple rows
+	 * @param {String} table  The name of the table
+	 * @param {Array} rows  An Array of objects, each with column-value pairs to insert
+	 * @return {String}
+	 */
+	static insertExtended(table, rows) {
 		// build insert expression
-		if (!Array.isArray(inserts) || inserts.length === 0) {
-			throw new Error('Db.insertExtended inserts must be a non-empty array');
+		if (!Array.isArray(rows) || rows.length === 0) {
+			throw new Error('Db.insertExtended rows must be a non-empty array');
 		}
 		const fields = [];
-		forOwn(inserts[0], (value, field) => {
+		forOwn(rows[0], (value, field) => {
 			fields.push(SqlBuilder.quote(field));
 		});
 		const batches = [];
-		inserts.forEach(insert => {
+		rows.forEach(insert => {
 			const values = [];
 			forOwn(insert, value => {
 				values.push(SqlBuilder.escape(value));
@@ -111,6 +151,15 @@ class SqlBuilder {
 		const batchesSql = batches.join(', ');
 		return `INSERT INTO ${escTable} (${fieldsSql}) VALUES ${batchesSql}`;
 	}
+
+	/**
+	 * Build an UPDATE statement
+	 * @param {String} table  The name of the table
+	 * @param {Object} set  An array of column-value pairs to update
+	 * @param {Object} where  Params to construct the WHERE clause - see SqlBuilder#buildWheres
+	 * @return {String}
+	 * @see SqlBuilder#buildWheres
+	 */
 	static updateTable(table, set, where = {}) {
 		const sets = [];
 		forOwn(set, (value, field) => {
@@ -124,15 +173,37 @@ class SqlBuilder {
 		const escWhere = SqlBuilder.buildWheres(where);
 		return `UPDATE ${escTable} SET ${setSql} WHERE ${escWhere}`;
 	}
+
+	/**
+	 * Construct a DELETE query
+	 * @param {String} table  The name of the table from which to delete
+	 * @param {Object} where  WHERE conditions on which to delete - see SqlBuilder#buildWheres
+	 * @param {Number} limit  Limit deletion to this many records
+	 * @return {String}
+	 * @see SqlBuilder#buildWheres
+	 */
 	static deleteFrom(table, where, limit) {
 		const escTable = SqlBuilder.quote(table);
 		const escWhere = SqlBuilder.buildWheres(where);
 		let sql = `DELETE FROM ${escTable} WHERE ${escWhere}`;
 		if (limit > 0) {
-			sql += ` LIMIT ${limit}`;
+			sql += ` LIMIT ${Number(limit)}`;
 		}
 		return sql;
 	}
+
+	/**
+	 * Construct INSERT statements suitable for a backup
+	 * @param {String} table  The name of the table from which to fetch records
+	 * @param {Object} rows  Rows to export
+	 * @param {Object} options  Additional options
+	 * @property {Object[]} [fields=null]  List of objects with "name" property for column names
+	 * @property {Number} [chunkSize=250]  If > 0, restrict INSERT STATEMENTS to a maximum of this many records
+	 * @property {Boolean} [discardIds=false]  If true, columns selected as "id" will have a NULL value
+	 * @property {Boolean} [disableForeignKeyChecks=false]  If true, add statements to disable and re-enable foreign key checks
+	 * @property {Boolean} [lockTables=false]  If true, add statements to lock and unlock tables
+	 * @return {String}
+	 */
 	static exportRows(
 		table,
 		rows,
@@ -146,7 +217,7 @@ class SqlBuilder {
 		} = {}
 	) {
 		if (rows.length === 0) {
-			return '';
+			return null;
 		}
 		// read field names or infer from rows
 		const fieldNames = fields ? fields.map(f => f.name) : Object.keys(rows[0]);

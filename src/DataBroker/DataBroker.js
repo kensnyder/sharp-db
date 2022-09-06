@@ -90,8 +90,11 @@ class DataBroker {
 		// cleanup inserted records
 		let totalAffectedRows = 0;
 		for (const table of Object.keys(this.ids)) {
-			for (const idOrKey of this.ids[table]) {
-				const where = typeof idOrKey === 'number' ? { id: idOrKey } : idOrKey;
+			for (const idOrCompositeKey of this.ids[table]) {
+				const where =
+					typeof idOrCompositeKey === 'number'
+						? { id: idOrCompositeKey }
+						: idOrCompositeKey;
 				const { affectedRows } = await this.db.deleteFrom(table, where, 1);
 				totalAffectedRows += affectedRows;
 			}

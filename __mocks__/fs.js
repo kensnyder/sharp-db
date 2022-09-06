@@ -1,6 +1,10 @@
 const fs = {
-	existsSync(path) {},
-	readFileSync(path, options) {},
+	existsSync(path) {
+		return false;
+	},
+	readFileSync(path, options) {
+		return '';
+	},
 };
 
 module.exports = fs;

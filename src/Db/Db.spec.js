@@ -374,10 +374,26 @@ describe('Db', () => {
 	describe('selectExists()', () => {
 		it('should construct a SELECT EXISTS query', async () => {
 			const sql = 'SELECT name FROM users';
-			const mockResults = [{ name: 'John Doe' }, { name: 'Jane Doe' }];
-			const mockFields = [{ name: 'name' }];
+			const mockResults = [{ does_it_exist: true }];
+			const mockFields = [];
 			mysqlMock.pushResponse({ results: mockResults, fields: mockFields });
 			const { results } = await db.selectExists(sql);
+			expect(results).toBe(true);
+		});
+		it('should return false if there are no results', async () => {
+			const sql = 'SELECT name FROM users';
+			const mockResults = [];
+			const mockFields = [];
+			mysqlMock.pushResponse({ results: mockResults, fields: mockFields });
+			const { results } = await db.selectExists(sql);
+			expect(results).toBe(false);
+		});
+		it('should construct a SELECT EXISTS query from object', async () => {
+			const sql = 'SELECT name FROM users';
+			const mockResults = [{ does_it_exist: true }];
+			const mockFields = [];
+			mysqlMock.pushResponse({ results: mockResults, fields: mockFields });
+			const { results } = await db.selectExists({ sql });
 			expect(results).toBe(true);
 		});
 		it('should handle errors', async () => {
@@ -434,6 +450,15 @@ describe('Db', () => {
 			mysqlMock.pushResponse({ results: mockResults });
 			const { changedRows } = await db.delete(sql);
 			expect(changedRows).toBe(3);
+		});
+		it('should reject on error', async () => {
+			const sql = 'DELETE FROM users WHERE is_active = false';
+			mysqlMock.pushResponse({ error: new Error('foo') });
+			try {
+				await db.delete(sql);
+			} catch (e) {
+				expect(e.message).toContain('foo');
+			}
 		});
 	});
 	describe('selectFrom()', () => {
@@ -1119,6 +1144,32 @@ INSERT INTO \`users\` (\`id\`,\`fname\`) VALUES
 (2,'Jane');
 			`.trim()
 			);
+		});
+	});
+	describe('transactions', () => {
+		it('should start transaction', async () => {
+			mysqlMock.pushResponse({});
+			const { query } = await db.startTransaction();
+			await db.end();
+			expect(query).toBe('START TRANSACTION');
+		});
+		it('should begin transaction', async () => {
+			mysqlMock.pushResponse({});
+			const { query } = await db.beginTransaction();
+			await db.end();
+			expect(query).toBe('START TRANSACTION');
+		});
+		it('should commit', async () => {
+			mysqlMock.pushResponse({});
+			const { query } = await db.commit();
+			await db.end();
+			expect(query).toBe('COMMIT');
+		});
+		it('should rollback', async () => {
+			mysqlMock.pushResponse({});
+			const { query } = await db.rollback();
+			await db.end();
+			expect(query).toBe('ROLLBACK');
 		});
 	});
 	describe('end()', () => {

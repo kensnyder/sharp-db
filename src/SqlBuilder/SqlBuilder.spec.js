@@ -71,4 +71,10 @@ describe('SqlBuilder', () => {
 			expect(sql).toBe('`b` = 2');
 		});
 	});
+	describe('exportRows()', () => {
+		it('should return null if there are no rows', async () => {
+			const sql = SqlBuilder.exportRows('posts', []);
+			expect(sql).toBe(null);
+		});
+	});
 });
