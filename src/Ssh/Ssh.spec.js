@@ -86,6 +86,16 @@ describe('Ssh', () => {
 		});
 		expect(conn.config.privateKey).toBe('keyval');
 	});
+	it('should handle private from env', () => {
+		process.env.DB_SSH_PRIVATE_KEY = 'abc123.pem';
+		fs.existsSync = () => true;
+		fs.readFileSync = () => 'keyval';
+		const conn = new Ssh({
+			privateKey: 'abc123.pem',
+		});
+		expect(conn.config.privateKey).toBe('keyval');
+		process.env.DB_SSH_PRIVATE_KEY = undefined;
+	});
 	it('should avoid calling end if not connected', () => {
 		const conn = new Ssh();
 		expect(conn.end()).toBe(undefined);

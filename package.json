@@ -6,7 +6,7 @@
   "scripts": {
     "test": "npx jest",
     "test-watch": "npx jest --watch",
-    "coverage": "npx jest --collectCoverage",
+    "coverage": "npx jest --coverage",
     "view-coverage": "open ./coverage/lcov-report/index.html",
     "docs": "npx jsdoc --configure .jsdoc.json --verbose",
     "view-docs": "open docs/index.html"

@@ -1,5 +1,12 @@
 ## Change Log
 
+### v1.8.0 on 2022-09-05
+
+- Move query building to SqlBuilder
+- Add QueryLogger
+- Make Db extend Emitter and emit DbEvent events
+- Replace lodash.chunk with simpler custom function
+
 ### v1.7.2 on 2022-09-02
 
 - Properly close ssh connections, even after errors

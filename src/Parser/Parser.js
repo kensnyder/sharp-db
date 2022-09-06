@@ -18,6 +18,7 @@ class Parser {
 	 * Strip single-line and multi-line comment blocks
 	 * @param {String} sql  The SQL string
 	 * @return {String}
+	 * @private
 	 */
 	_stripComments(sql) {
 		// multiline comments
@@ -33,6 +34,7 @@ class Parser {
 	 * Before splitting into SQL clauses, extract some regex-able subqueries
 	 * @param {String} sql  The unparsed sql string
 	 * @return {Object}  An array with new sql and subqueries
+	 * @private
 	 */
 	_extractSubqueries(sql) {
 		const subqueries = {};
@@ -54,6 +56,7 @@ class Parser {
 	/**
 	 * Inject column subqueries back into this object
 	 * @param {Object} subqueries  The lookup of extracted subqueries
+	 * @private
 	 */
 	_injectSubqueries(subqueries) {
 		const replacer = $0 => {
@@ -72,6 +75,7 @@ class Parser {
 	 * Split SQL into clauses (used by ::parse())
 	 * @param {String} sql  The SQL to split
 	 * @return {String[]}
+	 * @private
 	 */
 	_split(sql) {
 		const splitter =
@@ -244,6 +248,7 @@ class Parser {
 	 * Build a conditions list
 	 * @param {String} type  Either WHERE or HAVING
 	 * @param {String} clause  The expressions following the type keyword
+	 * @private
 	 */
 	_handleConditions(type, clause) {
 		const andGroups = clause.split(/\bAND\b/i);

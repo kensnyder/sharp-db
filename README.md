@@ -36,6 +36,10 @@ npm install sharp-db
     * [Use in Integration Tests](#use-in-integration-tests)
     * [Insertions](#insertions)
     * [Deletions](#deletions)
+* [SqlBuilder](#sqlbuilder)
+    * [Function List](#function-list)
+* [QueryLogger](#querylogger)
+    * [Logging queries](#logging-queries)
 * [How to Contribute](./CONTRIBUTING.md)
 * [ISC License](./LICENSE.md)
 
@@ -46,13 +50,13 @@ npm install sharp-db
 Connection can be configured with environmental variables or in the constructor.
 
 | Option | ENV name | Default |
-|---|---|---|
-| `host` | DB_HOST | 127.0.0.1 |
-| `port` | DB_PORT | 3306 |
-| `user` | DB_USER | root |
+|---|---|----------------|
+| `host` | DB_HOST | 127.0.0.1      |
+| `port` | DB_PORT | 3306           |
+| `user` | DB_USER | root           |
 | `password` | DB_PASSWORD | _empty string_ |
-| `database` | DB_DATABASE | undefined |
-| `charset` | DB_CHARSET| utf8mb4 |
+| `database` | DB_DATABASE | undefined      |
+| `charset` | DB_CHARSET| utf8mb4        |
 
 See node's mysqljs for [other options](https://github.com/mysqljs/mysql#connection-options).
 
@@ -78,6 +82,7 @@ const db2Again = Db.factory();
 
 // Don't forget to close the connection when done
 db1.end();
+db2.end();
 ```
 
 #### Auto factory and end
@@ -101,12 +106,13 @@ const { error, domain } = await Db.withInstance(async db => {
 `Db.withInstance()` will return one of the following:
 
 1. `{ error }` where error is an object from mysql2. [Full docs](https://github.com/mysqljs/mysql#error-handling). Summary:
-  - `error.sqlMessage` The textual description of the error
-  - `error.code` The string error code such as `PROTOCOL_CONNECTION_LOST`
-  - `error.errno` The associated number code
-  - `error.fatal` True if the error caused the connection to close
-  - `error.sql` The full SQL of the failed query
-  - `error.sqlState` The five-character SQLSTATE code
+   - `error.sqlMessage` The textual description of the error
+   - `error.code` The string error code such as `PROTOCOL_CONNECTION_LOST`
+   - `error.errno` The associated number code
+   - `error.fatal` True if the error caused the connection to close
+   - `error.sql` The full SQL of the failed query
+   - `error.sqlState` The five-character SQLSTATE code
+
 2. Whatever value is returned from the handler. We suggest always returning an object, expecting the caller to check `.error`.
 
 **WARNING:** Your handler function must return a promise that resolves AFTER
@@ -129,9 +135,9 @@ const { error, results } = Db.withInstance(db => {
 });
 // ALSO OK:
 const { error, newUserId } = Db.withInstance(async db => {
-    const { insertId } = await db.insertInto('users', user);
-    return {
-        newUserId: insertId,
+	const { insertId } = await db.insertInto('users', user);
+	return {
+		newUserId: insertId,
 	};
 });
 ```
@@ -159,14 +165,14 @@ const db = Db.factory({
 
 SSH Tunnel Options
 
-| Option | ENV name | Default |
-|---|---|---|
-| `host` | DB_SSH_HOST | "localhost" |
-| `port` | DB_SSH_PORT | 22 |
-| `user` | DB_SSH_USER | _none_ |
-| `password` | DB_SSH_PASSWORD | _none_ |
-| `privateKey` | DB_SSH_PRIVATE_KEY | _none_ |
-| `localPort` | DB_SSH_LOCAL_PORT | 12346 |
+| Option       | ENV name           | Default     |
+|--------------|--------------------|-------------|
+| `host`       | DB_SSH_HOST        | "localhost" |
+| `port`       | DB_SSH_PORT        | 22          |
+| `user`       | DB_SSH_USER        | _none_      |
+| `password`   | DB_SSH_PASSWORD    | _none_      |
+| `privateKey` | DB_SSH_PRIVATE_KEY | _none_      |
+| `localPort`  | DB_SSH_LOCAL_PORT  | 12346       |
 
 See all options in [ssh2's npm package](https://github.com/mscdex/ssh2#client-methods).
 
@@ -331,16 +337,16 @@ I want to add a new hit record with a given URL. You might write this:
 
 ```js
 const newHit = {
-    date: '2021-10-15 17:43:24',
+	date: '2021-10-15 17:43:24',
 	url: 'https://example.com',
 }
 
-const { results } = await db.selectOrCreate('urls', { url: newHit.url }));
+const { results } = await db.selectOrCreate('urls', { url: newHit.url });
 
 await db.insert('hits', {
-    date: newHit.date,
+	date: newHit.date,
 	url_id: results.id,
-})
+});
 ```
 
 ### Useful Query Options
@@ -974,3 +980,43 @@ expect(broker.deleted).toHaveLength(affectedRows);
 // then restore all the deleted all data
 await broker.cleanup();
 ```
+
+## SqlBuilder
+
+### Function list
+
+The `SqlBuilder` objects builds SQL for `Db` methods such as `selectFrom()`.
+Below is a full list of methods if you want to build SQL outside of `Db`.
+
+- SqlBuilder.quote(identifier)
+- SqlBuilder.escape(value)
+- SqlBuilder.selectFrom(table, fields, criteria, extra)
+- SqlBuilder.selectBy(table, column, value)
+- SqlBuilder.insertInto(table, row)
+- SqlBuilder.insertIntoOnDuplicateKeyUpdate(table, insert, update)
+- SqlBuilder.insertExtended(table, rows)
+- SqlBuilder.updateTable(table, set, where)
+- SqlBuilder.deleteFrom(table, where, limit)
+- SqlBuilder.exportRows(table, rows, options)
+- SqlBuilder.buildWhere(field, value)
+- SqlBuilder.buildWheres(wheres)
+
+## QueryLogger
+
+### Logging queries
+
+Example:
+
+```js
+const { Db, QueryLogger } = require('sharp-db');
+const logger = new QueryLogger();
+const db = Db.factory();
+logger.watch(db);
+// ... run queries
+logger.getLastQuery(); // last query
+logger.getQueries(); // all queries
+logger.clear(); // clear all logs
+logger.unwatch(db); // stop capturing logs
+```
+
+
