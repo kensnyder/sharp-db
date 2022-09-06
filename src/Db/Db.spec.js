@@ -374,10 +374,26 @@ describe('Db', () => {
 	describe('selectExists()', () => {
 		it('should construct a SELECT EXISTS query', async () => {
 			const sql = 'SELECT name FROM users';
-			const mockResults = [{ name: 'John Doe' }, { name: 'Jane Doe' }];
-			const mockFields = [{ name: 'name' }];
+			const mockResults = [{ does_it_exist: true }];
+			const mockFields = [];
 			mysqlMock.pushResponse({ results: mockResults, fields: mockFields });
 			const { results } = await db.selectExists(sql);
+			expect(results).toBe(true);
+		});
+		it('should return false if there are no results', async () => {
+			const sql = 'SELECT name FROM users';
+			const mockResults = [];
+			const mockFields = [];
+			mysqlMock.pushResponse({ results: mockResults, fields: mockFields });
+			const { results } = await db.selectExists(sql);
+			expect(results).toBe(false);
+		});
+		it('should construct a SELECT EXISTS query from object', async () => {
+			const sql = 'SELECT name FROM users';
+			const mockResults = [{ does_it_exist: true }];
+			const mockFields = [];
+			mysqlMock.pushResponse({ results: mockResults, fields: mockFields });
+			const { results } = await db.selectExists({ sql });
 			expect(results).toBe(true);
 		});
 		it('should handle errors', async () => {
@@ -434,6 +450,15 @@ describe('Db', () => {
 			mysqlMock.pushResponse({ results: mockResults });
 			const { changedRows } = await db.delete(sql);
 			expect(changedRows).toBe(3);
+		});
+		it('should reject on error', async () => {
+			const sql = 'DELETE FROM users WHERE is_active = false';
+			mysqlMock.pushResponse({ error: new Error('foo') });
+			try {
+				await db.delete(sql);
+			} catch (e) {
+				expect(e.message).toContain('foo');
+			}
 		});
 	});
 	describe('selectFrom()', () => {
@@ -832,76 +857,6 @@ describe('Db', () => {
 			);
 		});
 	});
-	describe('buildWhere()', () => {
-		it('should handle single strings', async () => {
-			const sql = db.buildWhere('status = 5');
-			expect(sql).toBe('status = 5');
-		});
-		it('should handle single values', async () => {
-			const sql = db.buildWhere('status', 5);
-			expect(sql).toBe('`status` = 5');
-		});
-		it('should handle single strings with expressions', async () => {
-			const sql = db.buildWhere('SUM(size) < 1024');
-			expect(sql).toBe('SUM(size) < 1024');
-		});
-		it('should handle between', async () => {
-			const sql = db.buildWhere('status BETWEEN', [1, 3]);
-			expect(sql).toBe('`status` BETWEEN 1 AND 3');
-		});
-		it('should handle expressions', async () => {
-			const sql = db.buildWhere('COUNT(*) BETWEEN', [1, 3]);
-			expect(sql).toBe('COUNT(*) BETWEEN 1 AND 3');
-		});
-		it('should handle >', async () => {
-			const sql = db.buildWhere('id >', 5);
-			expect(sql).toBe('`id` > 5');
-		});
-		it('should handle !=', async () => {
-			const sql = db.buildWhere('id !=', 5);
-			expect(sql).toBe('`id` != 5');
-		});
-		it('should handle null', async () => {
-			const sql = db.buildWhere('deleted_at', null);
-			expect(sql).toBe('`deleted_at` IS NULL');
-		});
-		it('should handle implicit IN()', async () => {
-			const sql = db.buildWhere('status', [1, 3]);
-			expect(sql).toBe('`status` IN(1,3)');
-		});
-		it('should handle explicit IN()', async () => {
-			const sql = db.buildWhere('status IN', [1, 3]);
-			expect(sql).toBe('`status` IN(1,3)');
-		});
-		it('should handle implicit NOT IN()', async () => {
-			const sql = db.buildWhere('status !=', [1, 3]);
-			expect(sql).toBe('`status` NOT IN(1,3)');
-		});
-		it('should handle explicit NOT IN()', async () => {
-			const sql = db.buildWhere('status NOT IN', [1, 3]);
-			expect(sql).toBe('`status` NOT IN(1,3)');
-		});
-		it('should handle IS NULL', async () => {
-			const sql = db.buildWhere('status', null);
-			expect(sql).toBe('`status` IS NULL');
-		});
-		it('should handle equals IS NULL', async () => {
-			const sql = db.buildWhere('status =', null);
-			expect(sql).toBe('`status` IS NULL');
-		});
-		it('should handle IS NOT NULL', async () => {
-			const sql = db.buildWhere('status !=', null);
-			expect(sql).toBe('`status` IS NOT NULL');
-		});
-		it('should check hasOwnProperty', async () => {
-			const obj = Object.create({
-				a: 1,
-			});
-			obj.b = 2;
-			const sql = db.buildWheres(obj);
-			expect(sql).toBe('`b` = 2');
-		});
-	});
 	describe('tpl() escaping', () => {
 		it('should template Numbers', async () => {
 			const { select } = db.tpl();
@@ -1189,6 +1144,32 @@ INSERT INTO \`users\` (\`id\`,\`fname\`) VALUES
 (2,'Jane');
 			`.trim()
 			);
+		});
+	});
+	describe('transactions', () => {
+		it('should start transaction', async () => {
+			mysqlMock.pushResponse({});
+			const { query } = await db.startTransaction();
+			await db.end();
+			expect(query).toBe('START TRANSACTION');
+		});
+		it('should begin transaction', async () => {
+			mysqlMock.pushResponse({});
+			const { query } = await db.beginTransaction();
+			await db.end();
+			expect(query).toBe('START TRANSACTION');
+		});
+		it('should commit', async () => {
+			mysqlMock.pushResponse({});
+			const { query } = await db.commit();
+			await db.end();
+			expect(query).toBe('COMMIT');
+		});
+		it('should rollback', async () => {
+			mysqlMock.pushResponse({});
+			const { query } = await db.rollback();
+			await db.end();
+			expect(query).toBe('ROLLBACK');
 		});
 	});
 	describe('end()', () => {

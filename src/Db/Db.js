@@ -1,16 +1,17 @@
-const forOwn = require('../forOwnDefined/forOwnDefined.js');
+const { EventEmitter } = require('events');
 const mysql = require('mysql2');
 const Ssh = require('../Ssh/Ssh.js');
-const chunk = require('lodash/chunk');
 const { isPlainObject } = require('is-plain-object');
 const decorateError = require('../decorateError/decorateError.js');
+const SqlBuilder = require('../SqlBuilder/SqlBuilder.js');
+const DbEvent = require('../DbEvent/DbEvent.js');
 
 const noop = () => {};
 
 /**
  * Simple database class for mysql
  */
-class Db {
+class Db extends EventEmitter {
 	/**
 	 * Specify connection details for MySQL and optionally SSH
 	 * @param {Object} [config]  MySQL connection details such as host, login, password, encoding, database
@@ -19,6 +20,7 @@ class Db {
 	 * @see https://github.com/mscdex/ssh2#client-methods
 	 */
 	constructor(config = {}, sshConfig = null) {
+		super();
 		const env = process.env;
 		/**
 		 * The config used for this instance
@@ -45,6 +47,44 @@ class Db {
 	}
 
 	/**
+	 * Emit an event and associated data
+	 * @param {String} type  The event name
+	 * @param {Object} data  Data to send with event
+	 * @return {DbEvent}
+	 */
+	emit(type, data = {}) {
+		const evt = new DbEvent({
+			type,
+			subtype: null,
+			target: this,
+			error: null,
+			data,
+		});
+		super.emit(type, evt);
+		return evt;
+	}
+
+	/**
+	 * Emit a dbError event and associated data
+	 * @param {String} subtype  The name of the event that would have been called in a success case
+	 * @param {Error} error  The error that was raised
+	 * @param {Object} data  Data to send with event
+	 * @return {DbEvent}
+	 */
+	emitError(subtype, error, data = {}) {
+		const type = 'dbError';
+		const evt = new DbEvent({
+			type,
+			subtype,
+			target: this,
+			error,
+			data,
+		});
+		super.emit(type, evt);
+		return evt;
+	}
+
+	/**
 	 * Create a new QuickDb instance or return the last used one.
 	 * Specify connection details for MySQL and optionally SSH
 	 * @param {Object} [config]  MySQL connection details such as host, login, password, encoding, database
@@ -62,23 +102,29 @@ class Db {
 
 	/**
 	 * Make a new connection to MySQL
+	 * @param {Object} [overrides]  Additional connection params
+	 * @return {Promise<Object>}  The mysql connection object
+	 * @see https://github.com/mysqljs/mysql#connection-options
 	 */
-	async connect() {
+	async connect(overrides = {}) {
 		if (this.ssh) {
 			await this.ssh.tunnelTo(this);
+			this.emit('sshConnect', this.ssh);
 		}
 		/**
 		 * The mysql2 library connection object
 		 * @type {Object}
 		 */
-		this.connection = mysql.createConnection(this.config);
+		this.connection = mysql.createConnection({ ...this.config, ...overrides });
 		return new Promise((resolve, reject) => {
 			this.connection.connect(error => {
 				if (error) {
 					decorateError(error);
+					this.emitError('connect', error);
 					reject(error);
 				} else {
-					resolve();
+					this.emit('connect', { connection: this.connection });
+					resolve(this.connection);
 				}
 			});
 		});
@@ -100,6 +146,7 @@ class Db {
 	end() {
 		if (this.ssh) {
 			this.ssh.end();
+			this.emit('sshDisconnect');
 		}
 		return new Promise((resolve, reject) => {
 			if (this.connection) {
@@ -110,8 +157,10 @@ class Db {
 				this.connection.end(error => {
 					if (error) {
 						decorateError(error);
+						this.emitError('disconnect', error);
 						reject(error);
 					} else {
+						this.emit('disconnect');
 						resolve();
 					}
 				});
@@ -128,6 +177,7 @@ class Db {
 	destroy() {
 		if (this.ssh) {
 			this.ssh.end();
+			this.emit('sshDisconnect');
 		}
 		if (this.connection && this.connection.destroy) {
 			const idx = Db.instances.indexOf(this);
@@ -135,6 +185,7 @@ class Db {
 				Db.instances.splice(idx, 1);
 			}
 			this.connection.destroy();
+			this.emit('disconnect');
 		}
 		return this;
 	}
@@ -172,9 +223,12 @@ class Db {
 			const query = this.connection.query(options, (error, results, fields) => {
 				if (error) {
 					decorateError(error, options);
+					this.emitError('query', error);
 					reject(error);
 				} else {
-					resolve({ query, results, fields });
+					const result = { query, results, fields };
+					const evt = this.emit('query', result);
+					resolve(evt.data);
 				}
 			});
 		});
@@ -212,9 +266,12 @@ class Db {
 			const query = this.connection.query(options, (error, results, fields) => {
 				if (error) {
 					decorateError(error, options);
+					this.emitError('select', error);
 					reject(error);
 				} else {
-					resolve({ query, results, fields });
+					const result = { query, results, fields };
+					const evt = this.emit('select', result);
+					resolve(evt.data);
 				}
 			});
 		});
@@ -230,28 +287,14 @@ class Db {
 	 * @property {Object[]} fields  Info about the selected fields
 	 */
 	async selectHash(sql, ...bindVars) {
-		await this.connectOnce();
-		const options = this.bindArgs(sql, bindVars);
-		return new Promise((resolve, reject) => {
-			const query = this.connection.query(options, (error, results, fields) => {
-				if (error) {
-					decorateError(error, options);
-					reject(error);
-				} else {
-					const key = fields[0].name;
-					const val = fields[1].name;
-					const hash = {};
-					results.forEach(result => {
-						hash[result[key]] = result[val];
-					});
-					resolve({
-						query,
-						results: hash,
-						fields,
-					});
-				}
-			});
+		const { query, results, fields } = await this.select(sql, ...bindVars);
+		const key = fields[0].name;
+		const val = fields[1].name;
+		const hash = {};
+		results.forEach(result => {
+			hash[result[key]] = result[val];
 		});
+		return { query, results: hash, fields };
 	}
 
 	/**
@@ -264,24 +307,14 @@ class Db {
 	 * @property {Object[]} fields  Info about the selected fields
 	 */
 	async selectList(sql, ...bindVars) {
-		await this.connectOnce();
-		const options = this.bindArgs(sql, bindVars);
-		return new Promise((resolve, reject) => {
-			const query = this.connection.query(options, (error, results, fields) => {
-				if (error) {
-					decorateError(error, options);
-					reject(error);
-				} else {
-					const name = fields[0].name;
-					const list = results.map(result => result[name]);
-					resolve({
-						query,
-						results: list,
-						fields,
-					});
-				}
-			});
-		});
+		const { query, results, fields } = await this.select(sql, ...bindVars);
+		const name = fields[0].name;
+		const list = results.map(result => result[name]);
+		return {
+			query,
+			results: list,
+			fields,
+		};
 	}
 
 	/**
@@ -295,29 +328,19 @@ class Db {
 	 * @property {Object[]} fields  Info about the selected fields
 	 */
 	async selectGrouped(groupField, sql, ...bindVars) {
-		await this.connectOnce();
-		const options = this.bindArgs(sql, bindVars);
-		return new Promise((resolve, reject) => {
-			const query = this.connection.query(options, (error, results, fields) => {
-				if (error) {
-					decorateError(error, options);
-					reject(error);
-				} else {
-					const groups = {};
-					results.forEach(result => {
-						if (!groups[result[groupField]]) {
-							groups[result[groupField]] = [];
-						}
-						groups[result[groupField]].push(result);
-					});
-					resolve({
-						query,
-						results: groups,
-						fields,
-					});
-				}
-			});
+		const { query, results, fields } = await this.select(sql, ...bindVars);
+		const groups = {};
+		results.forEach(result => {
+			if (!groups[result[groupField]]) {
+				groups[result[groupField]] = [];
+			}
+			groups[result[groupField]].push(result);
 		});
+		return {
+			query,
+			results: groups,
+			fields,
+		};
 	}
 
 	/**
@@ -331,26 +354,16 @@ class Db {
 	 * @property {Object[]} fields  Info about the selected fields
 	 */
 	async selectIndexed(indexField, sql, ...bindVars) {
-		await this.connectOnce();
-		const options = this.bindArgs(sql, bindVars);
-		return new Promise((resolve, reject) => {
-			const query = this.connection.query(options, (error, results, fields) => {
-				if (error) {
-					decorateError(error, options);
-					reject(error);
-				} else {
-					const hash = {};
-					results.forEach(result => {
-						hash[result[indexField]] = result;
-					});
-					resolve({
-						query,
-						results: hash,
-						fields,
-					});
-				}
-			});
+		const { query, results, fields } = await this.select(sql, ...bindVars);
+		const hash = {};
+		results.forEach(result => {
+			hash[result[indexField]] = result;
 		});
+		return {
+			query,
+			results: hash,
+			fields,
+		};
 	}
 
 	/**
@@ -363,22 +376,12 @@ class Db {
 	 * @property {Object[]} fields  Info about the selected fields
 	 */
 	async selectFirst(sql, ...bindVars) {
-		await this.connectOnce();
-		const options = this.bindArgs(sql, bindVars);
-		return new Promise((resolve, reject) => {
-			const query = this.connection.query(options, (error, results, fields) => {
-				if (error) {
-					decorateError(error, options);
-					reject(error);
-				} else {
-					resolve({
-						query,
-						results: results[0],
-						fields,
-					});
-				}
-			});
-		});
+		const { query, results, fields } = await this.select(sql, ...bindVars);
+		return {
+			query,
+			results: results[0],
+			fields,
+		};
 	}
 
 	/**
@@ -391,27 +394,17 @@ class Db {
 	 * @property {Object[]} fields  Info about the selected fields
 	 */
 	async selectValue(sql, ...bindVars) {
-		await this.connectOnce();
-		const options = this.bindArgs(sql, bindVars);
-		return new Promise((resolve, reject) => {
-			const query = this.connection.query(options, (error, results, fields) => {
-				if (error) {
-					decorateError(error, options);
-					reject(error);
-				} else {
-					let value = undefined;
-					if (results.length > 0) {
-						const name = fields[0].name;
-						value = results[0][name];
-					}
-					resolve({
-						query,
-						results: value,
-						fields,
-					});
-				}
-			});
-		});
+		const { query, results, fields } = await this.select(sql, ...bindVars);
+		let value = undefined;
+		if (results.length > 0) {
+			const name = fields[0].name;
+			value = results[0][name];
+		}
+		return {
+			query,
+			results: value,
+			fields,
+		};
 	}
 
 	/**
@@ -423,19 +416,16 @@ class Db {
 	 * @property {Boolean} results  True if any records match query
 	 * @property {Object[]} fields  Info about the selected fields
 	 */
-	selectExists(sql, ...bindVars) {
-		const options = this.bindArgs(sql, bindVars);
+	async selectExists(sql, ...bindVars) {
+		const options = typeof sql === 'object' ? sql : { sql };
 		options.sql = `SELECT EXISTS (${options.sql}) AS does_it_exist`;
-		return this.selectValue(options).then(
-			({ query, results, fields }) => {
-				return {
-					query,
-					results: Boolean(results),
-					fields,
-				};
-			},
-			err => err
-		);
+		const { query, results, fields } = await this.select(options, ...bindVars);
+		const doesItExist = results[0] ? Boolean(results[0].does_it_exist) : false;
+		return {
+			query,
+			results: doesItExist,
+			fields,
+		};
 	}
 
 	/**
@@ -453,14 +443,17 @@ class Db {
 			const query = this.connection.query(options, (error, results) => {
 				if (error) {
 					decorateError(error, options);
+					this.emitError('insert', error);
 					reject(error);
 				} else {
-					resolve({
+					const result = {
 						query,
 						insertId: results.insertId,
 						affectedRows: results.affectedRows,
 						changedRows: results.changedRows,
-					});
+					};
+					const evt = this.emit('insert', result);
+					resolve(evt.data);
 				}
 			});
 		});
@@ -482,13 +475,16 @@ class Db {
 			const query = this.connection.query(options, (error, results) => {
 				if (error) {
 					decorateError(error, options);
+					this.emitError('update', error);
 					reject(error);
 				} else {
-					resolve({
+					const result = {
 						query,
 						affectedRows: results.affectedRows,
 						changedRows: results.changedRows,
-					});
+					};
+					const evt = this.emit('update', result);
+					resolve(evt.data);
 				}
 			});
 		});
@@ -502,41 +498,47 @@ class Db {
 	 * @property {String} query  The final SQL that was executed
 	 * @property {Number} changedRows  The number of rows affected by the statement
 	 */
-	delete(sql, ...bindVars) {
-		return this.update(sql, ...bindVars);
+	async delete(sql, ...bindVars) {
+		await this.connectOnce();
+		const options = this.bindArgs(sql, bindVars);
+		return new Promise((resolve, reject) => {
+			const query = this.connection.query(options, (error, results) => {
+				if (error) {
+					decorateError(error, options);
+					this.emitError('delete', error);
+					reject(error);
+				} else {
+					const result = {
+						query,
+						affectedRows: results.affectedRows,
+						changedRows: results.changedRows,
+					};
+					const evt = this.emit('delete', result);
+					resolve(evt.data);
+				}
+			});
+		});
 	}
 
 	/**
 	 * Build a SELECT statement and return result rows
 	 * @param {String} table  The name of the table
 	 * @param {Array} fields  An array of field names to select
-	 * @param {Object} criteria  Params to construct the WHERE clause - see Db#buildWhere
+	 * @param {Object} criteria  Params to construct the WHERE clause - see SqlBuilder#buildWhere
 	 * @param {String} extra  Additional raw SQL such as GROUP BY, ORDER BY, or LIMIT
 	 * @return {Promise<Object>}
 	 * @property {String} query  The final SQL that was executed
 	 * @property {Array} results  The result rows
 	 * @property {Object[]} fields  Info about the selected fields
-	 * @see Db#buildWhere
+	 * @see SqlBuilder#buildWhere
 	 */
 	selectFrom(table, fields = [], criteria = {}, extra = '') {
-		if (!Array.isArray(fields)) {
-			throw new Error('Db.selectFrom fields must be an array');
-		}
-		if (typeof criteria !== 'object') {
-			throw new Error('Db.selectFrom criteria must be an array');
-		}
-		this.connectOnce();
-		const escFields = fields.map(field => this.quote(field));
-		const escFieldsString = fields.length ? escFields.join(', ') : '*';
-		const escTable = this.quote(table);
-		const escWhere = this.buildWheres(criteria);
-		const sql =
-			`SELECT ${escFieldsString} FROM ${escTable} WHERE ${escWhere} ${extra}`.trim();
+		const sql = SqlBuilder.selectFrom(table, fields, criteria, extra);
 		return this.select(sql);
 	}
 
 	/**
-	 * Select the record with the given UUID
+	 * Select the record with the given column value
 	 * @param {String} table  The name of the table from which to select
 	 * @param {String} column  The name of the column from which to select
 	 * @param {String} value  The value of the record for that column
@@ -546,12 +548,8 @@ class Db {
 	 * @property {Object[]} fields  Info about the selected fields
 	 */
 	selectByKey(table, column, value) {
-		const escTable = this.quote(table);
-		const escColumn = this.quote(column);
-		return this.selectFirst(
-			`SELECT * FROM ${escTable} WHERE ${escColumn} = ?`,
-			value
-		);
+		const sql = SqlBuilder.selectBy(table, column, value);
+		return this.selectFirst(sql);
 	}
 
 	/**
@@ -683,18 +681,8 @@ class Db {
 	 * @property {Number} insertId  The id of the last inserted record
 	 */
 	insertInto(table, insert) {
-		// build insert expression
-		const sets = [];
-		forOwn(insert, (value, field) => {
-			sets.push(this.quote(field) + '=' + mysql.escape(value));
-		});
-		if (sets.length === 0) {
-			throw new Error('Db.insertInto requires a non-empty insert Object');
-		}
-		const escTable = this.quote(table);
-		const setSql = sets.join(', ');
-		const insertSql = `INSERT INTO ${escTable} SET ${setSql}`;
-		return this.insert(insertSql);
+		const sql = SqlBuilder.insertInto(table, insert);
+		return this.insert(sql);
 	}
 
 	/**
@@ -709,141 +697,70 @@ class Db {
 	 * @property {Number} changedRows  The number of rows affected by the statement
 	 */
 	async insertIntoOnDuplicateKeyUpdate(table, insert, update) {
-		// build insert expression
-		const sets = [];
-		forOwn(insert, (value, field) => {
-			sets.push(this.quote(field) + '=' + mysql.escape(value));
-		});
-		if (sets.length === 0) {
-			throw new Error(
-				'Db.insertIntoOnDuplicateKeyUpdate requires a non-empty insert Object'
-			);
-		}
-		// build update expression
-		const updates = [];
-		forOwn(update, (value, field) => {
-			updates.push(this.quote(field) + '=' + mysql.escape(value));
-		});
-		if (updates.length === 0) {
-			throw new Error(
-				'Db.insertIntoOnDuplicateKeyUpdate requires a non-empty update Object'
-			);
-		}
-		table = this.quote(table);
-		const setSql = sets.join(', ');
-		const updateSql = updates.join(', ');
-		// combine
-		const sql = `INSERT INTO ${table} SET ${setSql} ON DUPLICATE KEY UPDATE ${updateSql}`;
-		// run
-		await this.connectOnce();
-		return new Promise((resolve, reject) => {
-			const query = this.connection.query(sql, (error, results) => {
-				if (error) {
-					decorateError(error, { sql });
-					reject(error);
-				} else {
-					resolve({
-						query,
-						insertId: results.insertId,
-						affectedRows: results.affectedRows,
-						changedRows: results.changedRows,
-					});
-				}
-			});
-		});
+		const sql = SqlBuilder.insertIntoOnDuplicateKeyUpdate(
+			table,
+			insert,
+			update
+		);
+		return this.insert(sql);
 	}
 
 	/**
 	 * Build an INSERT statement and run it
 	 * @param {String} table  The name of the table
-	 * @param {Array} inserts  list of column-value pairs to insert
+	 * @param {Array} rows  An Array of objects, each with column-value pairs to insert
 	 * @return {Promise<Object>}
 	 * @property {String} query  The final SQL that was executed
 	 * @property {Number} insertId  The id of the last inserted record
 	 */
-	insertExtended(table, inserts) {
-		// build insert expression
-		if (!Array.isArray(inserts) || inserts.length === 0) {
-			throw new Error('Db.insertExtended inserts must be a non-empty array');
-		}
-		const fields = [];
-		forOwn(inserts[0], (value, field) => {
-			fields.push(this.quote(field));
-		});
-		const batches = [];
-		inserts.forEach(insert => {
-			const values = [];
-			forOwn(insert, value => {
-				values.push(this.escape(value));
-			});
-			batches.push('(' + values.join(', ') + ')');
-		});
-		const escTable = this.quote(table);
-		const fieldsSql = fields.join(', ');
-		const batchesSql = batches.join(', ');
-		const insertSql = `INSERT INTO ${escTable} (${fieldsSql}) VALUES ${batchesSql}`;
-		return this.insert(insertSql);
+	insertExtended(table, rows) {
+		const sql = SqlBuilder.insertExtended(table, rows);
+		return this.insert(sql);
 	}
 
 	/**
 	 * Build an UPDATE statement and run it
 	 * @param {String} table  The name of the table
-	 * @param {Object} set  An array of column => value pairs to update
-	 * @param {Object} where  Params to construct the WHERE clause - see Db#buildWhere
+	 * @param {Object} set  An array of column-value pairs to update
+	 * @param {Object} where  Params to construct the WHERE clause - see SqlBuilder#buildWheres
 	 * @return {Promise<Object>}
 	 * @property {String} query  The final SQL that was executed
 	 * @property {Number} affectedRows  The number of rows matching the WHERE criteria
 	 * @property {Number} changedRows  The number of rows affected by the statement
-	 * @see Db#buildWhere
+	 * @see SqlBuilder#buildWheres
 	 */
 	updateTable(table, set, where = {}) {
-		const sets = [];
-		forOwn(set, (value, field) => {
-			sets.push(this.quote(field) + '=' + this.escape(value));
-		});
-		if (sets.length === 0) {
-			throw new Error('Db.updateTable requires a non-empty set Object');
-		}
-		const escTable = this.quote(table);
-		const setSql = sets.join(', ');
-		const escWhere = this.buildWheres(where);
-		const sql = `UPDATE ${escTable} SET ${setSql} WHERE ${escWhere}`;
+		const sql = SqlBuilder.updateTable(table, set, where);
 		return this.update(sql, set);
 	}
 
 	/**
-	 * Construct a delete query and run
+	 * Construct a DELETE query and run
 	 * @param {String} table  The name of the table from which to delete
-	 * @param {Object} where  WHERE conditions on which to delete - see Db#buildWhere
+	 * @param {Object} where  WHERE conditions on which to delete - see SqlBuilder#buildWheres
 	 * @param {Number} limit  Limit deletion to this many records
 	 * @return {Promise<Object>}
 	 * @property {String} query  The final SQL that was executed
 	 * @property {Number} affectedRows  The number of rows matching the WHERE criteria
 	 * @property {Number} changedRows  The number of rows affected by the statement
-	 * @see Db#buildWhere
+	 * @see SqlBuilder#buildWheres
 	 */
 	async deleteFrom(table, where, limit = null) {
-		await this.connectOnce();
-		const escTable = this.quote(table);
-		const escWhere = this.buildWheres(where);
-		let sql = `DELETE FROM ${escTable} WHERE ${escWhere}`;
-		if (limit > 0) {
-			sql += ` LIMIT ${limit}`;
-		}
+		const sql = SqlBuilder.deleteFrom(table, where, limit);
 		return this.delete(sql);
 	}
 
 	/**
 	 * Construct INSERT statements suitable for a backup
 	 * @param {String} table  The name of the table from which to fetch records
-	 * @param {Object} where  WHERE conditions on which to fetch records - see Db#buildWhere
-	 * @see Db#buildWhere
+	 * @param {Object} where  WHERE conditions on which to fetch records - see SqlBuilder#buildWheres
+	 * @see SqlBuilder#buildWheres
 	 * @param {Object} options  Additional options
-	 * @property {Number} limit  Limit export to this many records
-	 * @property {Number} chunkSize  If > 0, restrict INSERT STATEMENTS to a maximum of this many records
-	 * @property {Boolean} discardIds  If true, columns selected as "id" will have a NULL value
-	 * @property {Boolean} disableForeignKeyChecks  If true, add statements to disable and re-enable foreign key checks
-	 * @property {Boolean} lockTables  If true, add statements to lock and unlock tables
+	 * @property {Number} [limit=0]  Limit export to this many records
+	 * @property {Number} [chunkSize=250]  If > 0, restrict INSERT STATEMENTS to a maximum of this many records
+	 * @property {Boolean} [discardIds=false]  If true, columns selected as "id" will have a NULL value
+	 * @property {Boolean} [disableForeignKeyChecks=false]  If true, add statements to disable and re-enable foreign key checks
+	 * @property {Boolean} [lockTables=false]  If true, add statements to lock and unlock tables
 	 * @return {Promise<Object>}
 	 * @property {String} results  The exported SQL
 	 * @property {String} query  The SQL that was executed to fetch records
@@ -863,14 +780,13 @@ class Db {
 			lockTables = false,
 		} = {}
 	) {
-		await this.connectOnce();
 		// get results
-		const addl = limit > 0 ? `LIMIT ${limit}` : '';
+		const additional = limit > 0 ? `LIMIT ${limit}` : '';
 		const {
 			results: rows,
 			fields,
 			query,
-		} = await this.selectFrom(table, [], where, addl);
+		} = await this.selectFrom(table, [], where, additional);
 		if (rows.length === 0) {
 			return {
 				results: '',
@@ -880,130 +796,58 @@ class Db {
 				chunks: 0,
 			};
 		}
-		// build column names
-		const quotedFields = [];
-		for (const field of fields) {
-			quotedFields.push(this.quote(field.name));
-		}
-		const fieldsString = quotedFields.join(',');
-		const quotedTable = this.quote(table);
-		// start building lines of sql to insert
-		const lines = [];
-		if (disableForeignKeyChecks) {
-			lines.push(
-				'/*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;'
-			);
-		}
-		if (lockTables) {
-			lines.push(`LOCK TABLES ${quotedTable} WRITE;`);
-		}
-		if (truncateTable) {
-			lines.push(`TRUNCATE TABLE ${quotedTable};`);
-		}
-		// take rows in chunks so a single statement isn't too long
-		const chunks = chunk(rows, chunkSize);
-		for (const chunkOfRows of chunks) {
-			const rowStrings = [];
-			for (const values of chunkOfRows) {
-				const escapedValues = [];
-				// collect the value for each field
-				for (const field of fields) {
-					if (discardIds && field.name === 'id') {
-						escapedValues.push('NULL');
-					} else {
-						escapedValues.push(this.escape(values[field.name]));
-					}
-				}
-				const valuesString = escapedValues.join(',');
-				rowStrings.push(`(${valuesString})`);
-			}
-			const insertsString = rowStrings.join(',\n');
-			lines.push(
-				`INSERT INTO ${quotedTable} (${fieldsString}) VALUES\n${insertsString};`
-			);
-		}
-		if (lockTables) {
-			lines.push('UNLOCK TABLES;');
-		}
-		if (disableForeignKeyChecks) {
-			lines.push('/*!40014 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS */;');
-		}
+		const sql = SqlBuilder.exportRows(table, rows, {
+			fields,
+			chunkSize,
+			discardIds,
+			truncateTable,
+			disableForeignKeyChecks,
+			lockTables,
+		});
 		return {
-			results: lines.join('\n'),
+			results: sql,
 			fields,
 			query,
 			affectedRows: rows.length,
-			chunks: chunks.length,
+			chunks: Math.ceil(rows.length / chunkSize),
 		};
 	}
 
 	/**
-	 * Build a where clause from an object of field-value pairs.
-	 * Used internally by #selectFrom, #updateTable, #deleteFrom
-	 * @see Db#buildWhere
-	 * @param {Object} wheres  An object with field-value pairs (field may be field space operator)
-	 * @return {String}
-	 * @example
-	 * db.buildWheres({
-	 *     'start_date BETWEEN: ['2012-01-01','2013-01-01'],
-	 *     'start_date >': '2013-01-01',
-	 *     'start_date !=': '2013-01-01',
-	 *     'start_date': null, // `start_date` IS NULL
-	 *     'start_date !=': null, // `start_date` IS NOT NULL
-	 *     id: [1,2,3], // `id` IN (1,2,3)
-	 *     'id !=': [1,2,3], // `id` NOT IN (1,2,3)
-	 *     'id IN': [1,2,3], // `id` IN (1,2,3)
-	 *     'id NOT IN': [1,2,3], // `id` NOT IN (1,2,3)
-	 * })
+	 * run START TRANSACTION
+	 * @alias Db#beginTransaction
+	 * @return {Promise<Object>}
 	 */
-	buildWheres(wheres) {
-		const clauses = [];
-		for (const field in wheres) {
-			if (!wheres.hasOwnProperty(field)) {
-				continue;
-			}
-			clauses.push(this.buildWhere(field, wheres[field]));
-		}
-		return clauses.length ? clauses.join(' AND ') : '1';
+	startTransaction() {
+		this.emit('startTransaction');
+		return this.query('START TRANSACTION');
 	}
 
 	/**
-	 * Construct where clause element from the given field and value
-	 * @param {String} field  The field or field space operator
-	 * @param {*} value  The value to bind
-	 * @return {String}
-	 * @example
-	 * db.buildWhere('start_date BETWEEN', ['2012-01-01','2013-01-01']);
-	 * db.buildWhere('start_date >', '2013-01-01');
-	 * db.buildWhere('start_date !=', '2013-01-01');
-	 * db.buildWhere('start_date', null); // `start_date` IS NULL
-	 * db.buildWhere('start_date !=', null); // `start_date` IS NOT NULL
-	 * db.buildWhere('id', [1,2,3]); // `id` IN (1,2,3)
-	 * db.buildWhere('id !=', [1,2,3]); // `id` NOT IN (1,2,3)
-	 * db.buildWhere('id IN', [1,2,3]); // `id` IN (1,2,3)
-	 * db.buildWhere('id NOT IN', [1,2,3]); // `id` NOT IN (1,2,3)
+	 * run START TRANSACTION
+	 * @alias Db#startTransaction
+	 * @return {Promise<Object>}
 	 */
-	buildWhere(field, value = undefined) {
-		if (value === undefined) {
-			return field;
-		}
-		let [name, operator] = field.split(/\s+/);
-		name = this.quote(name);
-		operator = operator ? operator.toUpperCase() : '=';
-		if (operator === 'BETWEEN') {
-			const val0 = mysql.escape(value[0]);
-			const val1 = mysql.escape(value[1]);
-			return `${name} BETWEEN ${val0} AND ${val1}`;
-		} else if (value === null) {
-			return operator === '=' ? `${name} IS NULL` : `${name} IS NOT NULL`;
-		} else if (Array.isArray(value)) {
-			const values = value.map(val => mysql.escape(val));
-			return operator === '=' || operator === 'IN'
-				? `${name} IN(${values})`
-				: `${name} NOT IN(${values})`;
-		}
-		const escVal = mysql.escape(value);
-		return `${name} ${operator} ${escVal}`;
+	beginTransaction() {
+		return this.startTransaction();
+	}
+
+	/**
+	 * run COMMIT
+	 * @return {Promise<Object>}
+	 */
+	commit() {
+		this.emit('commit');
+		return this.query('COMMIT');
+	}
+
+	/**
+	 * run ROLLBACK
+	 * @return {Promise<Object>}
+	 */
+	rollback() {
+		this.emit('rollback');
+		return this.query('ROLLBACK');
 	}
 
 	/**
@@ -1045,16 +889,17 @@ class Db {
 				options.sql = options.sql.replace(/:([\w_]+)/g, ($0, $1) => {
 					if (arg.hasOwnProperty($1) && arg[$1] !== undefined) {
 						options.bound[$1] = arg[$1];
-						return mysql.escape(arg[$1]);
+						return this.escape(arg[$1]);
 					}
 					return $0;
 				});
 			} else {
 				options.bound[String(i)] = arg;
-				options.sql = options.sql.replace('?', mysql.escape(arg));
+				options.sql = options.sql.replace('?', this.escape(arg));
 			}
 		});
-		return options;
+		const evt = this.emit('bind', options);
+		return evt.data;
 	}
 
 	/**
@@ -1072,7 +917,7 @@ class Db {
 	 * @return {String}
 	 */
 	escapeQuoteless(value) {
-		let escaped = mysql.escape(value);
+		let escaped = this.escape(value);
 		if (escaped.slice(0, 1) === "'" && escaped.slice(-1) === "'") {
 			escaped = escaped.slice(1, -1);
 		}

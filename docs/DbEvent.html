@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>Ssh/Ssh.js - Documentation</title>
+    <title>DbEvent - Documentation</title>
 
     <script src="scripts/prettify/prettify.js"></script>
     <script src="scripts/prettify/lang-css.js"></script>
@@ -29,100 +29,760 @@
 
 <div id="main">
     
-    <h1 class="page-title">Ssh/Ssh.js</h1>
+    <h1 class="page-title">DbEvent</h1>
     
 
     
 
 
 
+
+<section>
+
+<header>
     
-    <section>
-        <article>
-            <pre class="prettyprint source linenums"><code>const os = require('os');
-const fs = require('fs');
-const Client = require('ssh2').Client;
+        <h2>
+        DbEvent
+        </h2>
+        
+    
+</header>
 
-/**
- * Class to allow connecting to a DB through an ssh tunnel
- */
-class Ssh {
-	/**
-	 * Specify connection details including, host, port, user, privateKey
-	 * @param {Object} [config]  Configuration to send to npm's ssh2
-	 */
-	constructor(config = {}) {
-		const env = process.env;
-		this.config = {
-			...config,
-			host: config.host || env.DB_SSH_HOST || 'localhost',
-			port: config.port || env.DB_SSH_PORT || 22,
-			user: config.user || env.DB_SSH_USER,
-			localPort: config.localPort || env.DB_SSH_LOCAL_PORT || 12347,
-		};
-		if (config.privateKey || env.DB_SSH_PRIVATE_KEY) {
-			this.config.privateKey = config.privateKey || env.DB_SSH_PRIVATE_KEY;
-			if (this.config.privateKey.match(/\.pem$/)) {
-				const pkeyPath = this.config.privateKey.replace(/^~/, os.homedir());
-				if (!fs.existsSync(pkeyPath)) {
-					throw new Error(`Private key file not found at "${pkeyPath}".`);
-				}
-				this.config.privateKey = fs.readFileSync(pkeyPath, {
-					encoding: 'utf8',
-				});
-			}
-		} else if (config.password || env.DB_SSH_PASSWORD) {
-			this.config.password = config.password || env.DB_SSH_PASSWORD;
-		}
-	}
+<article>
+    <div class="container-overview">
+    
+        
+<div class="section-method">
 
-	/**
-	 * Setup a tunnel for the given Db instance
-	 * @param {Db} db  A Db instance
-	 * @returns {Promise}  Resolves when tunnel is established
-	 */
-	tunnelTo(db) {
-		return new Promise((resolve, reject) => {
-			if (!db.config || !db.config.host || !db.config.port) {
-				reject(new Error('Db config must have host and port.'));
-			}
-			this.connection = new Client();
-			this.connection.on('ready', () => {
-				this.connection.forwardOut(
-					'127.0.0.1',
-					this.config.localPort,
-					db.config.host,
-					db.config.port,
-					(err, stream) => {
-						if (err) {
-							this.end();
-							return reject(err);
-						}
-						// override db host, since we're operating from within the SSH tunnel
-						db.config.host = 'localhost';
-						db.config.stream = stream;
-						resolve();
-					}
-				);
-			});
-			this.connection.connect(this.config);
-		});
-	}
+    
 
-	/**
-	 * Close the ssh tunnel
-	 */
-	end() {
-		if (this.connection) {
-			this.connection.end();
-		}
-	}
-}
+    <h4 class="name" id="DbEvent"><span class="type-signature"></span>new DbEvent<span class="signature">(props)</span><span class="type-signature"></span></h4>
 
-module.exports = Ssh;
-</code></pre>
-        </article>
-    </section>
+    
+
+
+
+<div class="description">
+    <p>Create new even object</p>
+</div>
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="DbEvent_DbEvent.js.html">DbEvent/DbEvent.js</a>, <a href="DbEvent_DbEvent.js.html#line32">line 32</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>props</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><code>Object</code></span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">
+                <p>The property values (type, subtype, target, error, data)</p>
+                
+            </td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</div>
+    
+    </div>
+
+    
+
+    
+
+    
+
+     
+
+    
+
+    
+        <h3 class="subsection-title">Members</h3>
+
+        
+            
+<div class="section-members">
+<h4 class="name" id="data"><span class="type-signature"></span>data<span class="type-signature"></span></h4>
+
+
+
+
+
+
+
+
+    <h5 class="subsection-title">Properties:</h5>
+
+    
+
+<table class="props">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>Any</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><code>Object</code></span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>additional data that was emitted</p></td>
+        </tr>
+
+        
+
+    
+    </tbody>
+</table>
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="DbEvent_DbEvent.js.html">DbEvent/DbEvent.js</a>, <a href="DbEvent_DbEvent.js.html#line26">line 26</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+</div>
+
+        
+            
+<div class="section-members">
+<h4 class="name" id="error"><span class="type-signature"></span>error<span class="type-signature"></span></h4>
+
+
+
+
+
+
+
+
+    <h5 class="subsection-title">Properties:</h5>
+
+    
+
+<table class="props">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>The</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><code>Error</code></span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>SQL error object</p></td>
+        </tr>
+
+        
+
+    
+    </tbody>
+</table>
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="DbEvent_DbEvent.js.html">DbEvent/DbEvent.js</a>, <a href="DbEvent_DbEvent.js.html#line21">line 21</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+</div>
+
+        
+            
+<div class="section-members">
+<h4 class="name" id="subtype"><span class="type-signature"></span>subtype<span class="type-signature"></span></h4>
+
+
+
+
+
+
+
+
+    <h5 class="subsection-title">Properties:</h5>
+
+    
+
+<table class="props">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>If</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><code>String</code></span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>an error, the event name that would have been
+emitted if there were no error</p></td>
+        </tr>
+
+        
+
+    
+    </tbody>
+</table>
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="DbEvent_DbEvent.js.html">DbEvent/DbEvent.js</a>, <a href="DbEvent_DbEvent.js.html#line11">line 11</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+</div>
+
+        
+            
+<div class="section-members">
+<h4 class="name" id="target"><span class="type-signature"></span>target<span class="type-signature"></span></h4>
+
+
+
+
+
+
+
+
+    <h5 class="subsection-title">Properties:</h5>
+
+    
+
+<table class="props">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>The</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><code><a href="Db.html">Db</a></code></span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>database itself</p></td>
+        </tr>
+
+        
+
+    
+    </tbody>
+</table>
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="DbEvent_DbEvent.js.html">DbEvent/DbEvent.js</a>, <a href="DbEvent_DbEvent.js.html#line16">line 16</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+</div>
+
+        
+            
+<div class="section-members">
+<h4 class="name" id="type"><span class="type-signature"></span>type<span class="type-signature"></span></h4>
+
+
+
+
+
+
+
+
+    <h5 class="subsection-title">Properties:</h5>
+
+    
+
+<table class="props">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>The</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><code>String</code></span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>event name</p></td>
+        </tr>
+
+        
+
+    
+    </tbody>
+</table>
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="DbEvent_DbEvent.js.html">DbEvent/DbEvent.js</a>, <a href="DbEvent_DbEvent.js.html#line5">line 5</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+</div>
+
+        
+    
+
+    
+
+    
+
+    
+</article>
+
+</section>
 
 
 

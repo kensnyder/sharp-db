@@ -45,7 +45,7 @@ describe('DataBroker', () => {
 			mysqlMock.pushResponse({ results: { insertId: 1 } });
 			mysqlMock.pushResponse({ results: { affectedRows: 1 } });
 			await broker.insert('users', { name: 'joe' });
-			const spy = jest.spyOn(db, 'update');
+			const spy = jest.spyOn(db, 'delete');
 			const affectedRows = await broker.cleanup();
 			expect(broker.ids).toEqual({});
 			expect(affectedRows).toBe(1);
@@ -86,7 +86,7 @@ describe('DataBroker', () => {
 				},
 				{ compositeKey: ['post_id', 'image_id'] }
 			);
-			const spy = jest.spyOn(db, 'update');
+			const spy = jest.spyOn(db, 'delete');
 			const affectedRows = await broker.cleanup();
 			expect(broker.ids).toEqual({});
 			expect(affectedRows).toBe(1);
