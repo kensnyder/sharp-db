@@ -1,8 +1,8 @@
 # sharp-db
 
-[![Build Status](https://travis-ci.com/kensnyder/sharp-db.svg?branch=master&v=1.8.0)](https://travis-ci.org/kensnyder/sharp-db)
-[![Code Coverage](https://codecov.io/gh/kensnyder/sharp-db/branch/master/graph/badge.svg?v=1.8.0)](https://codecov.io/gh/kensnyder/sharp-db)
-[![ISC License](https://img.shields.io/github/license/kensnyder/sharp-db.svg?v=1.8.0)](https://opensource.org/licenses/ISC)
+[![Build Status](https://ci.appveyor.com/api/projects/status/github/kensnyder/sharp-db?branch=master&svg=true&v=1.8.1)](https://ci.appveyor.com/project/kensnyder/sharp-db)
+[![Code Coverage](https://codecov.io/gh/kensnyder//branch/master/graph/badge.svg?v=1.8.1)](https://codecov.io/gh/kensnyder/sharp-db)
+[![ISC License](https://img.shields.io/github/license/kensnyder/sharp-db.svg?v=1.8.1)](https://opensource.org/licenses/ISC)
 
 Classes for running SQL and building select queries for MySQL in Node
 

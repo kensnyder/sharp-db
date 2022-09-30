@@ -1,5 +1,9 @@
 ## Change Log
 
+### v1.8.1 on 2022-09-30
+
+- Fix AppVeyor badge and link
+
 ### v1.8.0 on 2022-09-05
 
 - Move query building to SqlBuilder
