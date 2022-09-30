@@ -12,12 +12,13 @@ class QueryLogger {
 	 * @return {QueryLogger}
 	 */
 	watch(db, events = ['query', 'select', 'insert', 'update', 'delete']) {
-		for (const event of events) {
+		const lowerEvents = events.map(e => e.toLowerCase());
+		for (const event of lowerEvents) {
 			db.on(event, this.capture);
 		}
 		this._watching.push({
 			db,
-			events,
+			events: lowerEvents,
 		});
 		return this;
 	}
@@ -49,6 +50,7 @@ class QueryLogger {
 	 */
 	capture = evt => {
 		this._logs.push({
+			date: new Date(),
 			type: evt.type,
 			query: evt.data.query,
 			db: evt.target,
@@ -80,7 +82,9 @@ class QueryLogger {
 	 */
 	getQueries(filter = null) {
 		const filtered = filter ? this._logs.filter(filter) : this._logs;
-		return filtered.map(log => log.query);
+		return filtered.map(log =>
+			typeof log.query === 'string' ? log.query : log.query.sql
+		);
 	}
 
 	/**
