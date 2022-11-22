@@ -2,7 +2,12 @@
   "name": "sharp-db",
   "version": "1.8.1",
   "description": "Classes for running SQL and building select queries for MySQL in Node",
-  "main": "index.js",
+  "main": "dist/index.js",
+  "exports": {
+    "require": "dist/index.js",
+    "import": "dist/index.mjs"
+  },
+  "type": "module",
   "scripts": {
     "test": "npx jest",
     "test-watch": "npx jest --watch",
@@ -45,6 +50,7 @@
     "prettier": "2.7.1",
     "pretty-var-export": "1.1.7",
     "prompts": "2.4.2",
+    "typescript": "^4.9.3",
     "walkdir": "0.4.1"
   }
 }
