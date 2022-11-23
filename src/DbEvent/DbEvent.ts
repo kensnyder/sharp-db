@@ -1,29 +1,29 @@
-class DbEvent {
+export default class DbEvent {
 	/**
 	 * @property {String}  The event name
 	 */
-	type;
+	type: string;
 
 	/**
 	 * @property {String}  If an error, the event name that would have been
 	 *   emitted if there were no error
 	 */
-	subtype;
+	subtype: string;
 
 	/**
 	 * @property {Db}  The database itself
 	 */
-	target;
+	target: typeof Db;
 
 	/**
 	 * @property {Error}  The SQL error object
 	 */
-	error;
+	error: string;
 
 	/**
 	 * @property {Object}  Any additional data that was emitted
 	 */
-	data;
+	data: Object;
 
 	/**
 	 * Create new even object
@@ -33,5 +33,3 @@ class DbEvent {
 		Object.assign(this, props);
 	}
 }
-
-module.exports = DbEvent;

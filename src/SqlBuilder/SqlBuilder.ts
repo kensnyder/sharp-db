@@ -1,8 +1,8 @@
-const mysql = require('mysql2');
-const chunk = require('../chunk/chunk.js');
-const forOwn = require('../forOwnDefined/forOwnDefined.js');
+import mysql from 'mysql2'
+import chunk from '../chunk/chunk'
+import forOwn from '../forOwnDefined/forOwnDefined'
 
-class SqlBuilder {
+export default class SqlBuilder {
 	/**
 	 * Escape an identifier such as a table or column
 	 * @param identifier
@@ -334,5 +334,3 @@ class SqlBuilder {
 		return clauses.length ? clauses.join(' AND ') : '1';
 	}
 }
-
-module.exports = SqlBuilder;

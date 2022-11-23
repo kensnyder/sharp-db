@@ -1,10 +1,10 @@
-const Db = require('../Db/Db.js');
-const Select = require('../Select/Select.js');
+import Db from '../Db/Db'
+import Select from '../Select/Select'
 
 /**
  * Class for working with real data in unit tests
  */
-class DataBroker {
+export default class DataBroker {
 	/**
 	 * Create a new data broker
 	 * @param {Db} db  The database to read/write into
@@ -140,5 +140,3 @@ class DataBroker {
 		};
 	}
 }
-
-module.exports = DataBroker;

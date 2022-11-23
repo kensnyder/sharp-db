@@ -1,11 +1,11 @@
-const os = require('os');
-const fs = require('fs');
-const Client = require('ssh2').Client;
+import os from 'node:os';
+import fs from 'node:fs';
+import { Client } from 'ssh2';
 
 /**
  * Class to allow connecting to a DB through an ssh tunnel
  */
-class Ssh {
+export default class Ssh {
 	/**
 	 * Specify connection details including, host, port, user, privateKey
 	 * @param {Object} [config]  Configuration to send to npm's ssh2
@@ -77,5 +77,3 @@ class Ssh {
 		}
 	}
 }
-
-module.exports = Ssh;

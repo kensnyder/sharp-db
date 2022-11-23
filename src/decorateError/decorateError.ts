@@ -5,7 +5,7 @@
  * @property {String} options.sql  The final SQL string that was executed
  * @property {Object} options.bound  Key-value pairs of bound values
  */
-function decorateError(error, options = {}) {
+export default function decorateError(error, options = {}) {
 	// pull out existing properties and provide defaults
 	const code = error.code || 'ERROR';
 	const errno = error.errno || '-1';
@@ -36,5 +36,3 @@ function decorateError(error, options = {}) {
 	error.bound = options.bound || {};
 	error.name = 'MySQLError';
 }
-
-module.exports = decorateError;
