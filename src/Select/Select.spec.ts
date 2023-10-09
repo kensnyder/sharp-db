@@ -1,6 +1,6 @@
-jest.mock('mysql2');
-const mysqlMock = require('mysql2');
-const Select = require('../Select/Select.js');
+vitest.mock('mysql2');
+import mysqlMock from 'mysql2';
+import Select from '../Select/Select';
 
 const normalizeWhitespace = s => s.replace(/\s+/g, ' ').trim();
 

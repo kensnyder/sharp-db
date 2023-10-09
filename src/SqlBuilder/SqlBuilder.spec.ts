@@ -1,4 +1,4 @@
-const SqlBuilder = require('./SqlBuilder.js');
+import SqlBuilder from './SqlBuilder';
 
 describe('SqlBuilder', () => {
 	describe('buildWhere()', () => {

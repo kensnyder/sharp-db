@@ -1,4 +1,4 @@
-const realMysql2 = jest.requireActual('mysql2');
+const realMysql2 = vitest.importActual('mysql2');
 const nextResponses = [];
 const nextConnects = [];
 const nextEnds = [];
@@ -65,4 +65,4 @@ const mysql2 = {
 	},
 };
 
-module.exports = mysql2;
+export default mysql2;

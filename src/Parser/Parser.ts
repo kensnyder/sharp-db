@@ -1,26 +1,27 @@
-const capitalize = require('lodash/capitalize');
-const camelCase = require('lodash/camelCase');
-const upperFirst = require('lodash/upperFirst');
+import { capitalize, camelCase, upperFirst } from 'lodash-es';
+import type Select from '../Select/Select';
 
 /**
  * Parse SQL and populate onto a Select query object
  */
-class Parser {
+export default class Parser {
+	query: Select;
+
 	/**
 	 * Create a new instance
-	 * @param {Select} query  A Select object on which to build parsed conditions
+	 * @param query  A Select object on which to build parsed conditions
 	 */
-	constructor(query) {
+	constructor(query: Select) {
 		this.query = query;
 	}
 
 	/**
 	 * Strip single-line and multi-line comment blocks
-	 * @param {String} sql  The SQL string
-	 * @return {String}
+	 * @param sql  The SQL string
+	 * @return  The SQL string without comments
 	 * @private
 	 */
-	_stripComments(sql) {
+	_stripComments(sql: string) {
 		// multiline comments
 		sql = sql.replace(/\/\*[\s\S]*?\*\//g, '');
 		// single line comments -- dashes
@@ -31,17 +32,17 @@ class Parser {
 	}
 
 	/**
-	 * Before splitting into SQL clauses, extract some regex-able subqueries
-	 * @param {String} sql  The unparsed sql string
-	 * @return {Object}  An array with new sql and subqueries
+	 * Before splitting into SQL clauses, extract some regex-able subQueries
+	 * @param sql  The unparsed sql string
+	 * @return  An array with new sql and subQueries
 	 * @private
 	 */
-	_extractSubqueries(sql) {
-		const subqueries = {};
+	_extractSubQueries(sql: string) {
+		const subQueries = {};
 		let i = 0;
 		const extractor = $0 => {
 			const placeholder = `~~SUBQUERY_${i++}~~`;
-			subqueries[placeholder] = $0;
+			subQueries[placeholder] = $0;
 			return placeholder;
 		};
 		// subselect in FROM clause
@@ -50,17 +51,17 @@ class Parser {
 		sql = sql.replace(/\bIF\s*\(.+\)\s+AS\s+[^\s,]+/, extractor);
 		// IN (SELECT *) in JOINs, WHERE or HAVING
 		sql = sql.replace(/\bIN\s*\(\s*SELECT\s.+?\)/, extractor);
-		return { sql, subqueries };
+		return { sql, subQueries };
 	}
 
 	/**
-	 * Inject column subqueries back into this object
-	 * @param {Object} subqueries  The lookup of extracted subqueries
+	 * Inject column subQueries back into this object
+	 * @param subQueries  The lookup of extracted subQueries
 	 * @private
 	 */
-	_injectSubqueries(subqueries) {
+	_injectSubQueries(subQueries: Record<string, string>) {
 		const replacer = $0 => {
-			return subqueries[$0] || $0;
+			return subQueries[$0] || $0;
 		};
 		const mapper = clause => {
 			return clause.replace(/~~SUBQUERY_\d+~~/g, replacer);
@@ -73,11 +74,11 @@ class Parser {
 
 	/**
 	 * Split SQL into clauses (used by ::parse())
-	 * @param {String} sql  The SQL to split
-	 * @return {String[]}
+	 * @param sql  The SQL to split
+	 * @return
 	 * @private
 	 */
-	_split(sql) {
+	_split(sql: string) {
 		const splitter =
 			/(?:^|\s)(SELECT|FROM|(?:INNER|LEFT\s+OUTER|RIGHT\s+OUTER|LEFT|RIGHT|CROSS|FULL|FULL\s+OUTER)\s+JOIN|WHERE|GROUP BY|HAVING|ORDER BY|LIMIT|OFFSET)\b/i;
 		return sql.split(splitter);
@@ -85,12 +86,12 @@ class Parser {
 
 	/**
 	 * Get a QuickSelect object representing the given SQL SELECT statement
-	 * @param {String} rawSql  The raw SQL for the SELECT statement
-	 * @return {Boolean}
+	 * @param  rawSql  The raw SQL for the SELECT statement
+	 * @return True if the SQL was parsed successfully
 	 */
-	parse(rawSql) {
+	parse(rawSql: string) {
 		const stripped = this._stripComments(rawSql);
-		const { sql, subqueries } = this._extractSubqueries(stripped);
+		const { sql, subQueries } = this._extractSubQueries(stripped);
 		const expressions = this._split(sql);
 		let i = 1;
 		while (i < expressions.length) {
@@ -100,16 +101,16 @@ class Parser {
 			const handler = `_handle${keyword}`;
 			this[handler](clause);
 		}
-		this._injectSubqueries(subqueries);
+		this._injectSubQueries(subQueries);
 		return true;
 	}
 
 	/**
 	 * Handle SQL_CALC_FOUND_ROWS and column names
-	 * @param {String} clause  The clause after the SELECT
+	 * @param clause  The clause after the SELECT
 	 * @private
 	 */
-	_handleSelect(clause) {
+	_handleSelect(clause: string) {
 		let columns = clause.split(/s*,s*/);
 		// now handle parenthesis expressions that contain commas
 		let buffer = '';
@@ -142,92 +143,92 @@ class Parser {
 
 	/**
 	 * Handle table names
-	 * @param {String} clause  The clause after the FROM
+	 * @param clause  The clause after the FROM
 	 * @private
 	 */
-	_handleFrom(clause) {
+	_handleFrom(clause: string) {
 		const tables = clause.split(/\s*,\s*/);
 		tables.forEach(table => this.query.table(table));
 	}
 
 	/**
 	 * Handle INNER JOIN statements
-	 * @param {String} clause  The clause after the INNER JOIN
+	 * @param clause  The clause after the INNER JOIN
 	 * @private
 	 */
-	_handleInnerJoin(clause) {
+	_handleInnerJoin(clause: string) {
 		this.query.innerJoin(clause);
 	}
 
 	/**
 	 * Handle LEFT JOIN statements
-	 * @param {String} clause  The clause after the LEFT JOIN
+	 * @param clause  The clause after the LEFT JOIN
 	 * @private
 	 */
-	_handleLeftJoin(clause) {
+	_handleLeftJoin(clause: string) {
 		this.query.leftJoin(clause);
 	}
 
 	/**
 	 * Handle LEFT OUTER JOIN statements
-	 * @param {String} clause  The clause after the LEFT OUTER JOIN
+	 * @param clause  The clause after the LEFT OUTER JOIN
 	 * @private
 	 */
-	_handleLeftOuterJoin(clause) {
+	_handleLeftOuterJoin(clause: string) {
 		this.query.leftOuterJoin(clause);
 	}
 
 	/**
 	 * Handle RIGHT JOIN statements
-	 * @param {String} clause  The clause after the RIGHT JOIN
+	 * @param clause  The clause after the RIGHT JOIN
 	 * @private
 	 */
-	_handleRightJoin(clause) {
+	_handleRightJoin(clause: string) {
 		this.query.rightJoin(clause);
 	}
 
 	/**
 	 * Handle RIGHT OUTER JOIN statements
-	 * @param {String} clause  The clause after the RIGHT OUTER JOIN
+	 * @param clause  The clause after the RIGHT OUTER JOIN
 	 * @private
 	 */
-	_handleRightOuterJoin(clause) {
+	_handleRightOuterJoin(clause: string) {
 		this.query.rightOuterJoin(clause);
 	}
 
 	/**
 	 * Handle CROSS JOIN statements
-	 * @param {String} clause  The clause after the CROSS JOIN
+	 * @param clause  The clause after the CROSS JOIN
 	 * @private
 	 */
-	_handleCrossJoin(clause) {
+	_handleCrossJoin(clause: string) {
 		this.query.crossJoin(clause);
 	}
 
 	/**
 	 * Handle FULL JOIN statements
-	 * @param {String} clause  The clause after the FULL JOIN
+	 * @param clause  The clause after the FULL JOIN
 	 * @private
 	 */
-	_handleFullJoin(clause) {
+	_handleFullJoin(clause: string) {
 		this.query.fullJoin(clause);
 	}
 
 	/**
 	 * Handle FULL OUTER JOIN statements
-	 * @param {String} clause  The clause after the FULL OUTER JOIN
+	 * @param clause  The clause after the FULL OUTER JOIN
 	 * @private
 	 */
-	_handleFullOuterJoin(clause) {
+	_handleFullOuterJoin(clause: string) {
 		this.query.fullOuterJoin(clause);
 	}
 
 	/**
 	 * Handle WHERE conditions
-	 * @param {String} clause  All the conditions after WHERE
+	 * @param clause  All the conditions after WHERE
 	 * @private
 	 */
-	_handleWhere(clause) {
+	_handleWhere(clause: string) {
 		if (/^(1|'1'|true)$/i.test(clause)) {
 			this.query._wheres.push(clause);
 		} else {
@@ -237,20 +238,20 @@ class Parser {
 
 	/**
 	 * Handle HAVING statements
-	 * @param {String} clause  All the conditions after HAVING
+	 * @param clause  All the conditions after HAVING
 	 * @private
 	 */
-	_handleHaving(clause) {
+	_handleHaving(clause: string) {
 		this._handleConditions('having', clause);
 	}
 
 	/**
 	 * Build a conditions list
-	 * @param {String} type  Either WHERE or HAVING
-	 * @param {String} clause  The expressions following the type keyword
+	 * @param type  Either where or having
+	 * @param clause  The expressions following the type keyword
 	 * @private
 	 */
-	_handleConditions(type, clause) {
+	_handleConditions(type: 'where' | 'having', clause: string) {
 		const andGroups = clause.split(/\bAND\b/i);
 		andGroups.forEach(andGroup => {
 			const orPieces = andGroup.split(/\bOR\b/i).map(str => str.trim());
@@ -268,30 +269,30 @@ class Parser {
 
 	/**
 	 * Handle GROUP BY statements
-	 * @param {String} clause  The clauses after the GROUP BY
+	 * @param clause  The clauses after the GROUP BY
 	 * @private
 	 */
-	_handleGroupBy(clause) {
+	_handleGroupBy(clause: string) {
 		const columns = clause.split(/\s*,\s*/);
 		columns.forEach(column => this.query.groupBy(column));
 	}
 
 	/**
 	 * Handle ORDER BY statements
-	 * @param {String} clause  The clause after the ORDER BY
+	 * @param clause  The clause after the ORDER BY
 	 * @private
 	 */
-	_handleOrderBy(clause) {
+	_handleOrderBy(clause: string) {
 		const columns = clause.split(/\s*,\s*/);
 		columns.forEach(column => this.query.orderBy(column));
 	}
 
 	/**
 	 * Handle LIMIT statements including "LIMIT #" and "LIMIT #, #"
-	 * @param {String} clause  The clause after the LIMIT
+	 * @param clause  The clause after the LIMIT
 	 * @private
 	 */
-	_handleLimit(clause) {
+	_handleLimit(clause: string) {
 		const offsetLimit = clause.match(/^(\d+|\?|:\w+)\s*,\s*(\d+|\?|:\w+)$/);
 		if (offsetLimit) {
 			this.query.offset(offsetLimit[1]);
@@ -303,12 +304,10 @@ class Parser {
 
 	/**
 	 * Handle OFFSET statements
-	 * @param {String} clause  The number after the OFFSET
+	 * @param clause  The number after the OFFSET
 	 * @private
 	 */
-	_handleOffset(clause) {
+	_handleOffset(clause: string) {
 		this.query.offset(clause);
 	}
 }
-
-module.exports = Parser;

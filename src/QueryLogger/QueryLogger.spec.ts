@@ -1,7 +1,7 @@
-jest.mock('mysql2');
-const mysqlMock = require('mysql2');
-const Db = require('../Db/Db.js');
-const QueryLogger = require('../QueryLogger/QueryLogger.js');
+vitest.mock('mysql2');
+import mysqlMock from 'mysql2';
+import Db from '../Db/Db';
+import QueryLogger from '../QueryLogger/QueryLogger';
 
 describe('QueryLogger', () => {
 	let logger, db;

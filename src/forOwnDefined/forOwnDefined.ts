@@ -1,9 +1,12 @@
 /**
  * Iterate an object ignoring inherited and undefined values
- * @param {Object} object  The object to iterate
- * @param {Function} iteratee  The function to call for each item; takes args value, key, object
+ * @param object  The object to iterate
+ * @param iteratee  The function to call for each item; takes args value, key, object
  */
-function forOwnDefined(object, iteratee) {
+export default function forOwnDefined<InputObject extends Record<string, any>>(
+	object: InputObject,
+	iteratee: (value: any, key: keyof InputObject, object: InputObject) => void
+) {
 	for (const key in object) {
 		if (!object.hasOwnProperty(key) || object[key] === undefined) {
 			continue;
@@ -11,5 +14,3 @@ function forOwnDefined(object, iteratee) {
 		iteratee(object[key], key, object);
 	}
 }
-
-module.exports = forOwnDefined;

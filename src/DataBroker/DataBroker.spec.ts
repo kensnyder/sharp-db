@@ -1,7 +1,7 @@
-jest.mock('mysql2');
-const mysqlMock = require('mysql2');
-const Db = require('../Db/Db.js');
-const DataBroker = require('./DataBroker.js');
+vitest.mock('mysql2');
+import mysqlMock from 'mysql2';
+import Db from '../Db/Db';
+import DataBroker from './DataBroker';
 
 describe('DataBroker', () => {
 	let broker, db;
@@ -45,7 +45,7 @@ describe('DataBroker', () => {
 			mysqlMock.pushResponse({ results: { insertId: 1 } });
 			mysqlMock.pushResponse({ results: { affectedRows: 1 } });
 			await broker.insert('users', { name: 'joe' });
-			const spy = jest.spyOn(db, 'delete');
+			const spy = vi.spyOn(db, 'delete');
 			const affectedRows = await broker.cleanup();
 			expect(broker.ids).toEqual({});
 			expect(affectedRows).toBe(1);
@@ -86,7 +86,7 @@ describe('DataBroker', () => {
 				},
 				{ compositeKey: ['post_id', 'image_id'] }
 			);
-			const spy = jest.spyOn(db, 'delete');
+			const spy = vi.spyOn(db, 'delete');
 			const affectedRows = await broker.cleanup();
 			expect(broker.ids).toEqual({});
 			expect(affectedRows).toBe(1);
@@ -123,7 +123,7 @@ describe('DataBroker', () => {
 		it('should clean up deletions', async () => {
 			const deleted = [{ id: 1, name: 'joe' }];
 			mysqlMock.pushResponse({ results: deleted });
-			const spy = jest.spyOn(db, 'insertExtended');
+			const spy = vi.spyOn(db, 'insertExtended');
 			await broker.delete('users', { name: 'joe' });
 			await broker.cleanup();
 			expect(spy.mock.calls).toHaveLength(1);

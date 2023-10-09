@@ -3,6 +3,7 @@
   "exclude": [
     "node_modules",
     "types.ts",
+	"**/*.spec.ts",
     "__mocks__"
   ]
 }

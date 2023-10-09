@@ -1,9 +1,9 @@
-jest.mock('mysql2');
-const mysqlMock = require('mysql2');
-jest.mock('ssh2');
-const ssh2Mock = require('ssh2');
-const Db = require('./Db.js');
-const Ssh = require('../Ssh/Ssh.js');
+vitest.mock('mysql2');
+vitest.mock('ssh2');
+import mysqlMock from 'mysql2';
+import ssh2Mock from 'ssh2';
+import Db from './Db';
+import Ssh from '../Ssh/Ssh';
 
 describe('Db', () => {
 	let db;
@@ -1212,7 +1212,7 @@ INSERT INTO \`users\` (\`id\`,\`fname\`) VALUES
 			expect(err).toBe(undefined);
 		});
 		it('should end when db.ssh is defined', async () => {
-			const spy = jest.fn();
+			const spy = vitest.fn();
 			ssh2Mock.onNextEnd(spy);
 			ssh2Mock.pushResponse({
 				err: null,
@@ -1269,7 +1269,7 @@ INSERT INTO \`users\` (\`id\`,\`fname\`) VALUES
 			);
 			await db.connect();
 			db.connection = undefined;
-			db.ssh.connection.end = jest.fn();
+			db.ssh.connection.end = vitest.fn();
 			await db.end();
 			expect(db.ssh.connection.end).toHaveBeenCalled();
 		});
@@ -1403,14 +1403,14 @@ INSERT INTO \`users\` (\`id\`,\`fname\`) VALUES
 			expect(results.ssh.config.user).toBe('ubuntu');
 		});
 		it('should call db.end()', async () => {
-			const spy = jest.fn(() => Promise.resolve(1));
+			const spy = vitest.fn(() => Promise.resolve(1));
 			await Db.withInstance(db => {
 				db.end = spy;
 			});
 			expect(spy).toHaveBeenCalled();
 		});
 		it('should return Error on handler failure', async () => {
-			const spy = jest.fn(() => Promise.resolve(1));
+			const spy = vitest.fn(() => Promise.resolve(1));
 			const res = await Db.withInstance(db => {
 				db.end = spy;
 				throw new Error('foo');
@@ -1419,7 +1419,7 @@ INSERT INTO \`users\` (\`id\`,\`fname\`) VALUES
 			expect(res.error).toBeInstanceOf(Error);
 		});
 		it('should ignore error on db.end() failure', async () => {
-			const spy = jest.fn(() => Promise.reject('foobar'));
+			const spy = vitest.fn(() => Promise.reject('foobar'));
 			const res = await Db.withInstance(db => {
 				db.end = spy;
 				return 17;

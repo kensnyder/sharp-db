@@ -1,10 +1,15 @@
-import Db from '../Db/Db'
-import Select from '../Select/Select'
+import Db from '../Db/Db';
+import Select from '../Select/Select';
 
 /**
  * Class for working with real data in unit tests
  */
 export default class DataBroker {
+	db: Db;
+	now: Date;
+	uniqid: string;
+	deleted: Record<string, any[]>;
+	ids: Record<string, any | any[]>;
 	/**
 	 * Create a new data broker
 	 * @param {Db} db  The database to read/write into
@@ -39,13 +44,17 @@ export default class DataBroker {
 
 	/**
 	 * Insert records that can be cleaned up later
-	 * @param {String} table  The name of the table to insert into
-	 * @param {Object} values  The record to insert
-	 * @param {Object} options  Additional options
-	 * @property {Array} options.compositeKey  An array of column names that form a composite key
-	 * @returns {Promise<Number|Object>}  Resolves with the id of the new record or the composite key
+	 * @param table  The name of the table to insert into
+	 * @param values  The record to insert
+	 * @param options  Additional options
+	 * @property options.compositeKey  An array of column names that form a composite key
+	 * @returns  Resolves with the id of the new record or the composite key
 	 */
-	async insert(table, values, options = {}) {
+	async insert(
+		table: string,
+		values: Record<string, any>,
+		options: { compositeKey?: string[] } = {}
+	): Promise<number | Record<string, any>> {
 		const { insertId } = await this.db.insertInto(table, values);
 		if (!Array.isArray(this.ids[table])) {
 			this.ids[table] = [];
@@ -65,11 +74,14 @@ export default class DataBroker {
 
 	/**
 	 * Delete records that can be re-inserted later
-	 * @param {String} table  The name of the table to delete from
-	 * @param {Object} criteria  The criteria to match the records
-	 * @returns {Promise<Object[]>}  An array of all the records
+	 * @param table  The name of the table to delete from
+	 * @param criteria  The criteria to match the records
+	 * @returns An array of all the records
 	 */
-	async delete(table, criteria) {
+	async delete(
+		table: string,
+		criteria: Record<string, any>
+	): Promise<Record<string, any>> {
 		const query = Select.init(this.db);
 		query.table(table);
 		query.where(criteria);
@@ -84,9 +96,9 @@ export default class DataBroker {
 
 	/**
 	 * Delete insertions and restore deleted
-	 * @returns {Promise<Number>}  The total number of rows affected
+	 * @returns The total number of rows affected
 	 */
-	async cleanup() {
+	async cleanup(): Promise<number> {
 		// cleanup inserted records
 		let totalAffectedRows = 0;
 		for (const table of Object.keys(this.ids)) {
@@ -114,10 +126,15 @@ export default class DataBroker {
 
 	/**
 	 * Get value for createdAt, createdBy, modifiedAt and modifiedBy
-	 * @param {Number} userId  The user id to use for createdBy and modifiedBy
-	 * @returns {{createdAt: Date, createdBy: Number, modifiedAt: Date, modifiedBy: Number}}
+	 * @param userId  The user id to use for createdBy and modifiedBy
+	 * @returns the id specified along with the current date
 	 */
-	createdAndModified(userId = 0) {
+	createdAndModified(userId: number = 0): {
+		createdAt: Date;
+		createdBy: number;
+		modifiedAt: Date;
+		modifiedBy: number;
+	} {
 		return {
 			createdAt: this.now,
 			createdBy: userId,
@@ -128,10 +145,15 @@ export default class DataBroker {
 
 	/**
 	 * Get value for created_at, created_by, modified_at and modified_by
-	 * @param {Number} userId  The user id to use for created_by and modified_by
-	 * @returns {{modified_by: Number, created_at: Date, modified_at: Date, created_by: Number}}
+	 * @param userId  The user id to use for created_by and modified_by
+	 * @returns the id specified along with the current date
 	 */
-	created_and_modified(userId = 0) {
+	created_and_modified(userId: number = 0): {
+		created_at: Date;
+		created_by: number;
+		modified_at: Date;
+		modified_by: number;
+	} {
 		return {
 			created_at: this.now,
 			created_by: userId,

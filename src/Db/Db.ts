@@ -1,11 +1,12 @@
 import { EventEmitter } from 'node:events';
-import mysql from 'mysql';
+import mysql, { MysqlError } from 'mysql';
 import Ssh from '../Ssh/Ssh';
 import { isPlainObject } from 'is-plain-object';
 import decorateError from '../decorateError/decorateError';
 import SqlBuilder from '../SqlBuilder/SqlBuilder';
 import {
 	BindableType,
+	BoundValuesType,
 	DbConfigType,
 	DbConnectionType,
 	DbEventInterface,
@@ -15,7 +16,7 @@ import {
 	ExportSqlConfigType,
 	ExportSqlResultInterface,
 	InsertResponseInterface,
-	QueryCriteria,
+	QueryCriteriaType,
 	QueryResponseInterface,
 	SelectExistsResponseInterface,
 	SelectFirstResponseInterface,
@@ -40,15 +41,15 @@ const noop = () => {};
 export default class Db extends EventEmitter {
 	config: DbConfigType;
 	ssh: Ssh;
-	static instances: Db[];
+	static instances: Db[] = [];
 	connection: DbConnectionType;
 	_templatized: TemplatizedInterface;
 
 	/**
 	 * Specify connection details for MySQL and optionally SSH
-	 * @param {Object} [config]  MySQL connection details such as host, login, password, encoding, database
+	 * @param [config]  MySQL connection details such as host, login, password, encoding, database
 	 * @see https://github.com/mysqljs/mysql#connection-options
-	 * @param {Object} [sshConfig]  SSH connection details including host, port, user, privateKey
+	 * @param [sshConfig]  SSH connection details including host, port, user, privateKey
 	 * @see https://github.com/mscdex/ssh2#client-methods
 	 */
 	constructor(config: DbConfigType = {}, sshConfig: SshConfigType = null) {
@@ -187,7 +188,7 @@ export default class Db extends EventEmitter {
 				}
 				this.connection.end(error => {
 					if (error) {
-						decorateError(error);
+						decorateError(error as MysqlError);
 						this.emitDbError('disconnect', error);
 						reject(error);
 					} else {
@@ -249,7 +250,7 @@ export default class Db extends EventEmitter {
 	 */
 	async query(
 		sql: string | SqlOptionsInterface,
-		...bindVars: BindableType[]
+		...bindVars: BoundValuesType
 	): Promise<QueryResponseInterface> {
 		await this.connectOnce();
 		const options = this.bindArgs(sql, bindVars);
@@ -279,7 +280,7 @@ export default class Db extends EventEmitter {
 	 */
 	async multiQuery(
 		sql: string | SqlOptionsInterface,
-		...bindVars: BindableType[]
+		...bindVars: BoundValuesType
 	): Promise<QueryResponseInterface> {
 		await this.connectOnce();
 		const options = this.bindArgs(sql, bindVars);
@@ -298,7 +299,7 @@ export default class Db extends EventEmitter {
 	 */
 	async select(
 		sql: string | SqlOptionsInterface,
-		...bindVars: BindableType[]
+		...bindVars: BoundValuesType
 	): Promise<SelectResponseInterface> {
 		await this.connectOnce();
 		const options = this.bindArgs(sql, bindVars);
@@ -328,7 +329,7 @@ export default class Db extends EventEmitter {
 	 */
 	async selectHash(
 		sql: string | SqlOptionsInterface,
-		...bindVars: BindableType[]
+		...bindVars: BoundValuesType
 	): Promise<SelectHashResponseInterface> {
 		const { query, results, fields } = await this.select(sql, ...bindVars);
 		const key = fields[0].name;
@@ -351,7 +352,7 @@ export default class Db extends EventEmitter {
 	 */
 	async selectList(
 		sql: string | SqlOptionsInterface,
-		...bindVars: BindableType[]
+		...bindVars: BoundValuesType
 	): Promise<SelectListResponseInterface> {
 		const { query, results, fields } = await this.select(sql, ...bindVars);
 		const name = fields[0].name;
@@ -376,7 +377,7 @@ export default class Db extends EventEmitter {
 	async selectGrouped(
 		groupField,
 		sql: string | SqlOptionsInterface,
-		...bindVars: BindableType[]
+		...bindVars: BoundValuesType
 	): Promise<SelectGroupedResponseInterface> {
 		const { query, results, fields } = await this.select(sql, ...bindVars);
 		const groups = {};
@@ -406,7 +407,7 @@ export default class Db extends EventEmitter {
 	async selectIndexed(
 		indexField,
 		sql: string | SqlOptionsInterface,
-		...bindVars: BindableType[]
+		...bindVars: BoundValuesType
 	): Promise<SelectIndexedResponseInterface> {
 		const { query, results, fields } = await this.select(sql, ...bindVars);
 		const hash = {};
@@ -431,7 +432,7 @@ export default class Db extends EventEmitter {
 	 */
 	async selectFirst(
 		sql: string | SqlOptionsInterface,
-		...bindVars: BindableType[]
+		...bindVars: BoundValuesType
 	): Promise<SelectFirstResponseInterface> {
 		const { query, results, fields } = await this.select(sql, ...bindVars);
 		return {
@@ -452,7 +453,7 @@ export default class Db extends EventEmitter {
 	 */
 	async selectValue(
 		sql: string | SqlOptionsInterface,
-		...bindVars: BindableType[]
+		...bindVars: BoundValuesType
 	): Promise<SelectValueResponseInterface> {
 		const { query, results, fields } = await this.select(sql, ...bindVars);
 		let value = undefined;
@@ -478,7 +479,7 @@ export default class Db extends EventEmitter {
 	 */
 	async selectExists(
 		sql: string | SqlOptionsInterface,
-		...bindVars: BindableType[]
+		...bindVars: BoundValuesType
 	): Promise<SelectExistsResponseInterface> {
 		const options = typeof sql === 'object' ? sql : { sql };
 		options.sql = `SELECT EXISTS (${options.sql}) AS does_it_exist`;
@@ -501,7 +502,7 @@ export default class Db extends EventEmitter {
 	 */
 	async insert(
 		sql: string | SqlOptionsInterface,
-		...bindVars: BindableType[]
+		...bindVars: BoundValuesType
 	): Promise<InsertResponseInterface> {
 		await this.connectOnce();
 		const options = this.bindArgs(sql, bindVars);
@@ -536,7 +537,7 @@ export default class Db extends EventEmitter {
 	 */
 	async update(
 		sql: string | SqlOptionsInterface,
-		...bindVars: BindableType[]
+		...bindVars: BoundValuesType
 	): Promise<UpdateResponseInterface> {
 		await this.connectOnce();
 		const options = this.bindArgs(sql, bindVars);
@@ -569,7 +570,7 @@ export default class Db extends EventEmitter {
 	 */
 	async delete(
 		sql: string | SqlOptionsInterface,
-		...bindVars: BindableType[]
+		...bindVars: BoundValuesType
 	): Promise<DeleteResponseInterface> {
 		await this.connectOnce();
 		const options = this.bindArgs(sql, bindVars);
@@ -865,7 +866,7 @@ export default class Db extends EventEmitter {
 	 */
 	async exportAsSql(
 		table: string,
-		where: QueryCriteria = {},
+		where: QueryCriteriaType = {},
 		{
 			limit = 0,
 			chunkSize = 250,
@@ -1146,11 +1147,3 @@ export default class Db extends EventEmitter {
 		}
 	}
 }
-
-/**
- * A list of all the Db instances that have been created
- * @type {Array}
- */
-Db.instances = [];
-
-module.exports = Db;

@@ -1,8 +1,6 @@
-class QueryLogger {
-	constructor() {
-		this._logs = [];
-		this._watching = [];
-	}
+export default class QueryLogger {
+	#logs = [];
+	#watching = [];
 
 	/**
 	 * Watch the given Db instance
@@ -15,7 +13,7 @@ class QueryLogger {
 		for (const event of events) {
 			db.on(event, this.capture);
 		}
-		this._watching.push({
+		this.#watching.push({
 			db,
 			events,
 		});
@@ -29,7 +27,7 @@ class QueryLogger {
 	 */
 	unwatch(db) {
 		const newWatchList = [];
-		for (const watched of this._watching) {
+		for (const watched of this.#watching) {
 			if (watched.db === db) {
 				for (const event of watched.events) {
 					db.off(event, this.capture);
@@ -38,7 +36,7 @@ class QueryLogger {
 				newWatchList.push(watched);
 			}
 		}
-		this._watching = newWatchList;
+		this.#watching = newWatchList;
 		return this;
 	}
 
@@ -48,7 +46,7 @@ class QueryLogger {
 	 * @return {QueryLogger}
 	 */
 	capture = evt => {
-		this._logs.push({
+		this.#logs.push({
 			type: evt.type,
 			query: evt.data.query,
 			db: evt.target,
@@ -61,7 +59,7 @@ class QueryLogger {
 	 * @return {QueryLogger}
 	 */
 	clear() {
-		this._logs = [];
+		this.#logs = [];
 		return this;
 	}
 
@@ -70,7 +68,7 @@ class QueryLogger {
 	 * @return {Object[]}
 	 */
 	getLogs() {
-		return this._logs;
+		return this.#logs;
 	}
 
 	/**
@@ -79,7 +77,7 @@ class QueryLogger {
 	 * @return {String[]}
 	 */
 	getQueries(filter = null) {
-		const filtered = filter ? this._logs.filter(filter) : this._logs;
+		const filtered = filter ? this.#logs.filter(filter) : this.#logs;
 		return filtered.map(log => log.query);
 	}
 
@@ -88,9 +86,7 @@ class QueryLogger {
 	 * @return {String|null}
 	 */
 	getLastQuery() {
-		const last = this._logs[this._logs.length - 1];
+		const last = this.#logs[this.#logs.length - 1];
 		return last ? last.query : null;
 	}
 }
-
-module.exports = QueryLogger;

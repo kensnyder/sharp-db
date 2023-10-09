@@ -1,4 +1,4 @@
-class Client {
+export class Client {
 	on(event, handler) {
 		handler();
 	}
@@ -17,7 +17,6 @@ class Client {
 }
 
 const ssh2 = {
-	Client,
 	responses: [],
 	nextEndCallbacks: [],
 	pushResponse(resp) {
@@ -28,4 +27,4 @@ const ssh2 = {
 	},
 };
 
-module.exports = ssh2;
+export default ssh2;

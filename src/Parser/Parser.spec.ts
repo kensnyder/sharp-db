@@ -1,4 +1,4 @@
-const Select = require('../Select/Select.js');
+import Select from '../Select/Select';
 
 describe('Parser', () => {
 	describe('column handler', () => {

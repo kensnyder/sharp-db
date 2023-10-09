@@ -1,8 +1,8 @@
-jest.mock('ssh2');
-jest.mock('fs');
-const fs = require('fs');
-const ssh2Mock = require('ssh2');
-const Ssh = require('../Ssh/Ssh.js');
+vitest.mock('ssh2');
+vitest.mock('fs');
+import fs from 'node:fs';
+import ssh2Mock from 'ssh2';
+import Ssh from './Ssh';
 
 describe('Ssh', () => {
 	it('should tunnel', async () => {

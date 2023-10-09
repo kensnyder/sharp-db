@@ -1,9 +1,9 @@
 /**
- * @param {Array} array The array to process
- * @param {number} size The length of each chunk
- * @return {Array} Returns the new array of chunks
+ * @param array The array to process
+ * @param size The length of each chunk
+ * @return The new array of chunks
  */
-function chunk(array, size) {
+export default function chunk(array: any[], size: number) {
 	const chunkCount = Math.ceil(array.length / size);
 	const result = [];
 	for (let i = 0; i < chunkCount; i++) {
@@ -11,5 +11,3 @@ function chunk(array, size) {
 	}
 	return result;
 }
-
-module.exports = chunk;

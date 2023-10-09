@@ -1,12 +1,18 @@
-import Db from './Db/Db';
-import { Connection, ConnectionConfig, FieldInfo, QueryOptions } from 'mysql';
-import { ConnectConfig } from 'ssh2';
+import type Db from './Db/Db';
+import type {
+	Connection,
+	ConnectionConfig,
+	FieldInfo,
+	TypeCast,
+	MysqlError,
+} from 'mysql';
+import type { ConnectConfig } from 'ssh2';
 
 export type DbConnectionType = Connection;
 
-export type DbConfigType = ConnectionConfig;
+export type DbConfigType = Partial<ConnectionConfig>;
 
-export type SshConfigType = ConnectConfig;
+export type SshConfigType = Partial<ConnectConfig>;
 
 export type EventNameType =
 	| 'sshConnect'
@@ -24,6 +30,10 @@ export type EventNameType =
 	| 'bind'
 	| 'dbError';
 
+export type SharpDbError = MysqlError & {
+	bound: Record<string, any>;
+};
+
 export type EventSubtypeNameType = string;
 
 export interface DbEventInterface {
@@ -40,9 +50,13 @@ export type ResultObjectType = Record<string, ColumnResultValueType>;
 
 export type MySqlFieldsType = FieldInfo;
 
-export interface SqlOptionsInterface extends QueryOptions {
-	bound?: Object;
-	values?: Object;
+export interface SqlOptionsInterface {
+	sql?: string;
+	bound?: BoundValuesType;
+	values?: Record<string, any>;
+	timeout?: number | undefined;
+	nestTables?: boolean | string;
+	typeCast?: TypeCast | undefined;
 }
 
 export interface QueryResponseInterface {
@@ -146,41 +160,43 @@ export type ExportSqlConfigType = {
 
 export interface TemplatizedInterface {
 	select: (
-		sql: string,
+		sql: TemplateStringsArray,
 		...variables: BindableType[]
 	) => Promise<SelectResponseInterface>;
 	selectFirst: (
-		sql: string,
+		sql: TemplateStringsArray,
 		...variables: BindableType[]
 	) => Promise<SelectFirstResponseInterface>;
 	selectList: (
-		sql: string,
+		sql: TemplateStringsArray,
 		...variables: BindableType[]
 	) => Promise<SelectListResponseInterface>;
 	selectHash: (
-		sql: string,
+		sql: TemplateStringsArray,
 		...variables: BindableType[]
 	) => Promise<SelectHashResponseInterface>;
 	selectValue: (
-		sql: string,
+		sql: TemplateStringsArray,
 		...variables: BindableType[]
 	) => Promise<SelectValueResponseInterface>;
 	insert: (
-		sql: string,
+		sql: TemplateStringsArray,
 		...variables: BindableType[]
 	) => Promise<InsertResponseInterface>;
 	update: (
-		sql: string,
+		sql: TemplateStringsArray,
 		...variables: BindableType[]
 	) => Promise<UpdateResponseInterface>;
 	delete: (
-		sql: string,
+		sql: TemplateStringsArray,
 		...variables: BindableType[]
 	) => Promise<DeleteResponseInterface>;
 }
 
 export type BindableType = string | number | boolean | null;
 
-export type QueryCriteria = Record<string, BindableType | BindableType[]>;
+export type BoundValuesType = BindableType[] | [Record<string, BindableType>];
+
+export type QueryCriteriaType = Record<string, BindableType | BindableType[]>;
 
 export type EscapeInfixType = '?' | '?%' | '%?' | '%?%';

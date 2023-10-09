@@ -1,4 +1,4 @@
-const decorateError = require('./decorateError.js');
+import decorateError from './decorateError';
 
 describe('decorateError', () => {
 	it('should add properties', () => {

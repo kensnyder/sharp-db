@@ -7,4 +7,4 @@ const fs = {
 	},
 };
 
-module.exports = fs;
+export default fs;

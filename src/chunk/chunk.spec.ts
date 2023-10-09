@@ -1,4 +1,4 @@
-const chunk = require('./chunk.js');
+import chunk from './chunk';
 
 describe('chunk', () => {
 	it('should return empty array if input is empty', () => {

@@ -1,27 +1,41 @@
 import os from 'node:os';
 import fs from 'node:fs';
-import { Client } from 'ssh2';
+import { Client, type ConnectConfig } from 'ssh2';
+
+interface KnownEnvVars {
+	DB_SSH_HOST: string;
+	DB_SSH_PORT: number;
+	DB_SSH_USERNAME: string;
+	DB_SSH_PASSWORD: string;
+	DB_SSH_LOCAL_PORT: number;
+	DB_SSH_PRIVATE_KEY: string;
+}
 
 /**
  * Class to allow connecting to a DB through an ssh tunnel
  */
 export default class Ssh {
+	config: ConnectConfig;
+	connection: Client;
 	/**
 	 * Specify connection details including, host, port, user, privateKey
 	 * @param {Object} [config]  Configuration to send to npm's ssh2
 	 */
-	constructor(config = {}) {
-		const env = process.env;
+	constructor(config: Partial<ConnectConfig> = {}) {
+		const env = process.env as unknown as KnownEnvVars;
 		this.config = {
 			...config,
 			host: config.host || env.DB_SSH_HOST || 'localhost',
 			port: config.port || env.DB_SSH_PORT || 22,
-			user: config.user || env.DB_SSH_USER,
+			username: config.username || env.DB_SSH_USERNAME || '',
 			localPort: config.localPort || env.DB_SSH_LOCAL_PORT || 12347,
 		};
 		if (config.privateKey || env.DB_SSH_PRIVATE_KEY) {
 			this.config.privateKey = config.privateKey || env.DB_SSH_PRIVATE_KEY;
-			if (this.config.privateKey.match(/\.pem$/)) {
+			if (
+				typeof this.config.privateKey === 'string' &&
+				this.config.privateKey.match(/\.pem$/)
+			) {
 				const pkeyPath = this.config.privateKey.replace(/^~/, os.homedir());
 				if (!fs.existsSync(pkeyPath)) {
 					throw new Error(`Private key file not found at "${pkeyPath}".`);
@@ -36,7 +50,7 @@ export default class Ssh {
 	}
 
 	/**
-	 * Setup a tunnel for the given Db instance
+	 * Set up a tunnel for the given Db instance
 	 * @param {Db} db  A Db instance
 	 * @returns {Promise}  Resolves when tunnel is established
 	 */
@@ -60,7 +74,7 @@ export default class Ssh {
 						// override db host, since we're operating from within the SSH tunnel
 						db.config.host = 'localhost';
 						db.config.stream = stream;
-						resolve();
+						resolve(stream);
 					}
 				);
 			});

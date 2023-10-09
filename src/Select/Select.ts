@@ -1,22 +1,58 @@
-const mysql = require('mysql2');
-const Parser = require('../Parser/Parser.js');
-const Db = require('../Db/Db.js');
-const cloneDeep = require('lodash/cloneDeep');
-const escapeRegExp = require('lodash/escapeRegExp');
-const forOwn = require('../forOwnDefined/forOwnDefined.js');
-const substrCount = require('quickly-count-substrings');
+import mysql, { type FieldInfo } from 'mysql';
+import Parser from '../Parser/Parser';
+import Db from '../Db/Db';
+import { cloneDeep, escapeRegExp } from 'lodash-es';
+import forOwn from '../forOwnDefined/forOwnDefined';
+import substrCount from 'quickly-count-substrings';
+import { SqlOptionsInterface } from '../types';
+
+type FieldName =
+	| 'option'
+	| 'options'
+	| 'column'
+	| 'columns'
+	| 'table'
+	| 'tables'
+	| 'join'
+	| 'joins'
+	| 'where'
+	| 'wheres'
+	| 'having'
+	| 'havings'
+	| 'groupBy'
+	| 'groupBys'
+	| 'orderBy'
+	| 'orderBys'
+	| 'limit'
+	| 'offset'
+	| 'page';
 
 /**
  * Build a select query
  * Class Select
  */
-class Select {
+export default class Select {
+	_options: string[];
+	_tables: string[];
+	_columns: string[];
+	_joins: string[];
+	_wheres: string[];
+	_groupBys: string[];
+	_orderBys: string[];
+	_havings: string[];
+	_page: number;
+	_limit: number;
+	_offset: number;
+	db: Db;
+	_bound: Record<string, any>;
+	_siblings: Record<string, any>[];
+	_children: Record<string, any>[];
 	/**
 	 * Load the given SQL into this object
-	 * @param {String} sql  The SQL to parse
-	 * @returns {Select}
+	 * @param sql  The SQL to parse
+	 * @returns
 	 */
-	parse(sql) {
+	parse(sql: string) {
 		this.reset();
 		const parser = new Parser(this);
 		parser.parse(sql);
@@ -25,37 +61,37 @@ class Select {
 
 	/**
 	 * Return a new Select object that matches the given SQL
-	 * @param {String} sql  The SQL to parse
-	 * @param {Db} [db]  The Db instance to use for queries
-	 * @returns {Select}
+	 * @param sql  The SQL to parse
+	 * @param [db=null]  The Db instance to use for queries
+	 * @returns  A new Select instance
 	 */
-	static parse(sql, db = null) {
+	static parse(sql: string, db: Db = null): Select {
 		return Select.init(db).parse(sql);
 	}
 
 	/**
 	 * Select constructor
-	 * @param {Db} [db]  The Db instance to use
+	 * @param [db]  The Db instance to use
 	 */
-	constructor(db = null) {
+	constructor(db: Db = null) {
 		this.db = db || Db.factory();
 		this.reset();
 	}
 
 	/**
 	 * Shortcut to initialize without the `new` keyword
-	 * @param {Db} [db]  The Db instance to use
-	 * @return {Select}
+	 * @param [db]  The Db instance to use
+	 * @return A new Select instance
 	 */
-	static init(db = null) {
+	static init(db: Db = null) {
 		return new Select(db || Db.factory());
 	}
 
 	/**
 	 * Get the SQL as a pretty-printed string
-	 * @return {String}
+	 * @return The SQL query as a string
 	 */
-	toString() {
+	toString(): string {
 		const lines = [
 			'SELECT',
 			this._options.length ? `  ${this._options.join('\n  ')}` : null,
@@ -85,7 +121,7 @@ class Select {
 
 	/**
 	 * Get the SQL as a one-line string
-	 * @return {String}
+	 * @return The SQL query as a string without newlines or indents
 	 */
 	normalized() {
 		const lines = [
@@ -118,9 +154,9 @@ class Select {
 
 	/**
 	 * Get normalized SQL with all parameters bound
-	 * @returns {String}
+	 * @returns
 	 */
-	toBoundSql() {
+	toBoundSql(): string {
 		const sql = this.normalized();
 		const options = this.db.bindArgs(sql, [this._bound]);
 		return options.sql;
@@ -129,9 +165,10 @@ class Select {
 	/**
 	 * @param {String|Array} [field]  If given, reset the given component(s), otherwise reset all query components
 	 *     Valid components: option, column, table, where, orWhere, having, groupBy, orderBy, limit, offset, page
-	 * @return {Select}
+	 * @return This object
+	 * @chainable
 	 */
-	reset(field = null) {
+	reset(field: FieldName | FieldName = null) {
 		if (Array.isArray(field)) {
 			field.forEach(name => this.reset(name));
 			return this;
@@ -244,12 +281,12 @@ class Select {
 	/**
 	 * Specify data from a sibling table be spliced in
 	 * Can be used for one-to-one or many-to-one relationships
-	 * @param {String} property  The name of the property into which to splice
-	 * @param {Select} siblingQuery  The Select query to fetch the sibling data
-	 * @returns {Select}
+	 * @param roperty  The name of the property into which to splice
+	 * @param siblingQuery  The Select query to fetch the sibling data
+	 * @returns
 	 * @chainable
 	 */
-	withSiblingData(property, siblingQuery) {
+	withSiblingData(property: string, siblingQuery: Select) {
 		this._siblings.push({ property, query: siblingQuery });
 		return this;
 	}
@@ -257,26 +294,27 @@ class Select {
 	/**
 	 * Specify data from a child table to be spliced in
 	 * Can be used for one-to-many or many-to-many relationships
-	 * @param {String} property  The name of the property into which to splice
-	 * @param {Select} childQuery  The Select query to fetch the child data
-	 * @returns {Select}
+	 * @param property  The name of the property into which to splice
+	 * @param childQuery  The Select query to fetch the child data
+	 * @returns
+	 * @chainable
 	 */
-	withChildData(property, childQuery) {
+	withChildData(property: string, childQuery: Select) {
 		this._children.push({ property, query: childQuery });
 		return this;
 	}
 
 	/**
 	 * Bind values by name to the query
-	 * @param {Object|String|Array} placeholder  The name of the placeholder or an object with placeholder: value pairs
-	 * @param {*} [value=null]  The value to bind when placeholder is a string
+	 * @param placeholder  The name of the placeholder or an object with placeholder: value pairs
+	 * @param [value=null]  The value to bind when placeholder is a string
 	 * @example
 	 *     query.bind('postId', 123); // replace :postId with 123
 	 *     query.bind({ postId: 123 }); // replace :postId with 123
 	 * @return {Select}
 	 */
-	bind(placeholder, value = null) {
-		if (typeof placeholder === 'object' && arguments.length === 1) {
+	bind(placeholder: Record<string, any> | any, value: any = null) {
+		if (typeof placeholder === 'object') {
 			forOwn(placeholder, (val, field) => {
 				this._bound[field] = val;
 			});
@@ -288,10 +326,10 @@ class Select {
 
 	/**
 	 * Unbind a previously bound property
-	 * @param {String} [placeholder]
-	 * @return {Select}
+	 * @param [placeholder]
+	 * @return
 	 */
-	unbind(placeholder = null) {
+	unbind(placeholder: string = null) {
 		if (placeholder) {
 			this._bound[placeholder] = undefined;
 		} else {
@@ -302,10 +340,14 @@ class Select {
 
 	/**
 	 * Fetch records and splice in related data
-	 * @param [options] Query options
-	 * @return {Promise<Object>}
+	 * @param Query options
+	 * @return
 	 */
-	async fetch(options = {}) {
+	async fetch(options: SqlOptionsInterface = {}): Promise<{
+		queries: string[];
+		results: Record<string, any>[];
+		fields: FieldInfo[];
+	}> {
 		options.sql = this.toString();
 		const {
 			query: initialSql,
@@ -322,7 +364,7 @@ class Select {
 	 * Fetch the first matched record
 	 * @return {Object|null}
 	 */
-	async fetchFirst(options = {}) {
+	async fetchFirst(options: SqlOptionsInterface = {}) {
 		options.sql = this.toString();
 		const oldLimit = this._limit;
 		this.limit(1);
@@ -335,7 +377,7 @@ class Select {
 	 * Fetch each record as an object with key-value pairs
 	 * @return {Promise<Object>}
 	 */
-	fetchHash(options = {}) {
+	fetchHash(options: SqlOptionsInterface = {}) {
 		options.sql = this.toString();
 		return this.db.selectHash(options, this._bound);
 	}
@@ -344,7 +386,7 @@ class Select {
 	 * Fetch each record as an array of values
 	 * @return {Promise<Object>}
 	 */
-	fetchList(options = {}) {
+	fetchList(options: SqlOptionsInterface = {}) {
 		options.sql = this.toString();
 		return this.db.selectList(options, this._bound);
 	}
@@ -353,7 +395,7 @@ class Select {
 	 * Fetch the value of first column of the first record
 	 * @return {Promise}
 	 */
-	fetchValue(options = {}) {
+	fetchValue(options: SqlOptionsInterface = {}) {
 		options.sql = this.toString();
 		return this.db.selectValue(options, this._bound);
 	}
@@ -363,7 +405,7 @@ class Select {
 	 * @param {String} byField  The field by which to index (e.g. id)
 	 * @return {Promise<Object>}
 	 */
-	async fetchIndexed(byField, options = {}) {
+	async fetchIndexed(byField: string, options: SqlOptionsInterface = {}) {
 		options.sql = this.toString();
 		const { queries, results, fields } = await this.fetch(options);
 		const indexed = {};
@@ -380,7 +422,7 @@ class Select {
 	 *      // a key for each user id with an array of comments for each key
 	 * @return {Array}
 	 */
-	async fetchGrouped(byField, options = {}) {
+	async fetchGrouped(byField: string, options: SqlOptionsInterface = {}) {
 		options.sql = this.toString();
 		const { query, results, fields } = await this.fetch(options);
 		const grouped = {};
@@ -1102,5 +1144,3 @@ class Select {
 		return this.db.escapeLike(infix, value);
 	}
 }
-
-module.exports = Select;

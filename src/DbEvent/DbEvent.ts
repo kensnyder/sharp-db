@@ -27,9 +27,15 @@ export default class DbEvent {
 
 	/**
 	 * Create new even object
-	 * @param {Object} props  The property values (type, subtype, target, error, data)
+	 * @param props  The property values (type, subtype, target, error, data)
 	 */
-	constructor(props) {
+	constructor(props: {
+		type: string;
+		subtype: string;
+		target: typeof Db;
+		error: string;
+		data: Object;
+	}) {
 		Object.assign(this, props);
 	}
 }

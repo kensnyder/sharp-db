@@ -1,4 +1,4 @@
-const forOwn = require('./forOwnDefined.js');
+import forOwn from './forOwnDefined';
 
 describe('forOwn', () => {
 	it('should iterate', () => {
