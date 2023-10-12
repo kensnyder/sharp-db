@@ -1,6 +1,6 @@
-import mysql from 'mysql2'
-import chunk from '../chunk/chunk'
-import forOwn from '../forOwnDefined/forOwnDefined'
+import mysql from 'mysql2';
+import chunk from '../chunk/chunk';
+import forOwn from '../forOwnDefined/forOwnDefined';
 
 export default class SqlBuilder {
 	/**
@@ -331,6 +331,6 @@ export default class SqlBuilder {
 		forOwn(wheres, (value, field) => {
 			clauses.push(SqlBuilder.buildWhere(field, value));
 		});
-		return clauses.length ? clauses.join(' AND ') : '1';
+		return clauses.length ? clauses.join(' AND ') : '1 = 1';
 	}
 }

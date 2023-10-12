@@ -1,18 +1,12 @@
-import { EventEmitter } from 'node:events';
-import mysql, { MysqlError } from 'mysql';
-import Ssh from '../Ssh/Ssh';
 import { isPlainObject } from 'is-plain-object';
-import decorateError from '../decorateError/decorateError';
 import SqlBuilder from '../SqlBuilder/SqlBuilder';
 import {
 	BindableType,
 	BoundValuesType,
 	DbConfigType,
 	DbConnectionType,
-	DbEventInterface,
 	DeleteResponseInterface,
 	EscapeInfixType,
-	EventNameType,
 	ExportSqlConfigType,
 	ExportSqlResultInterface,
 	InsertResponseInterface,
@@ -32,17 +26,17 @@ import {
 	TemplatizedInterface,
 	UpdateResponseInterface,
 } from '../types';
+import AbstractAdapter from '../Adapters/AbstractAdapter';
 
 const noop = () => {};
 
 /**
  * Simple database class for mysql
  */
-export default class Db extends EventEmitter {
-	config: DbConfigType;
-	ssh: Ssh;
+export default class Db {
 	static instances: Db[] = [];
-	connection: DbConnectionType;
+	adapter: AbstractAdapter;
+	isConnected: boolean = false;
 	_templatized: TemplatizedInterface;
 
 	/**
@@ -52,65 +46,8 @@ export default class Db extends EventEmitter {
 	 * @param [sshConfig]  SSH connection details including host, port, user, privateKey
 	 * @see https://github.com/mscdex/ssh2#client-methods
 	 */
-	constructor(config: DbConfigType = {}, sshConfig: SshConfigType = null) {
-		super();
-		const env = process.env;
-		this.config = {
-			...config,
-			host: config.host || env.DB_HOST || env.RDS_HOSTNAME || '127.0.0.1',
-			user: config.user || env.DB_USER || env.RDS_USERNAME || 'root',
-			password: config.password || env.DB_PASSWORD || env.RDS_PASSWORD || '',
-			database:
-				config.database || env.DB_DATABASE || env.RDS_DATABASE || undefined,
-			port: config.port || Number(env.DB_PORT) || Number(env.RDS_PORT) || 3306,
-			charset: config.charset || env.DB_CHARSET || env.RDS_CHARSET || 'utf8mb4',
-		};
-		if (sshConfig) {
-			/**
-			 * The Ssh instance for tunnelling
-			 * @type {Ssh}
-			 */
-			this.ssh = new Ssh(sshConfig);
-		}
-		Db.instances.push(this);
-	}
-
-	/**
-	 * Emit an event and associated data
-	 * @param type  The event name
-	 * @param data  Data to send with event
-	 * @return  The emitted event
-	 */
-	emitDbEvent(type: EventNameType, data = {}): DbEventInterface {
-		const evt: DbEventInterface = {
-			type,
-			subtype: null,
-			target: this,
-			error: null,
-			data,
-		};
-		this.emit(type, evt);
-		return evt;
-	}
-
-	/**
-	 * Emit a dbError event and associated data
-	 * @param {String} subtype  The name of the event that would have been called in a success case
-	 * @param {Error} error  The error that was raised
-	 * @param {Object} data  Data to send with event
-	 * @return {DbEvent}
-	 */
-	emitDbError(subtype: string, error: Error, data = {}): DbEventInterface {
-		const type = 'dbError';
-		const evt: DbEventInterface = {
-			type,
-			subtype,
-			target: this,
-			error,
-			data,
-		};
-		this.emit(type, evt);
-		return evt;
+	constructor(adapter: AbstractAdapter) {
+		this.adapter = adapter;
 	}
 
 	/**
@@ -122,12 +59,9 @@ export default class Db extends EventEmitter {
 	 * @see https://github.com/mscdex/ssh2#client-methods
 	 * @return {Db}
 	 */
-	static factory(
-		config: DbConfigType = {},
-		sshConfig: SshConfigType = null
-	): Db {
+	static factory(): Db {
 		if (Db.instances.length === 0) {
-			return new Db(config, sshConfig);
+			throw new Error('No Db instances have been created yet');
 		}
 		return Db.instances[Db.instances.length - 1];
 	}
@@ -138,36 +72,25 @@ export default class Db extends EventEmitter {
 	 * @return {Promise<Object>}  The mysql connection object
 	 * @see https://github.com/mysqljs/mysql#connection-options
 	 */
-	async connect(overrides: DbConfigType = {}): Promise<DbConnectionType> {
-		if (this.ssh) {
-			await this.ssh.tunnelTo(this);
-			this.emitDbEvent('sshConnect', this.ssh);
-		}
-		/**
-		 * The mysql2 library connection object
-		 * @type {Object}
-		 */
-		this.connection = mysql.createConnection({ ...this.config, ...overrides });
-		return new Promise((resolve, reject) => {
-			this.connection.connect(error => {
-				if (error) {
-					decorateError(error);
-					this.emitDbError('connect', error);
-					reject(error);
-				} else {
-					this.emitDbEvent('connect', { connection: this.connection });
-					resolve(this.connection);
-				}
-			});
-		});
+	async connect(): Promise<DbConnectionType> {
+		const res = await this.adapter.connect();
+		this.isConnected = true;
+		return res;
 	}
 
 	/**
 	 * Make a new connection to MySQL if not already connected
 	 */
 	async connectOnce(): Promise<void> {
-		if (!this.connection) {
+		if (!this.isConnected) {
 			await this.connect();
+		}
+	}
+
+	_spliceOutInstance() {
+		const idx = Db.instances.indexOf(this);
+		if (idx > -1) {
+			Db.instances.splice(idx, 1);
 		}
 	}
 
@@ -176,30 +99,8 @@ export default class Db extends EventEmitter {
 	 * @return {Promise}  Resolves when connection has been closed
 	 */
 	end(): Promise<void> {
-		if (this.ssh) {
-			this.ssh.end();
-			this.emitDbEvent('sshDisconnect');
-		}
-		return new Promise((resolve, reject) => {
-			if (this.connection) {
-				const idx = Db.instances.indexOf(this);
-				if (idx > -1) {
-					Db.instances.splice(idx, 1);
-				}
-				this.connection.end(error => {
-					if (error) {
-						decorateError(error as MysqlError);
-						this.emitDbError('disconnect', error);
-						reject(error);
-					} else {
-						this.emitDbEvent('disconnect');
-						resolve();
-					}
-				});
-			} else {
-				resolve();
-			}
-		});
+		this._spliceOutInstance();
+		return this.adapter.end();
 	}
 
 	/**
@@ -207,19 +108,8 @@ export default class Db extends EventEmitter {
 	 * @return  This instance
 	 */
 	destroy(): Db {
-		if (this.ssh) {
-			this.ssh.end();
-			this.emitDbEvent('sshDisconnect');
-		}
-		if (this.connection && this.connection.destroy) {
-			const idx = Db.instances.indexOf(this);
-			if (idx > -1) {
-				Db.instances.splice(idx, 1);
-			}
-			this.connection.destroy();
-			this.emitDbEvent('disconnect');
-		}
-		return this;
+		this._spliceOutInstance();
+		return this.adapter.destroy();
 	}
 
 	/**
@@ -249,73 +139,42 @@ export default class Db extends EventEmitter {
 	 * @property fields  Info about the selected fields
 	 */
 	async query(
-		sql: string | SqlOptionsInterface,
+		sql: string,
 		...bindVars: BoundValuesType
 	): Promise<QueryResponseInterface> {
-		await this.connectOnce();
-		const options = this.bindArgs(sql, bindVars);
-		return new Promise((resolve, reject) => {
-			const query = this.connection.query(options, (error, results, fields) => {
-				if (error) {
-					decorateError(error, options);
-					this.emitDbError('query', error);
-					reject(error);
-				} else {
-					const result = { query, results, fields };
-					const evt = this.emitDbEvent('query', result);
-					resolve(evt.data);
-				}
-			});
-		});
+		return this.adapter.query(sql, bindVars);
 	}
 
 	/**
 	 * Run multiple statements separated by semicolon
 	 * @param {String|Object} sql  The sql to run
-	 * @param bindVars  Values to bind to the sql placeholders
+	 * @param bound  Values to bind to the sql placeholders
 	 * @returns {Promise<Object>}
 	 * @property {String} query  The final SQL that was executed
 	 * @property {Array} results  One element for every statement in the query
 	 * @property {Object[]} fields  Info about the selected fields
 	 */
 	async multiQuery(
-		sql: string | SqlOptionsInterface,
-		...bindVars: BoundValuesType
+		sql: string,
+		...bound: BoundValuesType
 	): Promise<QueryResponseInterface> {
-		await this.connectOnce();
-		const options = this.bindArgs(sql, bindVars);
-		options.multipleStatements = true;
-		return this.query(options);
+		return this.adapter.multiQuery(sql, bound);
 	}
 
 	/**
 	 * Return result rows for the given SELECT statement
 	 * @param {String|Object} sql  The SQL to run
-	 * @param bindVars  The values to bind to each question mark or named binding
+	 * @param bound  The values to bind to each question mark or named binding
 	 * @return {Promise<Object>}
 	 * @property {String} query  The final SQL that was executed
 	 * @property {Array} results  The result rows
 	 * @property {Object[]} fields  Info about the selected fields
 	 */
 	async select(
-		sql: string | SqlOptionsInterface,
-		...bindVars: BoundValuesType
+		sql: string,
+		...bound: BoundValuesType
 	): Promise<SelectResponseInterface> {
-		await this.connectOnce();
-		const options = this.bindArgs(sql, bindVars);
-		return new Promise((resolve, reject) => {
-			const query = this.connection.query(options, (error, results, fields) => {
-				if (error) {
-					decorateError(error, options);
-					this.emitDbError('select', error);
-					reject(error);
-				} else {
-					const result = { query, results, fields };
-					const evt = this.emitDbEvent('select', result);
-					resolve(evt.data);
-				}
-			});
-		});
+		return this.adapter.query(sql, bound);
 	}
 
 	/**
@@ -331,7 +190,10 @@ export default class Db extends EventEmitter {
 		sql: string | SqlOptionsInterface,
 		...bindVars: BoundValuesType
 	): Promise<SelectHashResponseInterface> {
-		const { query, results, fields } = await this.select(sql, ...bindVars);
+		const { query, results, fields } = await this.adapter.query(
+			sql,
+			...bindVars
+		);
 		const key = fields[0].name;
 		const val = fields[1].name;
 		const hash = {};
@@ -354,7 +216,10 @@ export default class Db extends EventEmitter {
 		sql: string | SqlOptionsInterface,
 		...bindVars: BoundValuesType
 	): Promise<SelectListResponseInterface> {
-		const { query, results, fields } = await this.select(sql, ...bindVars);
+		const { query, results, fields } = await this.adapter.query(
+			sql,
+			...bindVars
+		);
 		const name = fields[0].name;
 		const list = results.map(result => result[name]);
 		return {
@@ -379,7 +244,10 @@ export default class Db extends EventEmitter {
 		sql: string | SqlOptionsInterface,
 		...bindVars: BoundValuesType
 	): Promise<SelectGroupedResponseInterface> {
-		const { query, results, fields } = await this.select(sql, ...bindVars);
+		const { query, results, fields } = await this.adapter.query(
+			sql,
+			...bindVars
+		);
 		const groups = {};
 		results.forEach(result => {
 			if (!groups[String(result[groupField])]) {
@@ -409,7 +277,10 @@ export default class Db extends EventEmitter {
 		sql: string | SqlOptionsInterface,
 		...bindVars: BoundValuesType
 	): Promise<SelectIndexedResponseInterface> {
-		const { query, results, fields } = await this.select(sql, ...bindVars);
+		const { query, results, fields } = await this.adapter.query(
+			sql,
+			...bindVars
+		);
 		const hash = {};
 		results.forEach(result => {
 			hash[String(result[indexField])] = result;
@@ -434,7 +305,10 @@ export default class Db extends EventEmitter {
 		sql: string | SqlOptionsInterface,
 		...bindVars: BoundValuesType
 	): Promise<SelectFirstResponseInterface> {
-		const { query, results, fields } = await this.select(sql, ...bindVars);
+		const { query, results, fields } = await this.adapter.query(
+			sql,
+			...bindVars
+		);
 		return {
 			query,
 			results: results[0],
@@ -455,7 +329,10 @@ export default class Db extends EventEmitter {
 		sql: string | SqlOptionsInterface,
 		...bindVars: BoundValuesType
 	): Promise<SelectValueResponseInterface> {
-		const { query, results, fields } = await this.select(sql, ...bindVars);
+		const { query, results, fields } = await this.adapter.query(
+			sql,
+			...bindVars
+		);
 		let value = undefined;
 		if (results.length > 0) {
 			const name = fields[0].name;
@@ -478,12 +355,14 @@ export default class Db extends EventEmitter {
 	 * @property {Object[]} fields  Info about the selected fields
 	 */
 	async selectExists(
-		sql: string | SqlOptionsInterface,
+		sql: string,
 		...bindVars: BoundValuesType
 	): Promise<SelectExistsResponseInterface> {
-		const options = typeof sql === 'object' ? sql : { sql };
-		options.sql = `SELECT EXISTS (${options.sql}) AS does_it_exist`;
-		const { query, results, fields } = await this.select(options, ...bindVars);
+		const existsSql = `SELECT EXISTS (${sql}) AS does_it_exist`;
+		const { query, results, fields } = await this.adapter.query(
+			existsSql,
+			...bindVars
+		);
 		const doesItExist = results[0] ? Boolean(results[0].does_it_exist) : false;
 		return {
 			query,
@@ -510,7 +389,6 @@ export default class Db extends EventEmitter {
 			const query = this.connection.query(options, (error, results) => {
 				if (error) {
 					decorateError(error, options);
-					this.emitDbError('insert', error);
 					reject(error);
 				} else {
 					const result = {
@@ -519,7 +397,6 @@ export default class Db extends EventEmitter {
 						affectedRows: results.affectedRows,
 						changedRows: results.changedRows,
 					};
-					const evt = this.emitDbEvent('insert', result);
 					resolve(evt.data);
 				}
 			});
@@ -915,7 +792,6 @@ export default class Db extends EventEmitter {
 	 * @return {Promise<Object>}
 	 */
 	startTransaction() {
-		this.emitDbEvent('startTransaction');
 		return this.query('START TRANSACTION');
 	}
 
@@ -933,7 +809,6 @@ export default class Db extends EventEmitter {
 	 * @return {Promise<Object>}
 	 */
 	commit() {
-		this.emitDbEvent('commit');
 		return this.query('COMMIT');
 	}
 
@@ -942,60 +817,7 @@ export default class Db extends EventEmitter {
 	 * @return {Promise<Object>}
 	 */
 	rollback() {
-		this.emitDbEvent('rollback');
 		return this.query('ROLLBACK');
-	}
-
-	/**
-	 * Bind an arguments to a query
-	 * @param {String|Object} sql  The base SQL query
-	 * @param {*} args  A value, an object with key/value paris, or an array of values to bind
-	 * @return {Object}
-	 * @property {String} sql  The final SQL with bound values replaced
-	 * @example
-	 * db.select('SELECT * FROM users WHERE id = ?', 100);
-	 * db.bindArgs('SELECT * FROM users WHERE id = ?', 100); // SELECT * FROM users WHERE id = '100'
-	 * db.select('SELECT * FROM users WHERE id = :id', { id: 100 });
-	 * db.bindArgs('SELECT * FROM users WHERE id = :id', { id: 100 }); // SELECT * FROM users WHERE id = '100'
-	 */
-	bindArgs(sql: string | SqlOptionsInterface, args: any) {
-		const options = typeof sql === 'object' ? sql : { sql };
-		if (options.sql === '' || typeof options.sql !== 'string') {
-			throw new Error('SQL must be a non-empty empty string');
-		}
-		if (!Array.isArray(args)) {
-			args = [];
-		}
-		if (Array.isArray(options.values)) {
-			args = options.values.concat(args);
-		} else if (options.values) {
-			args = [options.values].concat(args);
-		}
-		options.values = undefined;
-		options.bound = {};
-		args.forEach((arg, i) => {
-			if (
-				arg instanceof Boolean ||
-				arg instanceof Number ||
-				arg instanceof String
-			) {
-				arg = arg.valueOf();
-			}
-			if (isPlainObject(arg)) {
-				options.sql = options.sql.replace(/:([\w_]+)/g, ($0, $1) => {
-					if (arg.hasOwnProperty($1) && arg[$1] !== undefined) {
-						options.bound[$1] = arg[$1];
-						return this.escape(arg[$1]);
-					}
-					return $0;
-				});
-			} else {
-				options.bound[String(i)] = arg;
-				options.sql = options.sql.replace('?', this.escape(arg));
-			}
-		});
-		const evt = this.emitDbEvent('bind', options);
-		return evt.data;
 	}
 
 	/**
@@ -1004,7 +826,7 @@ export default class Db extends EventEmitter {
 	 * @return {String}
 	 */
 	escape(value: BindableType): string {
-		return mysql.escape(value);
+		return this.adapter.escape(value);
 	}
 
 	/**
@@ -1012,7 +834,7 @@ export default class Db extends EventEmitter {
 	 * @param {String|Number|Boolean|null} value  The value to escape
 	 * @return {String}
 	 */
-	escapeQuoteless(value: BindableType): String {
+	escapeQuoteless(value: BindableType): string {
 		let escaped = this.escape(value);
 		if (escaped.slice(0, 1) === "'" && escaped.slice(-1) === "'") {
 			escaped = escaped.slice(1, -1);
@@ -1048,13 +870,12 @@ export default class Db extends EventEmitter {
 	/**
 	 * Escape an identifier such as a table or column
 	 * @param identifier
-	 * @return {*}
 	 */
-	quote(identifier: string) {
+	quote(identifier: string): string {
 		if (/[`()]/.test(identifier)) {
 			return identifier;
 		}
-		let quoted = mysql.escapeId(identifier);
+		let quoted = this.adapter.escapeId(identifier);
 		if (/`\*`$/.test(quoted)) {
 			quoted = quoted.slice(0, -3) + '*';
 		}
@@ -1080,11 +901,12 @@ export default class Db extends EventEmitter {
 	 * @property {Function} delete  Same as Db#delete()
 	 */
 	tpl(): TemplatizedInterface {
+		const adapter = this.adapter;
 		if (!this._templatized) {
 			function toSql(templateData, variables) {
 				let s = templateData[0];
 				variables.forEach((variable, i) => {
-					s += mysql.escape(variable);
+					s += adapter.escape(variable);
 					s += templateData[i + 1];
 				});
 				return s;
@@ -1101,49 +923,5 @@ export default class Db extends EventEmitter {
 			};
 		}
 		return this._templatized;
-	}
-
-	/**
-	 * Run the given handler by passing a new database instance. Three signatures:
-	 *   Db.withInstance(handler)
-	 *   Db.withInstance(mysqlConfig, handler)
-	 *   Db.withInstance(mysqlConfig, sshConfig, handler)
-	 * @example
-	 *   const addresses = await Db.withInstance(async db => {
-	 *   	const sql = 'SELECT * FROM animals WHERE type = "cat"';
-	 *      const { results: cats } = await db.select(sql);
-	 *      const homes = await findHomes(cats);
-	 *      return {
-	 *          homes: homes.map(home => home.address);
-	 *      };
-	 *   });
-	 * @param {Object} [config]  The mysql connection information (or omit to read from env)
-	 * @param {Object} [sshConfig]  The ssh config information (or omit to read from env)
-	 * @param {Function} handler  The function to pass the Db instance to
-	 * @returns {Promise<Error|*>}
-	 */
-	static async withInstance(
-		config: DbConfigType,
-		sshConfig: SshConfigType,
-		handler: Function
-	): Promise<any> {
-		if (typeof config === 'function') {
-			handler = config;
-			config = {};
-			sshConfig = null;
-		}
-		if (typeof sshConfig === 'function') {
-			handler = sshConfig;
-			sshConfig = null;
-		}
-		const db = new Db(config, sshConfig);
-		try {
-			const res = await handler(db);
-			db.end().then(noop, noop);
-			return res;
-		} catch (error) {
-			db.end().then(noop, noop);
-			return { error };
-		}
 	}
 }

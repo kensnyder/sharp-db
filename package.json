@@ -1,6 +1,6 @@
 {
   "name": "sharp-db",
-  "version": "1.8.1",
+  "version": "2.0.0",
   "description": "Classes for running SQL and building select queries for MySQL in Node",
   "main": "dist/index.js",
   "exports": {
@@ -36,9 +36,11 @@
   },
   "homepage": "https://github.com/kensnyder/sharp-db#readme",
   "dependencies": {
+    "@types/pg": "^8.10.5",
     "is-plain-object": "5.0.0",
     "lodash-es": "^4.17.21",
     "mysql2": "3.6.1",
+    "pg": "^8.11.3",
     "quickly-count-substrings": "1.0.0",
     "ssh2": "1.14.0"
   },
@@ -55,7 +57,7 @@
     "prompts": "2.4.2",
     "rimraf": "^5.0.5",
     "typescript": "^5.2.2",
-    "walkdir": "0.4.1",
-    "vitest": "^0.34.6"
+    "vitest": "^0.34.6",
+    "walkdir": "0.4.1"
   }
 }

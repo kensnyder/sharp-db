@@ -134,8 +134,8 @@ describe('Parser', () => {
 		});
 	});
 	describe('conditions handler', () => {
-		it('should parse WHERE 1', () => {
-			const query = Select.parse('SELECT * FROM mytable WHERE 1');
+		it('should parse WHERE 1 = 1', () => {
+			const query = Select.parse('SELECT * FROM mytable WHERE 1 = 1');
 			expect(query._wheres).toEqual(['1']);
 		});
 		it("should parse WHERE '1'", () => {

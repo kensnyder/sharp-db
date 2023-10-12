@@ -64,25 +64,58 @@ See node's mysqljs for [other options](https://github.com/mysqljs/mysql#connecti
 
 Connect to MySQL server
 
-```js
-const { Db } = require('sharp-db');
-// read options from ENV
-const db1 = Db.factory();
+```ts
+import { MysqlAdapter, Db } from 'sharp-db';
+import { createPool } from 'mysql2';
 
-// specify options in constructor
-const db2 = new Db({
-    host: '127.0.0.1',
-    user: 'root',
-    password: '',
-    port: 3306,
+const pool = createPool(myConfig);
+const db = new Db(new MysqlAdapter(pool));
+```
+
+Connect to Postgres server
+
+```ts
+import { PostgresAdapter, Db } from 'sharp-db';
+import { Pool } from 'pg';
+
+const pool = new Pool(myConfig);
+const db = new Db(new PostgresAdapter(pool));
+
+const db.query();
+```
+
+SSH and connect to MySQL server
+
+```ts
+import { MysqlAdapter, Db, buildMysqlConfigWithTunnel } from 'sharp-db';
+import { createPool } from 'mysql2';
+import { Client as Ssh2Client } from 'ssh2';
+
+const config = await buildMysqlConfigWithTunnel({
+  mysqlConfig: myDbConfig,
+  sshConfig: mySslConfig,
+  constructor: Ssh2Client,
 });
+const pool = new createPool(config);
+const db = new Db(new MysqlAdapter(pool));
 
-// instance that was last created
-const db2Again = Db.factory();
+const { results } = await db.query('SELECT * FROM users');
+await db.release();
+```
 
-// Don't forget to close the connection when done
-db1.end();
-db2.end();
+Using a factory and auto-end
+
+```ts
+import { MysqlAdapter } from 'sharp-db';
+import { createConnection } from 'mysql2';
+
+const factory = () => createConnection(myConfig);
+const name = await MysqlAdapter.usingInstance(factory, async db => {
+  const { results } = await db.query('SELECT * FROM users');
+  return results[0].name;
+});
+```
+
 ```
 
 #### Auto factory and end

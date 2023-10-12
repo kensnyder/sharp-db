@@ -7,6 +7,7 @@ import type {
 	MysqlError,
 } from 'mysql';
 import type { ConnectConfig } from 'ssh2';
+import ParentAdapter from './Adapters/ParentAdapter';
 
 export type DbConnectionType = Connection;
 
@@ -14,35 +15,9 @@ export type DbConfigType = Partial<ConnectionConfig>;
 
 export type SshConfigType = Partial<ConnectConfig>;
 
-export type EventNameType =
-	| 'sshConnect'
-	| 'connect'
-	| 'sshDisconnect'
-	| 'disconnect'
-	| 'query'
-	| 'select'
-	| 'insert'
-	| 'update'
-	| 'delete'
-	| 'startTransaction'
-	| 'commit'
-	| 'rollback'
-	| 'bind'
-	| 'dbError';
-
 export type SharpDbError = MysqlError & {
 	bound: Record<string, any>;
 };
-
-export type EventSubtypeNameType = string;
-
-export interface DbEventInterface {
-	type: EventNameType;
-	subtype: EventSubtypeNameType | null;
-	target: Db;
-	error: Error | null;
-	data: any;
-}
 
 export type ColumnResultValueType = string | number | boolean;
 
