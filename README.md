@@ -14,51 +14,36 @@ npm install sharp-db
 
 ## Table of Contents
 
-* [Db](#db)
-    * [Connection](#connection)
-    * [Instantiation](#instantiation)
-    * [SSH Tunneling](#ssh-tunneling)
-    * [Basic Use](#basic-use)
-    * [Bindings](#bindings)
-    * [Methods](#methods)
-    * [Useful Query Options](#useful-query-options)
-	* [Solutions to Common Problems](#solutions-to-common-problems)
-* [Select](#select)
-    * [Select.parse()](#selectparse)
-    * [Building the Query](#building-the-query)
-    * [Fetching Data](#fetching-data)
-    * [Counting Results](#counting-results)
-    * [Set the `Db` instance](#specifying-the-db-instance-to-use)
-    * [Dependent Data](#dependent-data)
-    * [Other Methods](#other-methods)
-    * [Select.parse() Limitations](#selectparse-limitations)
-* [DataBroker](#databroker)
-    * [Use in Integration Tests](#use-in-integration-tests)
-    * [Insertions](#insertions)
-    * [Deletions](#deletions)
-* [SqlBuilder](#sqlbuilder)
-    * [Function List](#function-list)
-* [QueryLogger](#querylogger)
-    * [Logging queries](#logging-queries)
-* [How to Contribute](./CONTRIBUTING.md)
-* [ISC License](./LICENSE.md)
+- [Db](#db)
+  - [Connection](#connection)
+  - [Instantiation](#instantiation)
+  - [SSH Tunneling](#ssh-tunneling)
+  - [Basic Use](#basic-use)
+  - [Bindings](#bindings)
+  - [Methods](#methods)
+  - [Useful Query Options](#useful-query-options)
+  - [Solutions to Common Problems](#solutions-to-common-problems)
+- [Select](#select)
+  - [Select.parse()](#selectparse)
+  - [Building the Query](#building-the-query)
+  - [Fetching Data](#fetching-data)
+  - [Counting Results](#counting-results)
+  - [Set the `Db` instance](#specifying-the-db-instance-to-use)
+  - [Dependent Data](#dependent-data)
+  - [Other Methods](#other-methods)
+  - [Select.parse() Limitations](#selectparse-limitations)
+- [DataBroker](#databroker)
+  - [Use in Integration Tests](#use-in-integration-tests)
+  - [Insertions](#insertions)
+  - [Deletions](#deletions)
+- [SqlBuilder](#sqlbuilder)
+  - [Function List](#function-list)
+- [QueryLogger](#querylogger)
+  - [Logging queries](#logging-queries)
+- [How to Contribute](./CONTRIBUTING.md)
+- [ISC License](./LICENSE.md)
 
 ## Db
-
-### Connection
-
-Connection can be configured with environmental variables or in the constructor.
-
-| Option | ENV name | Default |
-|---|---|----------------|
-| `host` | DB_HOST | 127.0.0.1      |
-| `port` | DB_PORT | 3306           |
-| `user` | DB_USER | root           |
-| `password` | DB_PASSWORD | _empty string_ |
-| `database` | DB_DATABASE | undefined      |
-| `charset` | DB_CHARSET| utf8mb4        |
-
-See node's mysqljs for [other options](https://github.com/mysqljs/mysql#connection-options).
 
 ### Instantiation
 
@@ -68,7 +53,7 @@ Connect to MySQL server
 import { MysqlAdapter, Db } from 'sharp-db';
 import { createPool } from 'mysql2';
 
-const pool = createPool(myConfig);
+const pool = createPool(myMysqlConfig);
 const db = new Db(new MysqlAdapter(pool));
 ```
 
@@ -78,10 +63,8 @@ Connect to Postgres server
 import { PostgresAdapter, Db } from 'sharp-db';
 import { Pool } from 'pg';
 
-const pool = new Pool(myConfig);
+const pool = new Pool(myPgConfig);
 const db = new Db(new PostgresAdapter(pool));
-
-const db.query();
 ```
 
 SSH and connect to MySQL server
@@ -99,46 +82,51 @@ const config = await buildMysqlConfigWithTunnel({
 const pool = new createPool(config);
 const db = new Db(new MysqlAdapter(pool));
 
-const { results } = await db.query('SELECT * FROM users');
+const { results } = await db.select('SELECT * FROM users');
 await db.release();
 ```
 
 Using a factory and auto-end
+
+If you are not working with a pool, you may want to auto-end the connection
+after the query is complete.
 
 ```ts
 import { MysqlAdapter } from 'sharp-db';
 import { createConnection } from 'mysql2';
 
 const factory = () => createConnection(myConfig);
-const name = await MysqlAdapter.usingInstance(factory, async db => {
-  const { results } = await db.query('SELECT * FROM users');
-  return results[0].name;
+const name = await MysqlAdapter.usingFactory(factory, async db => {
+  const { results } = await db.selectFirst('SELECT * FROM users');
+  return results.name;
 });
 ```
 
-```
+---
 
-#### Auto factory and end
+# Old Docs Below
 
-You can use `await Db.withInstance(db => /* do stuff with db */)`
-to get an instance, do something, and then close the connection.
+---
 
-```js
-const { Db } = require('sharp-db');
+### Connection
 
-// read options from ENV, instantiate and call db.end() automatically
-const { error, domain } = await Db.withInstance(async db => {
-    const sql = 'SELECT email FROM users WHERE id = 5';
-    const { results: email } = await db.selectValue(sql);
-    return {
-        domain: email.split('@').pop(),
-    };
-});
-```
+Connection can be configured with environmental variables or in the constructor.
+
+| Option     | ENV name    | Default        |
+| ---------- | ----------- | -------------- |
+| `host`     | DB_HOST     | 127.0.0.1      |
+| `port`     | DB_PORT     | 3306           |
+| `user`     | DB_USER     | root           |
+| `password` | DB_PASSWORD | _empty string_ |
+| `database` | DB_DATABASE | undefined      |
+| `charset`  | DB_CHARSET  | utf8mb4        |
+
+See node's mysqljs for [other options](https://github.com/mysqljs/mysql#connection-options).
 
 `Db.withInstance()` will return one of the following:
 
 1. `{ error }` where error is an object from mysql2. [Full docs](https://github.com/mysqljs/mysql#error-handling). Summary:
+
    - `error.sqlMessage` The textual description of the error
    - `error.code` The string error code such as `PROTOCOL_CONNECTION_LOST`
    - `error.errno` The associated number code
@@ -153,25 +141,26 @@ your query has returned a result. Failing to do so will result in `db.end()`
 being called before your query is run. You may see an Error similar to the
 following:
 
-```[ERROR] -1 (N/A): Can't add new command when connection is in closed state```
+`[ERROR] -1 (N/A): Can't add new command when connection is in closed state`
 
 For example:
+
 ```js
 // WILL FAIL:
 const { error } = Db.withInstance(db => {
-    db.insertInto('users', user);
+  db.insertInto('users', user);
 });
 
 // WILL SUCCEED:
 const { error, results } = Db.withInstance(db => {
-    return db.insertInto('users', user);
+  return db.insertInto('users', user);
 });
 // ALSO OK:
 const { error, newUserId } = Db.withInstance(async db => {
-	const { insertId } = await db.insertInto('users', user);
-	return {
-		newUserId: insertId,
-	};
+  const { insertId } = await db.insertInto('users', user);
+  return {
+    newUserId: insertId,
+  };
 });
 ```
 
@@ -181,25 +170,28 @@ Connect to MySQL through an SSH tunnel
 
 ```js
 const { Db } = require('sharp-db');
-const db = Db.factory({
+const db = Db.factory(
+  {
     // MySQL connection as first argument
     host: '127.0.0.1',
     port: 3306,
     user: 'root',
     password: '',
-}, {
+  },
+  {
     // SSH connection as second argument
     host: 'example.com',
     port: 22,
     user: 'ubuntu',
     privateKey: '~/.ssh/example.com.pem',
-});
+  }
+);
 ```
 
 SSH Tunnel Options
 
 | Option       | ENV name           | Default     |
-|--------------|--------------------|-------------|
+| ------------ | ------------------ | ----------- |
 | `host`       | DB_SSH_HOST        | "localhost" |
 | `port`       | DB_SSH_PORT        | 22          |
 | `user`       | DB_SSH_USER        | _none_      |
@@ -229,14 +221,14 @@ db.destroy();
 
 Relevant properties of each `fields` item:
 
-| Item | Description | Example |
-|---|---|---|
-| `characterSet` | [Character set constant](https://github.com/mysqljs/mysql/blob/master/lib/protocol/constants/charsets.js) | 45 |
-| `encoding` | Character set name | utf8 |
-| `name` | Name of column | my_column |
-| `columnLength` | Number of *bytes* of field | 400 |
-| `columnType` | [Data type constant](https://github.com/mysqljs/mysql/blob/master/lib/protocol/constants/types.js) | 253 |
-| `flags` | [Field flag constant](https://github.com/mysqljs/mysql/blob/master/lib/protocol/constants/field_flags.js) | 33 |
+| Item           | Description                                                                                               | Example   |
+| -------------- | --------------------------------------------------------------------------------------------------------- | --------- |
+| `characterSet` | [Character set constant](https://github.com/mysqljs/mysql/blob/master/lib/protocol/constants/charsets.js) | 45        |
+| `encoding`     | Character set name                                                                                        | utf8      |
+| `name`         | Name of column                                                                                            | my_column |
+| `columnLength` | Number of _bytes_ of field                                                                                | 400       |
+| `columnType`   | [Data type constant](https://github.com/mysqljs/mysql/blob/master/lib/protocol/constants/types.js)        | 253       |
+| `flags`        | [Field flag constant](https://github.com/mysqljs/mysql/blob/master/lib/protocol/constants/field_flags.js) | 33        |
 
 ### Bindings
 
@@ -252,10 +244,11 @@ const { results: users } = await db.select(sql, true, 5);
 #### Named Bindings
 
 ```js
-const sql = 'SELECT * FROM users WHERE is_active = :isActive AND department_id = :departmentId';
+const sql =
+  'SELECT * FROM users WHERE is_active = :isActive AND department_id = :departmentId';
 const { results: users } = await db.select(sql, {
-    isActive: true,
-    departmentId: 5,
+  isActive: true,
+  departmentId: 5,
 });
 ```
 
@@ -263,11 +256,11 @@ const { results: users } = await db.select(sql, {
 
 ```js
 const { results: users } = await db.select(sql, {
-    isActive: true,          // Boolean
-    departmentId: 5,         // Number
-    createdAt: '2020-02-14', // Strings
-    statusCode: [1, 2, 3],   // Arrays e.g. IN(1, 2, 3)
-    deletedAt: null,         // null e.g. NULL
+  isActive: true, // Boolean
+  departmentId: 5, // Number
+  createdAt: '2020-02-14', // Strings
+  statusCode: [1, 2, 3], // Arrays e.g. IN(1, 2, 3)
+  deletedAt: null, // null e.g. NULL
 });
 ```
 
@@ -332,11 +325,12 @@ const { results: usersById } = await db.selectIndexed('id', sql);
 ```
 
 Example results:
+
 ```js
 results = {
-  "1": { id: 1, name: "John" },
-  "2": { id: 2, name: "Jane" },
-}
+  1: { id: 1, name: 'John' },
+  2: { id: 2, name: 'Jane' },
+};
 ```
 
 #### selectGrouped(groupColumn, sql, ...bindValues)
@@ -348,16 +342,15 @@ const { results: usersGroupedByOrg } = await db.selectGrouped('org', sql);
 ```
 
 Example results:
+
 ```js
 results = {
-    "Marketing": [
-        { id: 1, name: "John", org: "Marketing" },
-        { id: 2, name: "Jane", org: "Marketing" },
-    ],
-    "Finance": [
-        { id: 3, name: "Jose", org: "Finance" },
-    ],
-}
+  Marketing: [
+    { id: 1, name: 'John', org: 'Marketing' },
+    { id: 2, name: 'Jane', org: 'Marketing' },
+  ],
+  Finance: [{ id: 3, name: 'Jose', org: 'Finance' }],
+};
 ```
 
 #### selectOrCreate(table, criteria[, newValues])
@@ -370,15 +363,15 @@ I want to add a new hit record with a given URL. You might write this:
 
 ```js
 const newHit = {
-	date: '2021-10-15 17:43:24',
-	url: 'https://example.com',
-}
+  date: '2021-10-15 17:43:24',
+  url: 'https://example.com',
+};
 
 const { results } = await db.selectOrCreate('urls', { url: newHit.url });
 
 await db.insert('hits', {
-	date: newHit.date,
-	url_id: results.id,
+  date: newHit.date,
+  url_id: results.id,
 });
 ```
 
@@ -388,18 +381,18 @@ SQL can actually be an Object with options.
 
 ```js
 const options = {
-    sql: `
+  sql: `
         SELECT users.*, avatars.*
         FROM users
         INNER JOIN avatars ON avatars.user_id = users.id
         WHERE users.is_active = ?
     `,
-    // kill query if not completed within 30 seconds
-    timeout: 30000,
-    // return records with keys `users` and `avatars` with their own fields nested underneath
-    nestTables: true,
-    // you can also bind values here using question marks
-    values: [true],
+  // kill query if not completed within 30 seconds
+  timeout: 30000,
+  // return records with keys `users` and `avatars` with their own fields nested underneath
+  nestTables: true,
+  // you can also bind values here using question marks
+  values: [true],
 };
 const { results } = await db.select(options);
 ```
@@ -419,31 +412,31 @@ nesting tables will return a data structure such as:
 
 ```js
 results = [
-	{
-		users: {
-			id: 1,
-			name: 'John Doe',
-			is_active: true,
-		},
-		avatars: {
-			id: 101,
-			user_id: 1,
-			url: 'http://example.com/john.png'
-		}
-	},
-	{
-		users: {
-			id: 2,
-			name: 'Jane Doe',
-			is_active: true,
-		},
-		avatars: {
-			id: 102,
-			user_id: 2,
-			url: 'http://example.com/jane.png'
-		}
-	}
-]
+  {
+    users: {
+      id: 1,
+      name: 'John Doe',
+      is_active: true,
+    },
+    avatars: {
+      id: 101,
+      user_id: 1,
+      url: 'http://example.com/john.png',
+    },
+  },
+  {
+    users: {
+      id: 2,
+      name: 'Jane Doe',
+      is_active: true,
+    },
+    avatars: {
+      id: 102,
+      user_id: 2,
+      url: 'http://example.com/jane.png',
+    },
+  },
+];
 ```
 
 #### selectFrom(table, fields, values)
@@ -451,10 +444,10 @@ results = [
 Build and run a simple select statement.
 
 ```js
-const { results } = await db.selectFrom('users', ['fname','lname'], {
-    'id >': 5,
-    is_active: true,
-    department_id: [1,2],
+const { results } = await db.selectFrom('users', ['fname', 'lname'], {
+  'id >': 5,
+  is_active: true,
+  department_id: [1, 2],
 });
 ```
 
@@ -463,7 +456,9 @@ const { results } = await db.selectFrom('users', ['fname','lname'], {
 Run an insert statement; return the id of the new record if applicable.
 
 ```js
-const { insertId } = await db.insert("INSERT INTO users SET name='John', email='john@example.com'");
+const { insertId } = await db.insert(
+  "INSERT INTO users SET name='John', email='john@example.com'"
+);
 ```
 
 #### insertInto(table, values)
@@ -472,8 +467,8 @@ Build and run an insert statement; return the id of the new record if applicable
 
 ```js
 const { insertId } = await db.insertInto('users', {
-    name: 'John',
-    email: 'john@example.com',
+  name: 'John',
+  email: 'john@example.com',
 });
 ```
 
@@ -483,8 +478,8 @@ Build and run an extended insert statement; return the id of the last record if 
 
 ```js
 const { insertId } = await db.insertExtended('users', [
-    { name: 'John', email: 'john@example.com' },
-    { name: 'Jane', email: 'jane@example.com' },
+  { name: 'John', email: 'john@example.com' },
+  { name: 'Jane', email: 'jane@example.com' },
 ]);
 ```
 
@@ -494,16 +489,16 @@ Build and run an insert statement; return the id of the new record if applicable
 
 ```js
 const { insertId, affectedRows } = await db.insertIntoOnDuplicateKeyUpdate(
-    'users',
-    {
-        sso_ref: 'A123456',
-        name: 'Jane Doe',
-        created_at: '2020-02-02',
-    },
-    {
-        name: 'Jane Doe Carter',
-        modified_at: '2020-02-02',
-    }
+  'users',
+  {
+    sso_ref: 'A123456',
+    name: 'Jane Doe',
+    created_at: '2020-02-02',
+  },
+  {
+    name: 'Jane Doe Carter',
+    modified_at: '2020-02-02',
+  }
 );
 ```
 
@@ -513,9 +508,9 @@ Run an update statement; return the number of affected rows.
 
 ```js
 const { affectedRows } = await db.update(
-    "UPDATE users SET name = ? WHERE id = ?",
-    'Jane Doe Carter',
-    5
+  'UPDATE users SET name = ? WHERE id = ?',
+  'Jane Doe Carter',
+  5
 );
 ```
 
@@ -525,9 +520,9 @@ Build and run an update statement; return the number of affected rows.
 
 ```js
 const { affectedRows } = await db.updateTable(
-    'users',
-    { name: 'Jane Doe Carter' },
-    { id: 5 }
+  'users',
+  { name: 'Jane Doe Carter' },
+  { id: 5 }
 );
 ```
 
@@ -537,8 +532,8 @@ Run a delete statement; return the number of affected rows.
 
 ```js
 const { affectedRows } = await db.delete(
-    "DELETE FROM users WHERE id = ? LIMIT 1",
-    5
+  'DELETE FROM users WHERE id = ? LIMIT 1',
+  5
 );
 ```
 
@@ -555,9 +550,7 @@ const { affectedRows } = await db.deleteFrom('users', { id: 5 }, 1);
 Run any type of statement.
 
 ```js
-const { query, results, fields } = await db.query(
-    'SELECT * FROM users'
-);
+const { query, results, fields } = await db.query('SELECT * FROM users');
 ```
 
 #### multiQuery(sql, ...bindValues)
@@ -566,7 +559,7 @@ Run multiple statements delimited by semicolon.
 
 ```js
 const { query, results, fields } = await db.query(
-    'SELECT * FROM users; SELECT * FROM tags'
+  'SELECT * FROM users; SELECT * FROM tags'
 );
 ```
 
@@ -587,12 +580,12 @@ can send keepalive packets.
 
 ```js
 const sshConfig = {
-	// ...
-	// How often (in milliseconds) to send SSH-level keepalive packets to the server (in a similar way as OpenSSH's ServerAliveInterval config option). Set to 0 to disable. Default: 0
-	keepaliveInterval: 30,
-	// How many consecutive, unanswered SSH-level keepalive packets that can be sent to the server before disconnection (similar to OpenSSH's ServerAliveCountMax config option). Default: 3
-	keepaliveCountMax: 120,
-}
+  // ...
+  // How often (in milliseconds) to send SSH-level keepalive packets to the server (in a similar way as OpenSSH's ServerAliveInterval config option). Set to 0 to disable. Default: 0
+  keepaliveInterval: 30,
+  // How many consecutive, unanswered SSH-level keepalive packets that can be sent to the server before disconnection (similar to OpenSSH's ServerAliveCountMax config option). Default: 3
+  keepaliveCountMax: 120,
+};
 const db = new Db(mysqlConfig, sshConfig);
 ```
 
@@ -616,10 +609,10 @@ const query = Select.parse(`
     WHERE u.is_active = 1
 `);
 if (email) {
-    query.where('u.email', email);
+  query.where('u.email', email);
 }
 if (areaCode) {
-    query.where('p.phone', 'LIKE ?%', areaCode);
+  query.where('p.phone', 'LIKE ?%', areaCode);
 }
 query.sort(sortField);
 query.limit(limitTo);
@@ -730,22 +723,22 @@ Example:
 ```js
 const query = Select.parse('SELECT id, name FROM users');
 query.withSiblingData(
-    'homeAddress',
-    Select.parse(`
+  'homeAddress',
+  Select.parse(`
         SELECT * FROM addresses
         WHERE addresses.user_id IN(:id)
         AND addresses.type = 'home'
         AND addresses.deleted_at IS NULL
-    `),
+    `)
 );
 query.withSiblingData(
-    'workAddress',
-    Select.parse(`
+  'workAddress',
+  Select.parse(`
         SELECT * FROM addresses
         WHERE addresses.user_id IN(:id)
         AND addresses.type = 'work'
         AND addresses.deleted_at IS NULL
-    `),
+    `)
 );
 const { results } = await query.fetch();
 ```
@@ -754,44 +747,44 @@ const { results } = await query.fetch();
 
 ```js
 results = [
-    {
-        id: 1,
-        name: 'John',
-        homeAddress: {
-            id: 11,
-            type: 'home',
-            is_active: 1,
-            user_id: 1,
-            street: '123 Any St.',
-            city: 'Any Town',
-            state: 'CA'
-        },
-        workAddress: {
-            id: 12,
-            type: 'work',
-            is_active: 1,
-            user_id: 1,
-            street: '123 Commerce Dr.',
-            city: 'Any Town',
-            state: 'CA',
-        },
+  {
+    id: 1,
+    name: 'John',
+    homeAddress: {
+      id: 11,
+      type: 'home',
+      is_active: 1,
+      user_id: 1,
+      street: '123 Any St.',
+      city: 'Any Town',
+      state: 'CA',
     },
-    {
-        id: 2,
-        name: 'Jane',
-        // rows without sibling data will be null
-        homeAddress: null,
-        workAddress: {
-            id: 12,
-            type: 'work',
-            is_active: 1,
-            user_id: 2,
-            street: '123 Tower Blvd.',
-            city: 'Any Town',
-            state: 'CA',
-        },
-    }
-]
+    workAddress: {
+      id: 12,
+      type: 'work',
+      is_active: 1,
+      user_id: 1,
+      street: '123 Commerce Dr.',
+      city: 'Any Town',
+      state: 'CA',
+    },
+  },
+  {
+    id: 2,
+    name: 'Jane',
+    // rows without sibling data will be null
+    homeAddress: null,
+    workAddress: {
+      id: 12,
+      type: 'work',
+      is_active: 1,
+      user_id: 2,
+      street: '123 Tower Blvd.',
+      city: 'Any Town',
+      state: 'CA',
+    },
+  },
+];
 ```
 
 #### withChildData(propertyName, childSql)
@@ -801,20 +794,20 @@ Example:
 ```js
 const query = Select.parse('SELECT id, headline, published_by FROM posts');
 query.withChildData(
-    'theComments',
-    Select.parse('SELECT * FROM comments WHERE comments.post_id IN(:id)')
+  'theComments',
+  Select.parse('SELECT * FROM comments WHERE comments.post_id IN(:id)')
 );
 query.withChildData(
-    'theTags',
-    Select.parse(`
+  'theTags',
+  Select.parse(`
         SELECT posts_tags.post_id, tags.* FROM tags
         INNER JOIN posts_tags ON posts_tags.tag_id = tags.id
         WHERE posts_tags.post_id IN(:id)
     `)
 );
 query.withSiblingData(
-    'thePublisher',
-    Select.parse('SELECT id, name FROM users WHERE user_id IN(:published_by)')
+  'thePublisher',
+  Select.parse('SELECT id, name FROM users WHERE user_id IN(:published_by)')
 );
 const { results } = await query.fetch();
 ```
@@ -823,50 +816,50 @@ const { results } = await query.fetch();
 
 ```js
 results = [
-    {
-        id: 1,
-        headline: 'Turmoil in China',
-        published_by: 1001,
-        theComments: [
-            {
-                id: 11,
-                post_id: 1,
-                user_id: 101,
-                text: 'Sad to hear',
-            },
-            {
-                id: 12,
-                post_id: 1,
-                user_id: 102,
-                text: 'Hope it works out',
-            },
-        ],
-        theTags: [
-            {
-                id: 101,
-                post_id: 1,
-                name: 'China',
-            },
-            {
-                id: 102,
-                post_id: 1,
-                name: 'Crisis',
-            },
-        ],
-        thePublisher: {
-            id: 1001,
-            name: 'John',
-        },
+  {
+    id: 1,
+    headline: 'Turmoil in China',
+    published_by: 1001,
+    theComments: [
+      {
+        id: 11,
+        post_id: 1,
+        user_id: 101,
+        text: 'Sad to hear',
+      },
+      {
+        id: 12,
+        post_id: 1,
+        user_id: 102,
+        text: 'Hope it works out',
+      },
+    ],
+    theTags: [
+      {
+        id: 101,
+        post_id: 1,
+        name: 'China',
+      },
+      {
+        id: 102,
+        post_id: 1,
+        name: 'Crisis',
+      },
+    ],
+    thePublisher: {
+      id: 1001,
+      name: 'John',
     },
-    {
-        id: 2,
-        headline: 'Syria at War',
-        // records with missing child data will hae empty arrays
-        theComments: [],
-        theTags: [],
-        thePublisher: null,
-    }
-]
+  },
+  {
+    id: 2,
+    headline: 'Syria at War',
+    // records with missing child data will hae empty arrays
+    theComments: [],
+    theTags: [],
+    thePublisher: null,
+  },
+];
 ```
 
 ### Other methods
@@ -942,8 +935,8 @@ WHERE (
 // WILL WORK
 const query = Select.parse(`SELECT * FROM users`);
 query.orWhere([
-	"fname = :fname AND (lname LIKE '%john' OR lname LIKE 'john%')",
-	'id > 0 AND is_active IS NOT NULL',
+  "fname = :fname AND (lname LIKE '%john' OR lname LIKE 'john%')",
+  'id > 0 AND is_active IS NOT NULL',
 ]);
 ```
 
@@ -968,8 +961,8 @@ Example:
 const { DataBroker, Db } = require('sharp-db');
 const broker = new DataBroker(Db.factory(config));
 const userId = await broker.insert('users', {
-	name: 'John',
-	is_active: true,
+  name: 'John',
+  is_active: true,
 });
 // the new user ID is also available at broker.ids
 expect(broker.ids.users[0]).toBe(userId);
@@ -983,15 +976,19 @@ Example with composite key:
 ```js
 const { DataBroker, Db } = require('sharp-db');
 const broker = new DataBroker(Db.factory(config));
-const userId = await broker.insert('posts_images', {
-	post_id: 1,
-	image_id: 2,
-	sort: 1,
-}, { compositeKey: ['post_id', 'image_id'] });
+const userId = await broker.insert(
+  'posts_images',
+  {
+    post_id: 1,
+    image_id: 2,
+    sort: 1,
+  },
+  { compositeKey: ['post_id', 'image_id'] }
+);
 // the new user ID is also available at broker.ids
 expect(broker.ids.posts_images[0]).toEqual({
-	post_id: 1,
-	image_id: 2,
+  post_id: 1,
+  image_id: 2,
 });
 // ... integration test using userId ...
 // then clean up all data
@@ -1051,5 +1048,3 @@ logger.getQueries(); // all queries
 logger.clear(); // clear all logs
 logger.unwatch(db); // stop capturing logs
 ```
-
-

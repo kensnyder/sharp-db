@@ -1,10 +1,6 @@
 import cloneDeep from 'lodash.clonedeep';
-import type AbstractAdapter from '../Adapters/AbstractAdapter';
-import Parser from '../Parser/Parser';
 import forOwn from '../forOwnDefined/forOwnDefined';
 import substrCount from '../substrCount/substrCount';
-import type { SqlOptionsInterface } from '../types';
-import { FieldsType } from '../types';
 
 type FieldName =
   | 'option'
@@ -31,34 +27,22 @@ type FieldName =
  * Build a select query
  * Class Select
  */
-export default class Select {
-  _options: string[];
-  _tables: string[];
-  _columns: string[];
-  _joins: string[];
-  _wheres: string[];
-  _groupBys: string[];
-  _orderBys: string[];
-  _havings: string[];
+export default class SelectBuilder {
+  _bindIndex: number = 0;
+  _options: string[] = [];
+  _tables: string[] = [];
+  _columns: string[] = [];
+  _joins: string[] = [];
+  _wheres: string[] = [];
+  _groupBys: string[] = [];
+  _orderBys: string[] = [];
+  _havings: string[] = [];
   _page: number;
   _limit: number;
   _offset: number;
-  adapter: AbstractAdapter;
-  // db: Db;
   _bound: Record<string, any>;
   _siblings: Record<string, any>[];
   _children: Record<string, any>[];
-  /**
-   * Load the given SQL into this object
-   * @param sql  The SQL to parse
-   * @returns
-   */
-  parse(sql: string) {
-    this.reset();
-    const parser = new Parser(this);
-    parser.parse(sql);
-    return this;
-  }
 
   /**
    * Return a new Select object that matches the given SQL
@@ -66,33 +50,24 @@ export default class Select {
    * @param adapter  The Db Engine adapter to use for escaping and quoting
    * @returns  A new Select instance
    */
-  static parse(adapter: AbstractAdapter, sql: string): Select {
-    return new Select(adapter).parse(sql);
+  static parse(sql: string): SelectBuilder {
+    return new SelectBuilder(sql);
   }
 
   /**
    * Select constructor
-   * @param [adapter]  The Db Engine adapter to use for escaping and quoting
+   * @param [url]  A base SQL query to parse
    */
-  constructor(adapter: AbstractAdapter) {
+  constructor(sql: string = null) {
     this.adapter = adapter;
     this.reset();
   }
 
   /**
-   * Shortcut to initialize without the `new` keyword
-   * @param [adapter]  The Db Engine adapter to use for escaping and quoting
-   * @return A new Select instance
-   */
-  static init(adapter: AbstractAdapter) {
-    return new Select(adapter);
-  }
-
-  /**
-   * Get the SQL as a pretty-printed string
+   * Get the SQL as a pretty-printed string plus all the bindings
    * @return The SQL query as a string
    */
-  toString() {
+  compile() {
     const lines = [
       'SELECT',
       this._options.length ? `  ${this._options.join('\n  ')}` : null,
@@ -117,40 +92,13 @@ export default class Select {
       }
     }
 
-    return lines.filter(Boolean).join('\n').trim();
-  }
-
-  /**
-   * Get the SQL as a one-line string
-   * @return The SQL query as a string without newlines or indents
-   */
-  normalized() {
-    const lines = [
-      'SELECT',
-      this._options.length ? this._options.join(' ') : null,
-      this._columns.length ? this._columns.join(', ') : '*',
-      `FROM ${this._tables.join(', ')}`,
-      this._joins.length ? this._joins.join(' ') : null,
-      this._wheres.length ? `WHERE ${this._wheres.join(' AND ')}` : null,
-      this._groupBys.length ? `GROUP BY ${this._groupBys.join(', ')}` : null,
-      this._havings.length ? `HAVING ${this._havings.join(' AND ')}` : null,
-      this._orderBys.length ? `ORDER BY ${this._orderBys.join(', ')}` : null,
-    ];
-
-    if (this._page > 0) {
-      const offset = (this._page - 1) * this._limit;
-      lines.push(`LIMIT ${this._limit}`);
-      lines.push(`OFFSET ${offset}`);
-    } else {
-      if (this._limit) {
-        lines.push(`LIMIT ${this._limit}`);
-      }
-      if (this._offset) {
-        lines.push(`OFFSET ${this._offset}`);
-      }
-    }
-
-    return lines.filter(Boolean).join(' ').trim();
+    const pretty = lines.filter(Boolean).join('\n').trim();
+    const bindings: any = [];
+    const sql = pretty.replace(/__BOUND_(\d+)__/g, ($0, $1) => {
+      bindings.push(this._bound[$1]);
+      return '?';
+    });
+    return { sql, bindings };
   }
 
   /**
@@ -270,168 +218,11 @@ export default class Select {
   }
 
   /**
-   * Specify data from a sibling table be spliced in
-   * Can be used for one-to-one or many-to-one relationships
-   * @param property  The name of the property into which to splice
-   * @param siblingQuery  The Select query to fetch the sibling data
-   * @returns
-   * @chainable
-   */
-  withSiblingData(property: string, siblingQuery: Select) {
-    this._siblings.push({ property, query: siblingQuery });
-    return this;
-  }
-
-  /**
-   * Specify data from a child table to be spliced in
-   * Can be used for one-to-many or many-to-many relationships
-   * @param property  The name of the property into which to splice
-   * @param childQuery  The Select query to fetch the child data
-   * @returns
-   * @chainable
-   */
-  withChildData(property: string, childQuery: Select) {
-    this._children.push({ property, query: childQuery });
-    return this;
-  }
-
-  /**
-   * Bind values by name to the query
-   * @param placeholder  The name of the placeholder or an object with placeholder: value pairs
-   * @param [value=null]  The value to bind when placeholder is a string
-   * @example
-   *     query.bind('postId', 123); // replace :postId with 123
-   *     query.bind({ postId: 123 }); // replace :postId with 123
-   * @return {Select}
-   */
-  bind(placeholder: Record<string, any> | any, value: any = null) {
-    if (typeof placeholder === 'object') {
-      forOwn<Record<string, string>>(placeholder, (val, field) => {
-        this._bound[field] = val;
-      });
-      return this;
-    }
-    this._bound[placeholder] = value;
-    return this;
-  }
-
-  /**
-   * Unbind a previously bound property
-   * @param [placeholder]
-   * @return
-   */
-  unbind(placeholder: string = null) {
-    if (placeholder) {
-      this._bound[placeholder] = undefined;
-    } else {
-      this._bound = {};
-    }
-    return this;
-  }
-
-  /**
-   * Fetch records and splice in related data
-   * @return
-   */
-  async fetch(): Promise<{
-    queries: string[];
-    results: Record<string, any>[];
-    fields: FieldsType[];
-  }> {
-    const {
-      query: initialSql,
-      results,
-      fields,
-    } = await this.adapter.query(this.toString(), this._bound);
-    const queries1 = await this._spliceChildData(results);
-    const queries2 = await this._spliceSiblingData(results);
-    const queries = [initialSql, ...queries1, ...queries2];
-    return { queries, results, fields };
-  }
-
-  /**
-   * Fetch the first matched record
-   * @return {Object|null}
-   */
-  async fetchFirst(): Promise<{
-    queries: string[];
-    results: Record<string, any>;
-    fields: FieldsType[];
-  }> {
-    const oldLimit = this._limit;
-    this.limit(1);
-    const { queries, results, fields } = await this.fetch();
-    this.limit(oldLimit);
-    return { queries, results: results[0], fields };
-  }
-
-  /**
-   * Fetch each record as an object with key-value pairs
-   * @return {Promise<Object>}
-   */
-  fetchHash() {
-    const res = this.adapter.query(this.toString(), this._bound);
-  }
-
-  /**
-   * Fetch each record as an array of values
-   * @return {Promise<Object>}
-   */
-  fetchList(options: SqlOptionsInterface = {}) {
-    options.sql = this.toString();
-    return this.db.selectList(options, this._bound);
-  }
-
-  /**
-   * Fetch the value of first column of the first record
-   * @return {Promise}
-   */
-  fetchValue(options: SqlOptionsInterface = {}) {
-    options.sql = this.toString();
-    return this.db.selectValue(options, this._bound);
-  }
-
-  /**
-   * Fetch values and index by the given field name
-   * @param {String} byField  The field by which to index (e.g. id)
-   * @return {Promise<Object>}
-   */
-  async fetchIndexed(byField: string, options: SqlOptionsInterface = {}) {
-    options.sql = this.toString();
-    const { queries, results, fields } = await this.fetch(options);
-    const indexed = {};
-    results.forEach(r => (indexed[r[byField]] = r));
-    return { queries, results: indexed, fields };
-  }
-
-  /**
-   * Fetch values grouped by the given field name
-   * @param {String} byField  The field by which to group
-   * @example
-   *      const query = Select.parse('SELECT * FROM comments');
-   *      const byUser = query.fetchGrouped('user_id')
-   *      // a key for each user id with an array of comments for each key
-   * @return {Array}
-   */
-  async fetchGrouped(byField: string, options: SqlOptionsInterface = {}) {
-    options.sql = this.toString();
-    const { query, results, fields } = await this.fetch(options);
-    const grouped = {};
-    results.forEach(r => {
-      if (!grouped[r[byField]]) {
-        grouped[r[byField]] = [];
-      }
-      grouped[r[byField]].push(r);
-    });
-    return { query, results: grouped, fields };
-  }
-
-  /**
    * Clone this object
    * @return {Select}
    */
   getClone() {
-    const copy = new Select(this.adapter);
+    const copy = new SelectBuilder();
     copy._children = cloneDeep(this._children);
     copy._siblings = cloneDeep(this._siblings);
     copy._options = cloneDeep(this._options);
@@ -480,102 +271,34 @@ export default class Select {
    * @param {Boolean} normalize  If true, return a normalized sql
    * @returns {String}
    */
-  getFoundRowsSql(countExpr = '*', normalize = false) {
+  getFoundRowsSql(countExpr = '*') {
     const query = this.getFoundRowsQuery(countExpr);
+    const { sql, bindings } = query.compile();
     if (this._havings.length === 0) {
-      return normalize ? query.normalized() : query.toString();
-    } else if (normalize) {
-      const subquerySql = query.normalized();
-      return `SELECT COUNT(*) AS foundRows FROM (${subquerySql}) AS subq`;
+      return { sql, bindings };
     } else {
-      const subquerySql = query.toString().replace(/\n/g, '\n\t');
-      return `SELECT COUNT(*) AS foundRows FROM (\n\t${subquerySql}\n) AS subq`;
+      const subquerySql = sql.replace(/\n/g, '\n\t');
+      return {
+        sql: `SELECT COUNT(*) AS found_rows FROM (${subquerySql}) AS subq`,
+        bindings,
+      };
     }
   }
 
-  /**
-   * Run a version of this query that simply returns COUNT(*)
-   * @param {String} [countExpr="*"]  Use to specify `DISTINCT colname` if needed
-   * @return {Promise<Number>}  The number of rows or false on error
-   */
-  foundRows(countExpr = '*', options = {}) {
-    options.sql = this.getFoundRowsSql(countExpr);
-    return this.db.selectValue(options, this._bound);
-  }
-
-  /**
-   * Extract the name of the first bound variable
-   * E.g. given "SELECT * FROM users WHERE id IN(:id)" it would return "id"
-   * @param {String} sql
-   * @returns {*|string}
-   * @private
-   */
-  static _extractBindingName(sql) {
-    const match = sql.match(/:([\w_]+)/);
-    if (!match) {
-      throw new Error(`Unable to find bound variable in SQL "${sql}"`);
-    }
-    return match[1];
-  }
-
-  /**
-   * Fetch sibling data and splice it into the given result set
-   * @param {Array} queries  The final SQL statements that were executed
-   */
-  async _spliceSiblingData(records) {
-    if (this._siblings.length === 0 || records.length === 0) {
-      return [];
-    }
-    const sqlQueries = [];
-    for (const { property, query } of this._siblings) {
-      const onColumn = Select._extractBindingName(query.toString());
-      const values = records.map(record => record[onColumn]);
-      query.bind(onColumn, values);
-      const { queries, results, fields } = await query.fetch();
-      const indexed = {};
-      const firstField = fields[0].name;
-      results.forEach(result => {
-        const key = result[firstField];
-        indexed[key] = result;
-      });
-      records.forEach(record => {
-        record[property] = indexed[record[onColumn]];
-      });
-      sqlQueries.push(...queries);
-    }
-    return sqlQueries;
-  }
-
-  /**
-   * Fetch child data and splice it into the given result set
-   * @param {Array} queries  The final SQL statements that were executed
-   */
-  async _spliceChildData(records) {
-    if (this._children.length === 0 || records.length === 0) {
-      return [];
-    }
-    const sqlQueries = [];
-    for (const { property, query } of this._children) {
-      const onColumn = Select._extractBindingName(query.toString());
-      const values = records.map(record => record[onColumn]);
-      query.bind(onColumn, values);
-      const { queries, results, fields } = await query.fetch();
-      const firstField = fields[0].name;
-      const grouped = {};
-      results.forEach(result => {
-        const key = result[firstField];
-        if (!grouped[key]) {
-          grouped[key] = [];
-        }
-        grouped[key].push(result);
-      });
-      records.forEach(record => {
-        record[property] = grouped[record[onColumn]] || [];
-      });
-      sqlQueries.push(...queries);
-    }
-    return sqlQueries;
-  }
+  // /**
+  //  * Extract the name of the first bound variable
+  //  * E.g. given "SELECT * FROM users WHERE id IN(:id)" it would return "id"
+  //  * @param {String} sql
+  //  * @returns {*|string}
+  //  * @private
+  //  */
+  // static _extractBindingName(sql) {
+  //   const match = sql.match(/:([\w_]+)/);
+  //   if (!match) {
+  //     throw new Error(`Unable to find bound variable in SQL "${sql}"`);
+  //   }
+  //   return match[1];
+  // }
 
   /**
    * Add an array of column names to fetch
@@ -1104,33 +827,5 @@ export default class Select {
       this._page = number;
     }
     return this;
-  }
-
-  /**
-   * Manually escape a value
-   * @param {*} value  The value to escape
-   * @return {string}
-   */
-  escape(value) {
-    return this.adapter.escape(value);
-  }
-
-  /**
-   * Manually escape a value without quotes
-   * @param {*} value  The value to escape without quotes
-   * @return {string}
-   */
-  escapeQuoteless(value) {
-    return this.adapter.escapeQuoteless(value);
-  }
-
-  /**
-   * Get the proper escaping for a LIKE or NOT LIKE clause
-   * @param {String} infix  One of ?% or %?% or %? or ?
-   * @param {String} value  The value to search for
-   * @return {String}
-   */
-  escapeLike(infix, value) {
-    return this.adapter.escapeLike(infix, value);
   }
 }
